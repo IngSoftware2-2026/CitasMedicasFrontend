@@ -39,20 +39,6 @@ Organización basada en separación por dominios funcionales para facilitar esca
 
 ---
 
-## Base de datos
-
-Los scripts de creación y consulta de la base de datos se encuentran en la carpeta `Database/`.  
-No se debe alterar la lógica SQL existente; las interfaces en `src/app/core/models` reflejan las tablas y columnas definidas en los archivos SQL.
-
-Los principales archivos son:
-
-* `QueryCitas.sql` – esquema completo con tablas, relaciones y restricciones.  
-* `SQLQuery1.sql`, `SQLQuery2.sql` – consultas o scripts de ejemplo.  
-
-Al modificar la base de datos, asegúrate primero de actualizar estos archivos y luego sincronizar cualquier cambio en los modelos TypeScript.
-
----
-
 ## Servidor de desarrollo
 
 ```bash
