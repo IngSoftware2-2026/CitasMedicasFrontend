@@ -1,0 +1,40 @@
+<p-toolbar>
+  <ng-template #start><h2 class="m-0"><i class="pi pi-file-edit"></i> Consultas Medicas</h2></ng-template>
+  <ng-template #end><p-button label="Nueva Consulta" icon="pi pi-plus" (onClick)="openConsultaDialog()" /></ng-template>
+</p-toolbar>
+<div class="card-grid consulta-grid">
+  @for (c of consultas; track c.consultaId) {
+  <p-card styleClass="consulta-card">
+    <div class="consulta-header">
+      <p-tag value="Consulta #{{ c.consultaId }}" severity="info" />
+      <span class="text-muted">{{ c.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+    </div>
+    <p-divider />
+    <div class="consulta-body">
+      <p><strong>Cita:</strong> #{{ c.citaId }}</p>
+      @if (c.motivo) { <p><strong>Motivo:</strong> {{ c.motivo }}</p> }
+      @if (c.notas) { <p><strong>Notas:</strong> {{ c.notas }}</p> }
+      @if (c.tratamiento) { <div class="treatment-box"><i class="pi pi-box"></i> {{ c.tratamiento }}</div> }
+    </div>
+    <p-button icon="pi pi-pencil" label="Editar" [outlined]="true" severity="info" size="small" (onClick)="openConsultaDialog(c)" styleClass="mt-2" />
+  </p-card>
+  }
+</div>
+
+<!-- CONSULTA DIALOG -->
+<p-dialog header="{{ consultaForm['consultaId'] ? 'Editar' : 'Nueva' }} Consulta" [(visible)]="consultaDialog" [modal]="true" [style]="{width: '550px'}">
+  <div class="dialog-form">
+    <div class="field"><label>Cita *</label>
+      <select class="p-inputtext" [(ngModel)]="consultaForm['citaId']">
+        @for (c of citas; track c.citaId) { <option [ngValue]="c.citaId">Cita #{{ c.citaId }} - {{ data.getPacienteNombre(c.pacienteId) }}</option> }
+      </select>
+    </div>
+    <div class="field"><label>Motivo</label><input pInputText [(ngModel)]="consultaForm['motivo']" /></div>
+    <div class="field"><label>Notas</label><textarea pTextarea [(ngModel)]="consultaForm['notas']" rows="3"></textarea></div>
+    <div class="field"><label>Tratamiento</label><textarea pTextarea [(ngModel)]="consultaForm['tratamiento']" rows="2"></textarea></div>
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" icon="pi pi-times" [text]="true" (onClick)="consultaDialog = false" />
+    <p-button label="Guardar" icon="pi pi-check" (onClick)="saveConsulta()" />
+  </ng-template>
+</p-dialog>

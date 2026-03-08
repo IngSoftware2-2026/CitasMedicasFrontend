@@ -1,0 +1,75 @@
+<p-toolbar>
+  <ng-template #start><h2 class="m-0"><i class="pi pi-briefcase"></i> Especialidades</h2></ng-template>
+  <ng-template #end><p-button label="Nueva Especialidad" icon="pi pi-plus" (onClick)="openEspecialidadDialog()" /></ng-template>
+</p-toolbar>
+
+<div class="mod-stats mod-stats-3">
+  <div class="mod-stat-item">
+    <div class="mod-stat-icon --accent"><i class="pi pi-list"></i></div>
+    <div class="mod-stat-info"><span class="mod-stat-num">{{ filteredEspecialidades.length }}</span><span class="mod-stat-label">Total</span></div>
+  </div>
+  <div class="mod-stat-item">
+    <div class="mod-stat-icon --green"><i class="pi pi-check-circle"></i></div>
+    <div class="mod-stat-info"><span class="mod-stat-num">{{ countActivas() }}</span><span class="mod-stat-label">Activas</span></div>
+  </div>
+  <div class="mod-stat-item">
+    <div class="mod-stat-icon --red"><i class="pi pi-ban"></i></div>
+    <div class="mod-stat-info"><span class="mod-stat-num">{{ countInactivas() }}</span><span class="mod-stat-label">Inactivas</span></div>
+  </div>
+</div>
+
+<div class="mod-table-card">
+  <p-table [value]="filteredEspecialidades" [paginator]="true" [rows]="10" dataKey="especialidadId" [rowHover]="true">
+    <ng-template #caption>
+      <div class="mod-caption">
+        <p-iconfield class="mod-search">
+          <p-inputicon styleClass="pi pi-search" />
+          <input pInputText [(ngModel)]="searchEspecialidad" placeholder="Buscar especialidad..." />
+        </p-iconfield>
+        <span class="mod-caption-count">{{ filteredEspecialidades.length }} especialidades</span>
+      </div>
+    </ng-template>
+    <ng-template #header>
+      <tr>
+        <th style="width: 3rem">#</th>
+        <th>Especialidad</th>
+        <th>Estado</th>
+        <th style="width: 8rem; text-align: center">Acciones</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-e let-i="rowIndex">
+      <tr>
+        <td><span class="mod-row-num">{{ i + 1 }}</span></td>
+        <td>
+          <div class="mod-person">
+            <span class="mod-avatar --purple"><i class="pi pi-briefcase" style="font-size: 0.85rem"></i></span>
+            <span class="mod-person-name">{{ e.nombre }}</span>
+          </div>
+        </td>
+        <td><p-tag [value]="e.activo ? 'Activa' : 'Inactiva'" [severity]="e.activo ? 'success' : 'danger'" [rounded]="true" /></td>
+        <td>
+          <div class="mod-actions">
+            <button class="mod-action-btn --edit" pTooltip="Editar" tooltipPosition="top" (click)="openEspecialidadDialog(e)"><i class="pi pi-pencil"></i></button>
+            <button class="mod-action-btn --danger" pTooltip="Eliminar" tooltipPosition="top" (click)="deleteEspecialidad(e)"><i class="pi pi-trash"></i></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr><td colspan="4">
+        <div class="mod-empty"><i class="pi pi-briefcase"></i><p>No se encontraron especialidades</p><span>Intenta con otros términos de búsqueda</span></div>
+      </td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- ESPECIALIDAD DIALOG -->
+<p-dialog header="{{ especialidadForm['especialidadId'] ? 'Editar' : 'Nueva' }} Especialidad" [(visible)]="especialidadDialog" [modal]="true" [style]="{width: '400px'}">
+  <div class="dialog-form">
+    <div class="field"><label>Nombre *</label><input pInputText [(ngModel)]="especialidadForm['nombre']" /></div>
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" icon="pi pi-times" [text]="true" (onClick)="especialidadDialog = false" />
+    <p-button label="Guardar" icon="pi pi-check" (onClick)="saveEspecialidad()" />
+  </ng-template>
+</p-dialog>

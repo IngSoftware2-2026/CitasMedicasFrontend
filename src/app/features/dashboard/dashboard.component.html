@@ -1,0 +1,98 @@
+<h2><i class="pi pi-chart-bar"></i> Dashboard</h2>
+<div class="stats-row">
+  <div class="stat-card stat-blue" (click)="navigateTo('pacientes')">
+    <div class="stat-icon-wrap blue"><i class="pi pi-users"></i></div>
+    <div class="stat-text">
+      <span class="stat-num">{{ totalPacientes }}</span>
+      <span class="stat-lbl">Pacientes Activos</span>
+    </div>
+    <i class="pi pi-arrow-up-right stat-arrow"></i>
+  </div>
+  <div class="stat-card stat-green" (click)="navigateTo('doctores')">
+    <div class="stat-icon-wrap green"><i class="pi pi-user"></i></div>
+    <div class="stat-text">
+      <span class="stat-num">{{ totalDoctores }}</span>
+      <span class="stat-lbl">Doctores Activos</span>
+    </div>
+    <i class="pi pi-arrow-up-right stat-arrow"></i>
+  </div>
+  <div class="stat-card stat-purple" (click)="navigateTo('citas')">
+    <div class="stat-icon-wrap purple"><i class="pi pi-calendar"></i></div>
+    <div class="stat-text">
+      <span class="stat-num">{{ citasConfirmadas }}</span>
+      <span class="stat-lbl">Citas Confirmadas</span>
+    </div>
+    <i class="pi pi-arrow-up-right stat-arrow"></i>
+  </div>
+  <div class="stat-card stat-orange" (click)="navigateTo('solicitudes')">
+    <div class="stat-icon-wrap orange"><i class="pi pi-clipboard"></i></div>
+    <div class="stat-text">
+      <span class="stat-num">{{ solicitudesPendientes }}</span>
+      <span class="stat-lbl">Solicitudes Pendientes</span>
+    </div>
+    <i class="pi pi-arrow-up-right stat-arrow"></i>
+  </div>
+  <div class="stat-card stat-teal" (click)="navigateTo('salas')">
+    <div class="stat-icon-wrap teal"><i class="pi pi-building"></i></div>
+    <div class="stat-text">
+      <span class="stat-num">{{ totalSalasActivas }}</span>
+      <span class="stat-lbl">Salas Activas</span>
+    </div>
+    <i class="pi pi-arrow-up-right stat-arrow"></i>
+  </div>
+  <div class="stat-card stat-pink" (click)="navigateTo('especialidades')">
+    <div class="stat-icon-wrap pink"><i class="pi pi-briefcase"></i></div>
+    <div class="stat-text">
+      <span class="stat-num">{{ totalEspecialidades }}</span>
+      <span class="stat-lbl">Especialidades</span>
+    </div>
+    <i class="pi pi-arrow-up-right stat-arrow"></i>
+  </div>
+</div>
+
+<div class="dashboard-bottom">
+  <p-card styleClass="meter-card">
+    <div class="dist-header">
+      <h3><i class="pi pi-chart-pie"></i> Distribucion de Citas</h3>
+      <span class="dist-total">{{ totalCitas }} total</span>
+    </div>
+    <p-metergroup [value]="meterData" />
+    <div class="dist-breakdown">
+      @for (s of distributionStats; track s.label) {
+        <div class="dist-item">
+          <div class="dist-item-header">
+            <span class="dist-dot" [style.background]="s.color"></span>
+            <span class="dist-item-label">{{ s.label }}</span>
+            <span class="dist-item-count">{{ s.count }}</span>
+          </div>
+          <div class="dist-bar-track">
+            <div class="dist-bar-fill" [style.width.%]="s.pct" [style.background]="s.color"></div>
+          </div>
+          <span class="dist-item-pct">{{ s.pct }}%</span>
+        </div>
+      }
+    </div>
+  </p-card>
+
+  <p-card styleClass="recent-card">
+    <div class="recent-header">
+      <h3><i class="pi pi-clock"></i> Citas Recientes</h3>
+    </div>
+    <div class="recent-list">
+      @for (c of recentCitas; track c.citaId) {
+        <div class="recent-item">
+          <p-avatar [label]="c.pacienteInitials" shape="circle" styleClass="recent-avatar" />
+          <div class="recent-info">
+            <span class="recent-patient">{{ c.pacienteNombre }}</span>
+            <span class="recent-doctor"><i class="pi pi-user"></i> {{ c.doctorNombre }}</span>
+          </div>
+          <div class="recent-meta">
+            <span class="recent-date"><i class="pi pi-calendar"></i> {{ c.inicio | date:'dd MMM' }}</span>
+            <span class="recent-time">{{ c.inicio | date:'HH:mm' }}</span>
+          </div>
+          <p-tag [value]="c.estadoNombre" [severity]="data.getEstadoCitaSeverity(c.estadoCodigo)" [rounded]="true" />
+        </div>
+      }
+    </div>
+  </p-card>
+</div>

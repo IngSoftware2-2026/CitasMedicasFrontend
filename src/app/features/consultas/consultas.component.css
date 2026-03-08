@@ -1,0 +1,16 @@
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 18px;
+  margin-top: 16px;
+}
+
+:host ::ng-deep .consulta-card { border-radius: var(--card-radius) !important; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s; }
+:host ::ng-deep .consulta-card:hover { transform: translateY(-3px); box-shadow: var(--card-shadow-hover); }
+
+.consulta-header { display: flex; justify-content: space-between; align-items: center; }
+.consulta-body p { margin: 6px 0; color: var(--text-color); }
+
+@media (max-width: 960px) {
+  .card-grid { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,4 @@
+/* Citas detail dialog styles */
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.detail-item label { font-size: 0.8rem; font-weight: 700; color: var(--text-color-secondary); text-transform: uppercase; display: block; }
+.detail-item p { margin: 4px 0 0; font-size: 1rem; color: var(--text-color); }

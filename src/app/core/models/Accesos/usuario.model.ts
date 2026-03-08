@@ -1,10 +1,10 @@
 export interface Usuario {
   usuarioId: number;
-  nombreUsuario?: string;
-  correo?: string;
+  nombreUsuario: string;
+  correo: string;
   telefono?: string;
-  claveHash: ArrayBuffer;
+  clave?: string;
   rolId: number;
   activo: boolean;
-  fechaCreacion: Date;
+  fechaCreacion: string;
 }

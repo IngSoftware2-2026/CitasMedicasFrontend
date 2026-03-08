@@ -1,0 +1,114 @@
+<div class="login-wrapper">
+  <div class="login-left">
+    <div class="login-brand">
+      <span class="login-logo">
+        <svg viewBox="0 0 40 40" width="40" height="40" fill="none">
+          <rect width="40" height="40" rx="10" fill="rgba(255,255,255,0.15)"/>
+          <path d="M20 11c-2.5-3-7-3-9 0s-2 7 9 14c11-7 11-11 9-14s-6.5-3-9 0z" fill="#fff"/>
+          <path d="M12 20h4l2-4 3 8 2-4h5" stroke="#6366f1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      {{ title }}
+    </div>
+    <p class="login-tagline">Sistema integral de gestión de citas médicas.<br>Conecta pacientes y doctores de manera<br>eficiente, segura y moderna.</p>
+    <ul class="login-features">
+      <li><i class="pi pi-calendar-clock"></i> Gestión completa de citas y agenda médica</li>
+      <li><i class="pi pi-users"></i> Módulo de doctores con especialidades</li>
+      <li><i class="pi pi-building"></i> Administración de salas y consultorios</li>
+      <li><i class="pi pi-shield"></i> Seguridad y confidencialidad de datos</li>
+    </ul>
+  </div>
+
+  <div class="login-right">
+    <div class="login-card">
+      <!-- Card Header -->
+      <div class="login-card-header">
+        <span class="login-card-logo">
+          <svg viewBox="0 0 40 40" width="36" height="36" fill="none">
+            <circle cx="20" cy="20" r="20" fill="#eef2ff"/>
+            <path d="M20 12c-2.2-2.6-6-2.6-7.8 0s-1.7 6 7.8 12c9.5-6 9.5-9.4 7.8-12s-5.6-2.6-7.8 0z" fill="#3b82f6"/>
+            <path d="M14 20h3l1.5-3 2.5 6 1.5-3h3.5" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span class="login-card-title">{{ title }}</span>
+      </div>
+
+      <h2>Iniciar Sesión</h2>
+      <p class="login-subtitle">Ingresa tus credenciales para acceder al sistema</p>
+
+      <!-- Email -->
+      <div class="field">
+        <label for="email">Correo Electrónico</label>
+        <p-iconfield>
+          <p-inputicon styleClass="pi pi-envelope" />
+          <input pInputText id="email" [(ngModel)]="loginUser" placeholder="correo@ejemplo.com" (keyup.enter)="login()" />
+        </p-iconfield>
+      </div>
+
+      <!-- Password -->
+      <div class="field">
+        <label for="pass">Contraseña</label>
+        <p-iconfield>
+          <p-inputicon styleClass="pi pi-lock" />
+          <input pInputText id="pass" [type]="showPassword ? 'text' : 'password'" [(ngModel)]="loginPass" placeholder="••••••••" (keyup.enter)="login()" />
+        </p-iconfield>
+      </div>
+
+      <!-- Remember + Forgot -->
+      <div class="login-options">
+        <label class="login-checkbox">
+          <input type="checkbox" [(ngModel)]="rememberSession" />
+          <span>Recordar sesión</span>
+        </label>
+        <a class="login-forgot" (click)="showForgotDialog = true">¿Olvidaste tu contraseña?</a>
+      </div>
+
+      @if (loginError) {
+        <small class="p-error">{{ loginError }}</small>
+      }
+
+      <p-button label="Iniciar Sesión" icon="pi pi-sign-in" (onClick)="login()" styleClass="w-full login-submit-btn" />
+
+      <!-- Footer -->
+      <p class="login-footer">¿No tienes cuenta? <a class="login-contact" (click)="showContactDialog = true">Contacta al administrador</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- Forgot Password Dialog -->
+<p-dialog header="Recuperar Contraseña" [(visible)]="showForgotDialog" [modal]="true" [style]="{width: '440px'}" [draggable]="false">
+  <div class="forgot-content">
+    <i class="pi pi-envelope forgot-icon"></i>
+    <p>Ingresa tu correo electrónico y te enviaremos instrucciones para restablecer tu contraseña.</p>
+    <div class="field">
+      <label>Correo Electrónico</label>
+      <p-iconfield>
+        <p-inputicon styleClass="pi pi-envelope" />
+        <input pInputText [(ngModel)]="forgotEmail" placeholder="correo@ejemplo.com" />
+      </p-iconfield>
+    </div>
+    @if (forgotSuccess) {
+      <small class="forgot-success"><i class="pi pi-check-circle"></i> Se enviaron las instrucciones a tu correo.</small>
+    }
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" icon="pi pi-times" [text]="true" (onClick)="showForgotDialog = false" />
+    <p-button label="Enviar instrucciones" icon="pi pi-send" (onClick)="sendForgotPassword()" />
+  </ng-template>
+</p-dialog>
+
+<!-- Contact Admin Dialog -->
+<p-dialog header="Contactar Administrador" [(visible)]="showContactDialog" [modal]="true" [style]="{width: '440px'}" [draggable]="false">
+  <div class="contact-content">
+    <i class="pi pi-user contact-icon"></i>
+    <p>Si necesitas una cuenta de acceso al sistema, comunícate con el administrador:</p>
+    <div class="contact-info">
+      <div><i class="pi pi-envelope"></i> <strong>admin&#64;medicitas.com</strong></div>
+      <div><i class="pi pi-phone"></i> <strong>+504 2222-3333</strong></div>
+      <div><i class="pi pi-clock"></i> Lunes a Viernes, 8:00 AM - 5:00 PM</div>
+    </div>
+  </div>
+  <ng-template #footer>
+    <p-button label="Entendido" icon="pi pi-check" (onClick)="showContactDialog = false" />
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,309 @@
+/* ===== SOLICITUDES STATS BAR ===== */
+.sol-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.sol-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--card-radius);
+  padding: 16px 20px;
+  transition: all var(--transition-speed) ease;
+}
+
+.sol-stat-item:hover {
+  box-shadow: var(--card-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.sol-stat-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.sol-stat-icon.total { background: var(--accent-bg); color: var(--accent); }
+.sol-stat-icon.pending { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+.sol-stat-icon.confirmed { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+.sol-stat-icon.rejected { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+.sol-stat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sol-stat-num {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-color);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.sol-stat-label {
+  font-size: 0.78rem;
+  color: var(--text-color-secondary);
+  font-weight: 500;
+}
+
+/* ===== TABLE CARD ===== */
+.sol-table-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  transition: background var(--transition-speed), border-color var(--transition-speed);
+}
+
+/* ===== CAPTION / SEARCH ===== */
+.sol-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 4px 0;
+}
+
+.sol-search {
+  flex: 1;
+  max-width: 420px;
+}
+
+.sol-search input {
+  border-radius: 10px !important;
+  background: var(--surface-section) !important;
+  border-color: var(--surface-border) !important;
+  transition: all var(--transition-speed) ease;
+}
+
+.sol-search input:focus {
+  background: var(--surface-card) !important;
+  box-shadow: 0 0 0 3px var(--accent-bg) !important;
+  border-color: var(--accent) !important;
+}
+
+.sol-caption-count {
+  font-size: 0.82rem;
+  color: var(--text-color-muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ===== TABLE ROWS ===== */
+.sol-row-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--surface-section);
+  color: var(--text-color-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* ===== PERSON (AVATAR + NAME) ===== */
+.sol-person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sol-avatar {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.sol-avatar.patient {
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: #fff;
+}
+
+.sol-avatar.doctor {
+  background: linear-gradient(135deg, #14b8a6, #2dd4bf);
+  color: #fff;
+}
+
+.sol-person-name {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--text-color);
+}
+
+/* ===== DATE / TIME ===== */
+.sol-datetime {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sol-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.sol-date i {
+  font-size: 0.8rem;
+  color: var(--accent);
+}
+
+.sol-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--text-color-secondary);
+}
+
+.sol-time i {
+  font-size: 0.75rem;
+  color: var(--text-color-muted);
+}
+
+/* ===== DURATION ===== */
+.sol-duration {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-color-secondary);
+  background: var(--surface-section);
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.sol-duration i {
+  color: var(--accent-light);
+  font-size: 0.8rem;
+}
+
+/* ===== MOTIVO ===== */
+.sol-motivo {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+/* ===== ACTION BUTTONS ===== */
+.sol-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.sol-action-btn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.sol-action-btn.confirm {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+.sol-action-btn.confirm:hover {
+  background: #22c55e;
+  color: #fff;
+  transform: scale(1.12);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.35);
+}
+
+.sol-action-btn.reject {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+.sol-action-btn.reject:hover {
+  background: #f59e0b;
+  color: #fff;
+  transform: scale(1.12);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+}
+
+.sol-action-btn.cancel {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+.sol-action-btn.cancel:hover {
+  background: #ef4444;
+  color: #fff;
+  transform: scale(1.12);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+}
+
+.sol-no-actions {
+  color: var(--text-color-muted);
+  font-size: 0.85rem;
+}
+
+/* ===== EMPTY STATE ===== */
+.sol-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+  gap: 8px;
+}
+
+.sol-empty i {
+  font-size: 2.5rem;
+  color: var(--text-color-muted);
+  margin-bottom: 4px;
+}
+
+.sol-empty p {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.sol-empty span {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .sol-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
