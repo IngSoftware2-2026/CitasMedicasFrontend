@@ -71,7 +71,7 @@ export class RolService extends ConexionService {
    * @returns Observable con el rol actualizado
    */
   actualizarRol(id: number, datos: Partial<Rol>): Observable<Rol> {
-    return this.crear<Rol>('/Accesos/Roles/Editar', { rolId: id, ...datos }).pipe(
+    return this.actualizar<Rol>('/Accesos/Roles/Editar', { rolId: id, ...datos }).pipe(
       map((respuesta: any) => {
         const exitoso = respuesta.exitoso ?? respuesta.success;
         const datosResp = respuesta.datos ?? respuesta.data;
@@ -90,8 +90,12 @@ export class RolService extends ConexionService {
    * @returns Observable con true si fue exitoso
    */
   eliminarRol(id: number): Observable<boolean> {
+    console.log('=== ELIMINAR ROL ===');
+    console.log('rolId:', id);
+    console.log('URL:', '/Accesos/Roles/Eliminar?rolId=' + id);
     return this.eliminar<boolean>('/Accesos/Roles/Eliminar?rolId=' + id).pipe(
       map((respuesta: any) => {
+        console.log('Response:', respuesta);
         const exitoso = respuesta.exitoso ?? respuesta.success;
         
         if (exitoso) {

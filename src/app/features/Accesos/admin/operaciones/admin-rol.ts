@@ -14,11 +14,8 @@ export class AdminRolOperations {
   private rolesSubject = new BehaviorSubject<any[]>([]);
   roles$ = this.rolesSubject.asObservable();
 
-  private rolPermisosSubject = new BehaviorSubject<any[]>([]);
-  rolPermisos$ = this.rolPermisosSubject.asObservable();
-
   constructor() {
-    setTimeout(() => this.loadRoles(), 0);
+    this.loadRoles();
   }
 
   setCdr(cdr: ChangeDetectorRef) {
@@ -33,13 +30,13 @@ export class AdminRolOperations {
         next: (data) => {
           console.log('Roles cargados:', data);
           this.rolesSubject.next(data || []);
-          this.cdr?.markForCheck();
+          this.cdr?.detectChanges();
         },
         error: (err) => {
           console.error('Error cargando roles:', err);
           this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar roles' });
           this.rolesSubject.next([]);
-          this.cdr?.markForCheck();
+          this.cdr?.detectChanges();
         }
       });
   }
@@ -49,10 +46,11 @@ export class AdminRolOperations {
   }
 
   get rolPermisos(): any[] {
-    return this.rolPermisosSubject.getValue();
+    return this.rolesSubject.getValue();
   }
 
   save(r: Partial<Rol>, isEdit: boolean): void {
+    console.log('Guardando rol:', r, 'isEdit:', isEdit);
     if (!r.codigoRol || !r.nombreRol) {
       this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Codigo y nombre son obligatorios' });
       return;
@@ -65,8 +63,13 @@ export class AdminRolOperations {
           next: () => {
             this.loadRoles();
             this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Rol actualizado' });
+            this.cdr?.detectChanges();
           },
-          error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al actualizar rol' })
+          error: (err) => {
+            console.error('Error actualizando rol:', err);
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.mensaje || 'Error al actualizar rol' });
+            this.cdr?.detectChanges();
+          }
         });
     } else {
       this.rolService.insertar(r)
@@ -75,13 +78,19 @@ export class AdminRolOperations {
           next: () => {
             this.loadRoles();
             this.messageService.add({ severity: 'success', summary: 'Creado', detail: 'Rol creado' });
+            this.cdr?.detectChanges();
           },
-          error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al crear rol' })
+          error: (err) => {
+            console.error('Error insertando rol:', err);
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.mensaje || 'Error al crear rol' });
+            this.cdr?.detectChanges();
+          }
         });
     }
   }
 
   delete(r: Rol, onConfirm: () => void): void {
+    console.log('Eliminando rol:', r.rolId, r.nombreRol);
     this.rolService.eliminarRol(r.rolId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -89,8 +98,13 @@ export class AdminRolOperations {
           this.loadRoles();
           this.messageService.add({ severity: 'success', summary: 'Eliminado', detail: 'Rol eliminado' });
           onConfirm();
+          this.cdr?.detectChanges();
         },
-        error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al eliminar rol' })
+        error: (err) => {
+          console.error('Error eliminando rol:', err);
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.mensaje || err?.error?.message || 'Error al eliminar rol' });
+          this.cdr?.detectChanges();
+        }
       });
   }
 }

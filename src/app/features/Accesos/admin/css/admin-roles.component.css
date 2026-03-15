@@ -1,0 +1,343 @@
+:host {
+  display: block;
+}
+
+.roles-container {
+  padding: 1rem;
+}
+
+.roles-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-600) 100%);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.roles-header-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.roles-header-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.roles-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.roles-header p {
+  margin: 0.25rem 0 0;
+  opacity: 0.9;
+  font-size: 0.9rem;
+}
+
+.roles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+.role-card {
+  background: var(--surface-card);
+  border-radius: 16px;
+  border: 1px solid var(--surface-border);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.role-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  border-color: var(--primary-200);
+}
+
+.role-card-header {
+  background: linear-gradient(135deg, var(--surface-ground) 0%, var(--surface-card) 100%);
+  padding: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.role-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.role-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: white;
+}
+
+.role-avatar--admin { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+.role-avatar--doctor { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.role-avatar--recep { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.role-avatar--paciente { background: linear-gradient(135deg, #10b981, #059669); }
+.role-avatar--default { background: linear-gradient(135deg, #64748b, #475569); }
+
+.role-details h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.role-code {
+  display: inline-block;
+  background: var(--primary-50);
+  color: var(--primary-600);
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+
+.role-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.role-card-body {
+  padding: 1rem 1.25rem;
+}
+
+.role-permisos-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--surface-ground);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.role-permisos-toggle:hover {
+  background: var(--surface-hover);
+}
+
+.role-permisos-toggle-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.role-permisos-toggle i {
+  color: var(--text-color-secondary);
+  transition: transform 0.2s ease;
+}
+
+.role-permisos-toggle i.expanded {
+  transform: rotate(90deg);
+}
+
+.role-permisos-toggle span {
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.role-permisos-count {
+  background: var(--primary-100);
+  color: var(--primary-700);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.role-permisos-count.empty {
+  background: var(--surface-border);
+  color: var(--text-color-secondary);
+}
+
+.role-permisos-list {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.permiso-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  background: var(--surface-ground);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.permiso-item:hover {
+  background: var(--surface-hover);
+}
+
+.permiso-item.active {
+  background: var(--primary-50);
+  border: 1px solid var(--primary-200);
+}
+
+.permiso-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary-color);
+  cursor: pointer;
+}
+
+.permiso-item i {
+  color: var(--text-color-secondary);
+  font-size: 0.9rem;
+}
+
+.permiso-item.active i {
+  color: var(--primary-600);
+}
+
+.permiso-item span {
+  font-size: 0.85rem;
+  color: var(--text-color);
+}
+
+.role-card-empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-color-secondary);
+}
+
+.role-card-empty i {
+  font-size: 2.5rem;
+  color: var(--text-color-muted);
+  margin-bottom: 0.75rem;
+}
+
+.role-card-empty p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Dialog styles */
+:host ::ng-deep .role-dialog .p-dialog-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-600) 100%);
+  color: white;
+  border-radius: 16px 16px 0 0;
+  padding: 1.25rem 1.5rem;
+}
+
+:host ::ng-deep .role-dialog .p-dialog-header .p-dialog-title {
+  font-weight: 600;
+}
+
+:host ::ng-deep .role-dialog .p-dialog-content {
+  padding: 1.5rem;
+}
+
+:host ::ng-deep .role-dialog .p-dialog-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--surface-border);
+}
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dialog-field label {
+  font-weight: 500;
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+
+.dialog-field label .required {
+  color: #ef4444;
+}
+
+.dialog-field input {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.dialog-field input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-100);
+  outline: none;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .roles-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .roles-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .role-card-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .role-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

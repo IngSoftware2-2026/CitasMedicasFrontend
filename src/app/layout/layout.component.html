@@ -16,6 +16,7 @@
       @if (tienePermiso('GESTIONAR_SOLICITUDES')) { <a routerLink="/solicitudes" routerLinkActive="active"><i class="pi pi-clipboard"></i> @if (!barraLateralColapsada) { <span>Solicitudes</span> }</a> }
       @if (tienePermiso('GESTIONAR_CATALOGOS')) { <a routerLink="/salas" routerLinkActive="active"><i class="pi pi-building"></i> @if (!barraLateralColapsada) { <span>Salas</span> }</a> }
       @if (tienePermiso('GESTIONAR_CATALOGOS')) { <a routerLink="/especialidades" routerLinkActive="active"><i class="pi pi-briefcase"></i> @if (!barraLateralColapsada) { <span>Especialidades</span> }</a> }
+      @if (tienePermiso('GESTIONAR_ROLES')) { <a routerLink="/permisos" routerLinkActive="active"><i class="pi pi-lock"></i> @if (!barraLateralColapsada) { <span>Permisos</span> }</a> }
       @if (tienePermiso('VER_CONSULTAS')) { <a routerLink="/consultas" routerLinkActive="active"><i class="pi pi-file-edit"></i> @if (!barraLateralColapsada) { <span>Consultas</span> }</a> }
       @if (tienePermiso('GESTIONAR_CATALOGOS')) { <a routerLink="/horarios" routerLinkActive="active"><i class="pi pi-clock"></i> @if (!barraLateralColapsada) { <span>Horarios</span> }</a> }
       @if (tienePermiso('GESTIONAR_USUARIOS')) { <a routerLink="/usuarios" routerLinkActive="active"><i class="pi pi-id-card"></i> @if (!barraLateralColapsada) { <span>Usuarios</span> }</a> }

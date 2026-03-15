@@ -8,6 +8,7 @@ import { CitasComponent } from './features/Clinica/citas/citas.component';
 import { SolicitudesComponent } from './features/Clinica/solicitudes/solicitudes.component';
 import { SalasComponent } from './features/Catalogos/salas/salas.component';
 import { EspecialidadesComponent } from './features/Catalogos/especialidades/especialidades.component';
+import { PermisosComponent } from './features/Catalogos/permisos/permisos.component';
 import { ConsultasComponent } from './features/Clinica/consultas/consultas.component';
 import { HorariosComponent } from './features/Clinica/horarios/horarios.component';
 import { AdminComponent } from './features/Accesos/admin/admin.component';
@@ -25,6 +26,7 @@ const ROUTES = {
   SOLICITUDES: 'solicitudes',
   SALAS: 'salas',
   ESPECIALIDADES: 'especialidades',
+  PERMISOS: 'permisos',
   CONSULTAS: 'consultas',
   HORARIOS: 'horarios',
   USUARIOS: 'usuarios',
@@ -80,6 +82,12 @@ export const routes: Routes = [
         component: EspecialidadesComponent,
         canActivate: [permissionGuard],
         data: { permission: PERMISSIONS.GESTIONAR_CATALOGOS }
+      },
+      {
+        path: ROUTES.PERMISOS,
+        component: PermisosComponent,
+        canActivate: [permissionGuard],
+        data: { permission: PERMISSIONS.GESTIONAR_ROLES }
       },
       {
         path: ROUTES.CONSULTAS,

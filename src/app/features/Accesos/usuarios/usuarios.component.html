@@ -63,7 +63,6 @@
           <div class="usuarios-actions">
             <button class="usuarios-action-btn usuarios-action-btn--edit" pTooltip="Editar" tooltipPosition="top" (click)="openUsuarioDialog(u)"><i class="pi pi-pencil"></i></button>
             <button class="usuarios-action-btn usuarios-action-btn--warn" [pTooltip]="u.activo ? 'Desactivar' : 'Activar'" tooltipPosition="top" (click)="toggleUsuarioActivo(u)"><i [class]="u.activo ? 'pi pi-eye-slash' : 'pi pi-eye'"></i></button>
-            <button class="usuarios-action-btn usuarios-action-btn--danger" pTooltip="Eliminar" tooltipPosition="top" (click)="deleteUsuario(u)"><i class="pi pi-trash"></i></button>
           </div>
         </td>
       </tr>

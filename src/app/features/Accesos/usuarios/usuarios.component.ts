@@ -1,6 +1,6 @@
 import { Component, ChangeDetectorRef, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MessageService, ConfirmationService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -20,7 +20,7 @@ import { Subject, takeUntil } from 'rxjs';
   selector: 'app-usuarios',
   standalone: true,
   imports: [FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, TagModule, ToolbarModule, TooltipModule, SelectModule, IconFieldModule, InputIconModule, PasswordModule],
-  providers: [MessageService, ConfirmationService, UsuariosCrud, UsuariosUtils],
+  providers: [MessageService, UsuariosCrud, UsuariosUtils],
   templateUrl: './usuarios.component.html',
   styleUrl: './usuarios.component.css'
 })
@@ -43,9 +43,10 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     public crud: UsuariosCrud,
     public utils: UsuariosUtils,
     private cdr: ChangeDetectorRef,
-    private messageService: MessageService,
-    private confirmationService: ConfirmationService
-  ) {}
+    private messageService: MessageService
+  ) {
+    this.crud.setCdr(cdr);
+  }
 
   get usuarios() { return this.crud.usuarios; }
   get roles() { return this.rolesList; }
@@ -110,14 +111,5 @@ export class UsuariosComponent implements OnInit, OnDestroy {
 
   toggleUsuarioActivo(u: Usuario): void {
     this.crud.toggle(u);
-  }
-
-  deleteUsuario(u: Usuario): void {
-    this.confirmationService.confirm({
-      message: `Eliminar el usuario ${u.nombreUsuario}?`,
-      header: 'Confirmar',
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => this.crud.delete(u, () => {})
-    });
   }
 }

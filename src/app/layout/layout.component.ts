@@ -4,13 +4,11 @@ import { AuthService } from '../core/services/Accesos/auth.service';
 import { ThemeService } from '../core/shared/theme.service';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { MessageService, ConfirmationService } from 'primeng/api';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
   imports: [RouterLink, RouterLinkActive, RouterOutlet, ToastModule, ConfirmDialogModule],
-  providers: [MessageService, ConfirmationService],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css'
 })
