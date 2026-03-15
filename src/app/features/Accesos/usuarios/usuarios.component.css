@@ -1,0 +1,227 @@
+.usuarios-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.usuarios-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--surface-card);
+  border-radius: var(--card-radius);
+  border: 1px solid var(--surface-border);
+}
+
+.usuarios-stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.usuarios-stat-icon--accent { background: rgba(99, 102, 241, 0.12); color: var(--primary-color); }
+.usuarios-stat-icon--green { background: rgba(34, 197, 94, 0.12); color: var(--green-500); }
+.usuarios-stat-icon--red { background: rgba(239, 68, 68, 0.12); color: var(--red-500); }
+.usuarios-stat-icon--purple { background: rgba(168, 85, 247, 0.12); color: var(--purple-500); }
+
+.usuarios-stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.usuarios-stat-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-color);
+  line-height: 1;
+}
+
+.usuarios-stat-label {
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+  margin-top: 2px;
+}
+
+.usuarios-table-card {
+  background: var(--surface-card);
+  border-radius: var(--card-radius);
+  border: 1px solid var(--surface-border);
+  padding: 16px;
+}
+
+.usuarios-table-caption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.usuarios-search {
+  width: 300px;
+}
+
+.usuarios-table-count {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+}
+
+.usuarios-row-number {
+  font-size: 0.85rem;
+  color: var(--text-color-muted);
+}
+
+.usuarios-person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.usuarios-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.usuarios-avatar--red { background: var(--red-500); }
+.usuarios-avatar--teal { background: var(--teal-500); }
+.usuarios-avatar--amber { background: var(--amber-500); }
+.usuarios-avatar--blue { background: var(--blue-500); }
+.usuarios-avatar--indigo { background: var(--indigo-500); }
+
+.usuarios-person-name {
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.usuarios-info-cell {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.usuarios-info-cell i {
+  font-size: 0.8rem;
+  color: var(--text-color-muted);
+}
+
+.usuarios-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.usuarios-action-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.usuarios-action-btn--edit {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--blue-500);
+}
+
+.usuarios-action-btn--edit:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.usuarios-action-btn--warn {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--amber-500);
+}
+
+.usuarios-action-btn--warn:hover {
+  background: rgba(245, 158, 11, 0.2);
+}
+
+.usuarios-action-btn--danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--red-500);
+}
+
+.usuarios-action-btn--danger:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.usuarios-empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-color-secondary);
+}
+
+.usuarios-empty i {
+  font-size: 3rem;
+  color: var(--text-color-muted);
+  margin-bottom: 16px;
+}
+
+.usuarios-empty p {
+  font-size: 1rem;
+  margin: 0 0 4px;
+}
+
+.usuarios-empty span {
+  font-size: 0.85rem;
+  color: var(--text-color-muted);
+}
+
+.usuarios-dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.usuarios-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.usuarios-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.usuarios-field label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+:host ::ng-deep .usuarios-password .p-password {
+  width: 100%;
+}
+
+:host ::ng-deep .usuarios-password .p-password-input {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .usuarios-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .usuarios-form-row {
+    grid-template-columns: 1fr;
+  }
+}

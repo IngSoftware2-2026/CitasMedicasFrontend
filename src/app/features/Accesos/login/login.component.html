@@ -1,0 +1,21 @@
+<div class="login-wrapper">
+  <div class="login-card">
+    <h2 class="login-title">Iniciar Sesión</h2>
+    
+    <div class="login-field">
+      <label class="login-label">Usuario:</label>
+      <input class="login-input" type="text" [(ngModel)]="loginUser" placeholder="Ingrese usuario" (keyup.enter)="login()" />
+    </div>
+    
+    <div class="login-field">
+      <label class="login-label">Contraseña:</label>
+      <input class="login-input" type="password" [(ngModel)]="loginPass" placeholder="Ingrese contraseña" (keyup.enter)="login()" />
+    </div>
+    
+    @if (loginError) {
+      <div class="login-error">{{ loginError }}</div>
+    }
+    
+    <button class="login-button" (click)="login()">Entrar</button>
+  </div>
+</div>
