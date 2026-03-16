@@ -1,6 +1,10 @@
 <p-toolbar>
   <ng-template #start><h2 class="m-0"><i class="pi pi-calendar"></i> Citas</h2></ng-template>
-  <ng-template #end><p-button label="Nueva Cita" icon="pi pi-plus" (onClick)="openCitaDialog()" /></ng-template>
+  <ng-template #end>
+    @if (canManageCitas) {
+      <p-button label="Nueva Cita" icon="pi pi-plus" (onClick)="openCitaDialog()" />
+    }
+  </ng-template>
 </p-toolbar>
 
 <div class="mod-stats mod-stats-4">
@@ -72,15 +76,11 @@
         <td>
           <div class="mod-actions">
             <button class="mod-action-btn --view" pTooltip="Ver detalle" tooltipPosition="top" (click)="openCitaDetail(c)"><i class="pi pi-eye"></i></button>
-            <button class="mod-action-btn --edit" pTooltip="Editar" tooltipPosition="top" (click)="openCitaDialog(c)"><i class="pi pi-pencil"></i></button>
-            @if (c.estadoId === 1) {
-              <button class="mod-action-btn --start" pTooltip="Iniciar" tooltipPosition="top" (click)="cambiarEstadoCita(c, 2)"><i class="pi pi-play"></i></button>
-            }
-            @if (c.estadoId === 2) {
-              <button class="mod-action-btn --confirm" pTooltip="Finalizar" tooltipPosition="top" (click)="cambiarEstadoCita(c, 3)"><i class="pi pi-check"></i></button>
-            }
-            @if (c.estadoId === 1 || c.estadoId === 2) {
-              <button class="mod-action-btn --danger" pTooltip="Cancelar" tooltipPosition="top" (click)="cambiarEstadoCita(c, 4)"><i class="pi pi-times"></i></button>
+            @if (canManageCitas) {
+              @if (c.estadoCodigo === 'CONF') {
+                <button class="mod-action-btn --start" pTooltip="Iniciar" tooltipPosition="top" (click)="cambiarEstadoCita(c, 2)"><i class="pi pi-play"></i></button>
+                <button class="mod-action-btn --danger" pTooltip="Cancelar" tooltipPosition="top" (click)="cambiarEstadoCita(c, 4)"><i class="pi pi-times"></i></button>
+              }
             }
           </div>
         </td>
@@ -100,12 +100,12 @@
     <div class="form-row">
       <div class="field"><label>Paciente *</label>
         <select class="p-inputtext" [(ngModel)]="citaForm['pacienteId']">
-          @for (p of pacientes; track p.pacienteId) { <option [ngValue]="p.pacienteId">{{ p.nombres }} {{ p.apellidos }}</option> }
+          @for (p of pacientesData; track p.pacienteId) { <option [ngValue]="p.pacienteId">{{ p.paciente || ((p.nombres || '') + ' ' + (p.apellidos || '')).trim() }}</option> }
         </select>
       </div>
       <div class="field"><label>Doctor *</label>
         <select class="p-inputtext" [(ngModel)]="citaForm['medicoId']">
-          @for (d of doctores; track d.medicoId) { <option [ngValue]="d.medicoId">{{ d.nombrePublico }}</option> }
+          @for (d of doctoresData; track d.medicoId) { <option [ngValue]="d.medicoId">{{ d.medico }}</option> }
         </select>
       </div>
     </div>
@@ -119,11 +119,6 @@
     </div>
     <div class="form-row">
       <div class="field"><label>Inicio</label><input pInputText type="datetime-local" [(ngModel)]="citaForm['inicio']" /></div>
-      <div class="field"><label>Estado</label>
-        <select class="p-inputtext" [(ngModel)]="citaForm['estadoId']">
-          @for (e of estadosCita; track e.estadoCitaId) { <option [ngValue]="e.estadoCitaId">{{ e.nombreEstado }}</option> }
-        </select>
-      </div>
     </div>
   </div>
   <ng-template #footer>
@@ -136,10 +131,10 @@
 <p-dialog header="Detalle de Cita" [(visible)]="citaDetailDialog" [modal]="true" [style]="{width: '650px'}">
   @if (detailCita) {
   <div class="detail-grid">
-    <div class="detail-item"><label>Paciente</label><p>{{ data.getPacienteNombre(detailCita.pacienteId) }}</p></div>
-    <div class="detail-item"><label>Doctor</label><p>{{ data.getDoctorNombre(detailCita.medicoId) }}</p></div>
-    <div class="detail-item"><label>Sala</label><p>{{ data.getSalaNombre(detailCita.salaId) }}</p></div>
-    <div class="detail-item"><label>Estado</label><p><p-tag [value]="data.getEstadoCitaNombre(detailCita.estadoId)" [severity]="data.getEstadoCitaSeverity(data.getEstadoCitaCodigo(detailCita.estadoId))" /></p></div>
+    <div class="detail-item"><label>Paciente</label><p>{{ detailCita.paciente || data.getPacienteNombre(detailCita.pacienteId) }}</p></div>
+    <div class="detail-item"><label>Doctor</label><p>{{ detailCita.medico || data.getDoctorNombre(detailCita.medicoId) }}</p></div>
+    <div class="detail-item"><label>Sala</label><p>{{ detailCita.sala || data.getSalaNombre(detailCita.salaId) }}</p></div>
+    <div class="detail-item"><label>Estado</label><p><p-tag [value]="detailCita.estado || data.getEstadoCitaNombre(detailCita.estadoId)" [severity]="data.getEstadoCitaSeverity(detailCita.codigoEstado || data.getEstadoCitaCodigo(detailCita.estadoId))" /></p></div>
     <div class="detail-item"><label>Inicio</label><p>{{ detailCita.inicio | date:'dd/MM/yyyy HH:mm' }}</p></div>
     <div class="detail-item"><label>Fin</label><p>{{ detailCita.fin | date:'dd/MM/yyyy HH:mm' }}</p></div>
     <div class="detail-item"><label>Duracion</label><p>{{ detailCita.duracionMinutos }} minutos</p></div>
