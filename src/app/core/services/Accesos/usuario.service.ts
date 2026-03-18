@@ -61,13 +61,22 @@ export class UsuarioService extends ConexionService {
   }
 
   /**
-   * Obtiene un usuario específico por su ID.
+   * Obtiene un usuario específico por su ID desde el endpoint del API.
    * @param id - ID del usuario a buscar
-   * @returns Observable con el usuario encontrado o null
+   * @returns Observable con el usuario encontrado
    */
   obtenerPorId(id: number): Observable<Usuario | null> {
-    return this.listar().pipe(
-      map(usuarios => usuarios.find(u => u.usuarioId === id) || null)
+    return this.obtener<Usuario>(`/Accesos/Usuarios/${id}`).pipe(
+      map((respuesta: any) => {
+        const exitoso = respuesta.success !== undefined ? respuesta.success : respuesta.exitoso;
+        const datos = respuesta.data !== undefined ? respuesta.data : respuesta.datos;
+        
+        if (exitoso && datos) {
+          return datos as Usuario;
+        }
+        return null;
+      }),
+      catchError(() => [])
     );
   }
 

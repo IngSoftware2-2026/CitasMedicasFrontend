@@ -2,18 +2,18 @@ import { Injectable, signal, effect } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
-  estaOscuro = signal(this.cargarPreferencia());
+  isDark = signal(this.cargarPreferencia());
 
   constructor() {
     effect(() => {
-      const oscuro = this.estaOscuro();
+      const oscuro = this.isDark();
       document.documentElement.classList.toggle('dark-mode', oscuro);
       localStorage.setItem('medicitas-theme', oscuro ? 'dark' : 'light');
     });
   }
 
-  cambiar(): void {
-    this.estaOscuro.update(valor => !valor);
+  toggle(): void {
+    this.isDark.update(valor => !valor);
   }
 
   private cargarPreferencia(): boolean {

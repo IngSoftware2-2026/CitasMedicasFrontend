@@ -30,10 +30,10 @@ export class ConfiguracionesComponent {
   }
 
   get isDarkMode(): boolean {
-    return this.tema.estaOscuro();
+    return this.tema.isDark();
   }
 
   toggleTheme(): void {
-    this.tema.cambiar();
+    this.tema.toggle();
   }
 }

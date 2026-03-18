@@ -7,6 +7,9 @@
 
 /* ===== HEADER ===== */
 .dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 12px;
 }
 
@@ -23,6 +26,15 @@
   margin: 0;
 }
 
+.dashboard-date {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+  background: var(--surface-card);
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--surface-border);
+}
+
 /* ===== BANNER ===== */
 .dashboard-banner {
   background: linear-gradient(135deg, #1e3a8a 0%, #1a56db 50%, #3b82f6 100%);
@@ -31,7 +43,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .dashboard-banner-user {
@@ -51,11 +63,6 @@
   color: white;
   font-size: 1rem;
   font-weight: 700;
-}
-
-.dashboard-banner-info {
-  display: flex;
-  flex-direction: column;
 }
 
 .dashboard-banner-name {
@@ -93,19 +100,13 @@
   font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.dashboard-banner-btn i {
-  font-size: 0.85rem;
-}
-
 .dashboard-banner-btn:hover {
   background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.6);
 }
 
 .dashboard-banner-btn--logout {
@@ -115,14 +116,13 @@
 
 .dashboard-banner-btn--logout:hover {
   background: rgba(239, 68, 68, 0.45);
-  border-color: rgba(239, 68, 68, 0.7);
 }
 
 /* ===== STATS ===== */
 .dashboard-stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
   margin-bottom: 14px;
 }
 
@@ -133,38 +133,25 @@
   padding: 12px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .dashboard-stat-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
-.dashboard-stat-icon--blue {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-}
-
-.dashboard-stat-icon--orange {
-  background: rgba(249, 115, 22, 0.1);
-  color: #f97316;
-}
-
-.dashboard-stat-icon--purple {
-  background: rgba(168, 85, 247, 0.1);
-  color: #a855f7;
-}
-
-.dashboard-stat-icon--green {
-  background: rgba(34, 197, 94, 0.1);
-  color: #22c55e;
-}
+.dashboard-stat-icon--blue { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+.dashboard-stat-icon--green { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+.dashboard-stat-icon--purple { background: rgba(168, 85, 247, 0.1); color: #a855f7; }
+.dashboard-stat-icon--orange { background: rgba(249, 115, 22, 0.1); color: #f97316; }
+.dashboard-stat-icon--red { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.dashboard-stat-icon--cyan { background: rgba(6, 182, 212, 0.1); color: #06b6d4; }
 
 .dashboard-stat-info {
   display: flex;
@@ -172,157 +159,406 @@
 }
 
 .dashboard-stat-number {
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: var(--text-color);
   line-height: 1;
 }
 
 .dashboard-stat-label {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text-color-secondary);
-  margin-top: 2px;
 }
 
-/* ===== SECTIONS ===== */
-.dashboard-section {
+/* ===== BENTO GRID ===== */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 12px;
+}
+
+.bento-box {
   background: var(--surface-card);
   border: 1px solid var(--surface-border);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 14px;
-  margin-bottom: 14px;
 }
 
-.dashboard-section-header {
+.bento-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
 }
 
-.dashboard-section-title {
-  font-size: 1rem;
+.bento-title {
+  font-size: 0.9rem;
   font-weight: 700;
   color: var(--text-color);
   margin: 0;
 }
 
-.dashboard-section-link {
+.bento-link {
   color: var(--primary-color);
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 500;
   text-decoration: none;
-  cursor: pointer;
 }
 
-.dashboard-section-link:hover {
+.bento-link:hover {
   text-decoration: underline;
 }
 
-/* ===== QUICK ACTIONS ===== */
-.dashboard-quick-actions {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+/* Quick Actions - Full width */
+.bento-quick {
+  grid-column: span 12;
 }
 
-.dashboard-quick-btn {
-  background: var(--surface-card);
-  border: 1.5px solid var(--surface-border);
+.bento-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.bento-quick-btn {
+  background: var(--surface-section);
+  border: 1px solid var(--surface-border);
   color: var(--text-color);
-  padding: 10px 12px;
+  padding: 10px 8px;
   border-radius: 8px;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 500;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
   transition: all 0.2s;
 }
 
-.dashboard-quick-btn:hover {
-  border-color: var(--primary-color);
+.bento-quick-btn i {
+  font-size: 1.1rem;
   color: var(--primary-color);
+}
+
+.bento-quick-btn:hover {
+  border-color: var(--primary-color);
   background: var(--primary-bg);
 }
 
-/* ===== CITAS LIST ===== */
-.dashboard-citas-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+/* Citas - Full width */
+.bento-citas {
+  grid-column: span 12;
 }
 
-.dashboard-citas-item {
+.bento-citas-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bento-citas-row {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 12px;
+  gap: 12px;
+  padding: 10px 12px;
   background: var(--surface-section);
   border-radius: 8px;
+  transition: all 0.2s;
 }
 
-.dashboard-citas-time {
-  display: flex;
-  flex-direction: column;
-  min-width: 60px;
+.bento-citas-row:hover {
+  background: var(--surface-hover);
 }
 
-.dashboard-citas-hora {
-  font-size: 1rem;
+.bento-citas-time {
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--primary-color);
+  min-width: 45px;
 }
 
-.dashboard-citas-fecha {
+.bento-citas-date {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+  min-width: 50px;
+}
+
+.bento-citas-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.bento-citas-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.bento-citas-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bento-citas-doc {
   font-size: 0.75rem;
   color: var(--text-color-secondary);
 }
 
-.dashboard-citas-info {
+.bento-citas-sala {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+  background: var(--surface-border);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.bento-citas-sala i {
+  font-size: 0.75rem;
+}
+
+.bento-citas-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.badge--confirmado, .badge--confirmada { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+.badge--en-curso { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+.badge--finalizado, .badge--finalizada { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+.badge--cancelado, .badge--cancelada { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+/* Estados - 6 columns */
+.bento-estados {
+  grid-column: span 6;
+}
+
+.bento-estados-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bento-estado-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bento-estado-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 110px;
+  font-size: 0.8rem;
+  color: var(--text-color);
+}
+
+.bento-estado-info i { font-size: 0.85rem; }
+
+.bento-estado-bar {
+  flex: 1;
+  height: 8px;
+  background: var(--surface-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bento-estado-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.bento-estado-count {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-color);
+  min-width: 25px;
+  text-align: right;
+}
+
+/* Salas - 6 columns */
+.bento-salas {
+  grid-column: span 6;
+}
+
+.bento-salas-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.bento-sala {
+  background: rgba(34, 197, 94, 0.05);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 8px;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.bento-sala i { color: #22c55e; font-size: 1.1rem; }
+.bento-sala span { font-size: 0.8rem; font-weight: 600; color: var(--text-color); }
+.bento-sala small { font-size: 0.65rem; color: #22c55e; }
+
+.bento-sala.sala-occupied {
+  background: rgba(245, 158, 11, 0.05);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+.bento-sala.sala-occupied i { color: #f59e0b; }
+.bento-sala.sala-occupied small { color: #f59e0b; }
+
+.bento-sala.sala-maint {
+  background: rgba(156, 163, 175, 0.05);
+  border-color: rgba(156, 163, 175, 0.2);
+}
+.bento-sala.sala-maint i { color: #9ca3af; }
+.bento-sala.sala-maint small { color: #9ca3af; }
+
+/* Solicitudes - Full width */
+.bento-solicitudes {
+  grid-column: span 12;
+}
+
+.bento-solicitudes-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.bento-solicitud {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: var(--surface-section);
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.bento-solicitud:hover {
+  background: var(--surface-hover);
+}
+
+.bento-solicitud-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #6366f1;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.bento-solicitud-info {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
-.dashboard-citas-paciente {
-  font-size: 0.9rem;
+.bento-solicitud-info span {
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-color);
 }
 
-.dashboard-citas-doctor {
-  font-size: 0.8rem;
+.bento-solicitud-info small {
+  font-size: 0.7rem;
   color: var(--text-color-secondary);
 }
 
-.dashboard-citas-room {
-  background: transparent;
-  border: 1px solid var(--surface-border);
-  color: var(--primary-color);
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 6px 10px;
+.bento-solicitud-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-ok, .btn-no {
+  width: 28px;
+  height: 28px;
   border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
   transition: all 0.2s;
 }
 
-.dashboard-citas-room:hover {
-  background: var(--primary-bg);
-  border-color: var(--primary-color);
+.btn-ok {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.btn-ok:hover {
+  background: #22c55e;
+  color: white;
+}
+
+.btn-no {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.btn-no:hover {
+  background: #ef4444;
+  color: white;
 }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1200px) {
   .dashboard-stats {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
   
-  .dashboard-quick-actions {
+  .bento-quick-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .bento-estados { grid-column: span 12; }
+  .bento-salas { grid-column: span 12; }
+  
+  .bento-salas-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .bento-solicitudes-list {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
   .dashboard-banner {
     flex-direction: column;
     gap: 12px;
@@ -339,16 +575,32 @@
   }
   
   .dashboard-stats {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
   
-  .dashboard-quick-actions {
-    grid-template-columns: 1fr;
-  }
-  
-  .dashboard-citas-item {
+  .bento-grid {
+    display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
+  }
+  
+  .bento-quick-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .bento-citas-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .bento-citas-date {
+    display: none;
+  }
+  
+  .bento-salas-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .bento-solicitudes-list {
+    grid-template-columns: 1fr;
   }
 }

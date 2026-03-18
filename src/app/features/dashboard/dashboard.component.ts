@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { CommonModule, DatePipe } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
@@ -12,7 +13,7 @@ import { DashboardStats, DashboardUtils } from './operaciones';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, CardModule, TableModule, TagModule, MeterGroupModule, AvatarModule],
+  imports: [CommonModule, DatePipe, RouterLink, CardModule, TableModule, TagModule, MeterGroupModule, AvatarModule],
   providers: [MockDataService, DashboardStats, DashboardUtils],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
@@ -43,6 +44,16 @@ export class DashboardComponent {
     return localStorage.getItem('rolNombre') || 'Administrador';
   }
 
+  get currentDate(): string {
+    const options: Intl.DateTimeFormatOptions = { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    };
+    return new Date().toLocaleDateString('es-ES', options);
+  }
+
   get totalPacientes() { return this.stats.totalPacientes; }
   get totalDoctores() { return this.stats.totalDoctores; }
   get citasConfirmadas() { return this.stats.citasConfirmadas; }
@@ -57,6 +68,11 @@ export class DashboardComponent {
 
   getInitials(name: string) { return this.utils.getInitials(name); }
   navigateTo(route: string) { return this.utils.navigateTo(route); }
+
+  getAvatarColor(id: number): string {
+    const colors = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'];
+    return colors[id % colors.length];
+  }
 
   goToConfig(): void {
     this.router.navigate(['/configuraciones']);

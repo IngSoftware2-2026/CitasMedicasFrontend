@@ -27,7 +27,7 @@ import {
   standalone: true,
   imports: [CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, TagModule, CardModule, ToolbarModule, TooltipModule, AvatarModule, DividerModule, IconFieldModule, InputIconModule],
   providers: [MessageService, AdminRolOperations, AdminPermisoOperations, AdminPermisoRolOperations, AdminUtils],
-  styleUrls: ['./css/admin-roles.component.css'],
+  styleUrls: ['./admin-roles.component.css'],
   template: `
     <div class="roles-container">
       <div class="roles-header">

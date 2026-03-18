@@ -1,84 +1,168 @@
-import { Component, ChangeDetectorRef, OnInit, OnDestroy } from '@angular/core';
+/**
+ * ============================================================
+ * COMPONENTE: Gestión de Usuarios
+ * ============================================================
+ * Muestra una tabla con todos los usuarios del sistema.
+ * Permite buscar, filtrar, crear, editar, ver detalles y cambiar estado.
+ */
+
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MessageService } from 'primeng/api';
+import { Subject, takeUntil } from 'rxjs';
+
+// PrimeNG - Tabla y búsqueda
 import { TableModule } from 'primeng/table';
-import { ButtonModule } from 'primeng/button';
-import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
-import { TagModule } from 'primeng/tag';
-import { ToolbarModule } from 'primeng/toolbar';
-import { TooltipModule } from 'primeng/tooltip';
 import { SelectModule } from 'primeng/select';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+
+// PrimeNG - Botones y diálogos
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { DividerModule } from 'primeng/divider';
+import { TooltipModule } from 'primeng/tooltip';
 import { PasswordModule } from 'primeng/password';
+import { AvatarModule } from 'primeng/avatar';
+
+// Modelos
 import { Usuario } from '../../../core/models/Accesos/usuario.model';
+
+// Servicios
+import { MessageService } from 'primeng/api';
+import { UsuarioService } from '../../../core/services/Accesos/usuario.service';
+
+// Operaciones (lógica separada)
 import { UsuariosCrud, UsuariosUtils } from './operaciones';
-import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, TagModule, ToolbarModule, TooltipModule, SelectModule, IconFieldModule, InputIconModule, PasswordModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TableModule,
+    InputTextModule,
+    SelectModule,
+    IconFieldModule,
+    InputIconModule,
+    ButtonModule,
+    DialogModule,
+    DividerModule,
+    TooltipModule,
+    PasswordModule,
+    AvatarModule
+  ],
   providers: [MessageService, UsuariosCrud, UsuariosUtils],
   templateUrl: './usuarios.component.html',
   styleUrl: './usuarios.component.css'
 })
 export class UsuariosComponent implements OnInit, OnDestroy {
-  searchUsuario = '';
-  selectedRoleFilter: number | null = null;
-  usuarioDialog = false;
+
+  // ============================================================
+  // VARIABLES DE BÚSQUEDA Y FILTROS
+  // ============================================================
+  
+  /** Texto de búsqueda */
+  busqueda: string = '';
+  
+  /** ID del rol seleccionado para filtrar */
+  filtroRolId: number | null = null;
+
+  // ============================================================
+  // VARIABLES DEL FORMULARIO
+  // ============================================================
+  
+  /** Controla la visibilidad del modal de usuario */
+  usuarioDialog: boolean = false;
+  
+  /** Datos del formulario de usuario */
   usuarioForm: Partial<Usuario> = {};
-  isEditing = false;
+  
+  /** Indica si estamos editando (true) o creando (false) */
+  esEdicion: boolean = false;
 
-  totalUsuarios = 0;
-  activosCount = 0;
-  inactivosCount = 0;
-  adminCount = 0;
-  filteredUsuariosList: Usuario[] = [];
-  rolesList: any[] = [];
+  // ============================================================
+  // VARIABLES DE DETALLE
+  // ============================================================
+  
+  /** Controla la visibilidad del modal de detalle */
+  detalleDialog: boolean = false;
+  
+  /** Usuario seleccionado para ver detalles */
+  usuarioDetalle: Usuario | null = null;
+  
+  /** Indica si está cargando los detalles */
+  detalleLoading: boolean = false;
 
-  roleFilterOptions = [
+  // ============================================================
+  // VARIABLES DE DATOS
+  // ============================================================
+  
+  /** Lista completa de usuarios */
+  listaUsuarios: Usuario[] = [];
+  
+  /** Lista filtrada según búsqueda */
+  listaFiltrada: Usuario[] = [];
+  
+  /** Lista de roles */
+  listaRoles: any[] = [];
+
+  // ============================================================
+  // ESTADÍSTICAS
+  // ============================================================
+  
+  totalUsuarios: number = 0;
+  usuariosActivos: number = 0;
+  usuariosInactivos: number = 0;
+  administradoresCount: number = 0;
+
+  // ============================================================
+  // OPCIONES DE FILTRO
+  // ============================================================
+  
+  opcionesFiltroRol = [
     { label: 'Todos', value: null },
     { label: 'Administrador', value: 1 },
     { label: 'Doctor', value: 2 },
-    { label: 'Recepcion', value: 3 },
+    { label: 'Recepcionista', value: 3 },
     { label: 'Paciente', value: 4 },
-    { label: 'DEVELOPER', value: 5 }
+    { label: 'Desarrollador', value: 5 }
   ];
 
+  // ============================================================
+  // SUSCRIPCIONES
+  // ============================================================
+  
   private destroy$ = new Subject<void>();
 
+  // ============================================================
+  // CONSTRUCTOR
+  // ============================================================
+  
   constructor(
+    /** Servicio de operaciones CRUD (inyectado por Angular) */
     public crud: UsuariosCrud,
+    
+    /** Servicio de utilidades (inyectado por Angular) */
     public utils: UsuariosUtils,
-    private cdr: ChangeDetectorRef,
-    private messageService: MessageService
+    
+    /** Servicio de usuarios para API */
+    private usuarioService: UsuarioService,
+    
+    /** Detector de cambios */
+    private cdr: ChangeDetectorRef
   ) {
-    this.crud.setCdr(cdr);
+    this.crud.setCdr(this.cdr);
   }
 
-  get usuarios() { return this.crud.usuarios; }
-  get roles() { return this.rolesList; }
-
-  get filteredUsuarios() {
-    return this.filteredUsuariosList;
-  }
-
+  // ============================================================
+  // CICLO DE VIDA
+  // ============================================================
+  
   ngOnInit(): void {
-    this.crud.usuarios$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(usuarios => {
-        this.updateCounts();
-        this.cdr.detectChanges();
-      });
-
-    this.utils.roles$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(roles => {
-        this.rolesList = roles;
-        this.cdr.detectChanges();
-      });
+    this.cargarDatos();
   }
 
   ngOnDestroy(): void {
@@ -86,59 +170,159 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  updateCounts(): void {
-    let usuarios = this.crud.usuarios;
-    
-    if (this.selectedRoleFilter !== null) {
-      usuarios = usuarios.filter(u => u.rolId === this.selectedRoleFilter);
-    }
-    
-    if (this.searchUsuario) {
-      const search = this.searchUsuario.toLowerCase();
-      usuarios = usuarios.filter(u => 
-        u.nombreUsuario?.toLowerCase().includes(search) ||
-        u.correo?.toLowerCase().includes(search)
+  // ============================================================
+  // MÉTODOS DE CARGA DE DATOS
+  // ============================================================
+  
+  /**
+   * Carga usuarios y roles desde el API.
+   */
+  private cargarDatos(): void {
+    // Cargar usuarios
+    this.usuarioService.listar()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (usuarios) => {
+          this.listaUsuarios = usuarios;
+          this.aplicarFiltros();
+        },
+        error: (error) => {
+          console.error('Error al cargar usuarios:', error);
+        }
+      });
+
+    // Cargar roles
+    this.utils.roles$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (roles) => {
+          this.listaRoles = roles;
+        }
+      });
+  }
+
+  // ============================================================
+  // MÉTODOS DE FILTRADO
+  // ============================================================
+  
+  /**
+   * Aplica los filtros de búsqueda y rol.
+   */
+  private aplicarFiltros(): void {
+    let resultado = [...this.listaUsuarios];
+
+    if (this.busqueda.trim()) {
+      const termino = this.busqueda.toLowerCase();
+      resultado = resultado.filter(usuario => 
+        usuario.nombreUsuario?.toLowerCase().includes(termino) ||
+        usuario.correo?.toLowerCase().includes(termino)
       );
     }
+
+    if (this.filtroRolId !== null) {
+      resultado = resultado.filter(usuario => usuario.rolId === this.filtroRolId);
+    }
+
+    this.listaFiltrada = resultado;
+    this.calcularEstadisticas();
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Calcula las estadísticas de usuarios.
+   */
+  private calcularEstadisticas(): void {
+    this.totalUsuarios = this.listaUsuarios.length;
+    this.usuariosActivos = this.listaUsuarios.filter(u => u.activo).length;
+    this.usuariosInactivos = this.listaUsuarios.filter(u => !u.activo).length;
+    this.administradoresCount = this.listaUsuarios.filter(u => u.rolId === 1).length;
+  }
+
+  /**
+   * Manejador del evento de búsqueda.
+   */
+  onSearchChange(valor: string): void {
+    this.busqueda = valor;
+    this.aplicarFiltros();
+  }
+
+  /**
+   * Manejador del evento de filtro por rol.
+   */
+  onRoleFilterChange(valor: number | null): void {
+    this.filtroRolId = valor;
+    this.aplicarFiltros();
+  }
+
+  // ============================================================
+  // ACCIONES: Modal de Usuario (Crear/Editar)
+  // ============================================================
+  
+  /**
+   * Abre el modal para crear o editar un usuario.
+   * @param usuario - Usuario a editar (null = crear nuevo)
+   */
+  abrirModalUsuario(usuario?: Usuario): void {
+    this.esEdicion = !!usuario;
     
-    this.totalUsuarios = this.crud.usuarios.length;
-    this.activosCount = this.crud.usuarios.filter(u => u.activo).length;
-    this.inactivosCount = this.crud.usuarios.filter(u => !u.activo).length;
-    this.adminCount = this.crud.usuarios.filter(u => u.rolId === 1).length;
-    this.filteredUsuariosList = usuarios;
-    this.rolesList = [...this.utils.roles];
-  }
-
-  onSearchChange(value: string): void {
-    this.searchUsuario = value;
-    this.updateCounts();
-  }
-
-  onRoleFilterChange(value: number | null): void {
-    this.selectedRoleFilter = value;
-    this.updateCounts();
-  }
-
-  getInitials(name: string) { return this.utils.getInitials(name); }
-  getRolAvatarColor(rolId: number, nombreUsuario?: string) { return this.utils.getRolAvatarColor(rolId, nombreUsuario); }
-
-  getRolNombre(rolId: number) { return this.utils.getRolNombre(rolId); }
-  getRolCodigo(rolId: number) { return this.utils.getRolCodigo(rolId); }
-  getRolSeverity(rolId: number) { return this.utils.getRolSeverity(rolId); }
-  getRolBadgeClass(rolId: number) { return this.utils.getRolBadgeClass(rolId); }
-
-  openUsuarioDialog(u?: Usuario): void {
-    this.isEditing = !!u;
-    this.usuarioForm = u ? { ...u, clave: '' } : { activo: true };
+    if (usuario) {
+      this.usuarioForm = { ...usuario, clave: '' };
+    } else {
+      this.usuarioForm = { activo: true };
+    }
+    
     this.usuarioDialog = true;
   }
 
-  saveUsuario(): void {
-    this.crud.save(this.usuarioForm, this.isEditing);
+  /**
+   * Cierra el modal de usuario sin guardar.
+   */
+  cerrarModalUsuario(): void {
     this.usuarioDialog = false;
   }
 
-  toggleUsuarioActivo(u: Usuario): void {
-    this.crud.toggle(u);
+  /**
+   * Guarda el usuario (crea o actualiza).
+   */
+  guardarUsuario(): void {
+    this.crud.guardar(this.usuarioForm, this.esEdicion);
+    this.usuarioDialog = false;
+  }
+
+  // ============================================================
+  // ACCIONES: Toggle Estado
+  // ============================================================
+  
+  /**
+   * Activa o desactiva un usuario.
+   */
+  togglearEstado(usuario: Usuario): void {
+    this.crud.toggleEstado(usuario);
+  }
+
+  // ============================================================
+  // ACCIONES: Ver Detalle
+  // ============================================================
+  
+  /**
+   * Abre el modal de detalles del usuario.
+   */
+  async verDetalle(usuario: Usuario): Promise<void> {
+    this.detalleLoading = true;
+    this.detalleDialog = true;
+    this.usuarioDetalle = null;
+
+    const detalle = await this.crud.obtenerDetalle(usuario.usuarioId!);
+    
+    this.usuarioDetalle = detalle;
+    this.detalleLoading = false;
+  }
+
+  /**
+   * Cierra el modal de detalles.
+   */
+  cerrarDetalle(): void {
+    this.detalleDialog = false;
+    this.usuarioDetalle = null;
   }
 }

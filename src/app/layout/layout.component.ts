@@ -38,7 +38,7 @@ export class LayoutComponent {
   }
 
   get estaOscuro(): boolean {
-    return this.tema.estaOscuro();
+    return this.tema.isDark();
   }
 
   get userName(): string {
@@ -59,7 +59,7 @@ export class LayoutComponent {
   }
 
   cambiarTema(): void {
-    this.tema.cambiar();
+    this.tema.toggle();
   }
 
   cerrarSesion(): void {

@@ -1,3 +1,6 @@
+<!-- ============================================================
+     ENCABEZADO DE PÁGINA
+     ============================================================ -->
 <div class="page-header-container">
   <div class="page-header-left">
     <div class="page-header-icon">
@@ -8,38 +11,96 @@
       <p>Administrar usuarios del sistema</p>
     </div>
   </div>
-  <p-button label="Nuevo Usuario" icon="pi pi-plus" styleClass="p-button-rounded p-button-blue" (onClick)="openUsuarioDialog()" />
+  <p-button 
+    label="Nuevo Usuario" 
+    icon="pi pi-plus" 
+    styleClass="p-button-rounded p-button-blue" 
+    (onClick)="abrirModalUsuario()" />
 </div>
 
+<!-- ============================================================
+     FILTROS DE BÚSQUEDA
+     ============================================================ -->
 <div class="usuarios-filters">
   <p-iconfield class="usuarios-search">
     <p-inputicon styleClass="pi pi-search" />
-    <input pInputText [(ngModel)]="searchUsuario" (ngModelChange)="onSearchChange($event)" placeholder="Buscar" />
+    <input 
+      pInputText 
+      [(ngModel)]="busqueda" 
+      (ngModelChange)="onSearchChange($event)" 
+      placeholder="Buscar por nombre o correo" />
   </p-iconfield>
-  <p-select [options]="roleFilterOptions" [(ngModel)]="selectedRoleFilter" (ngModelChange)="onRoleFilterChange($event)" optionLabel="label" optionValue="value" placeholder="Todos" [style]="{'minWidth': '150px'}" appendTo="body" />
+  
+  <p-select 
+    [options]="opcionesFiltroRol" 
+    [(ngModel)]="filtroRolId" 
+    (ngModelChange)="onRoleFilterChange($event)" 
+    optionLabel="label" 
+    optionValue="value" 
+    placeholder="Todos los roles" 
+    [style]="{'minWidth': '180px'}" 
+    appendTo="body" />
 </div>
 
+<!-- ============================================================
+     TARJETAS DE ESTADÍSTICAS
+     ============================================================ -->
 <div class="usuarios-stats">
   <div class="usuarios-stat-item">
-    <div class="usuarios-stat-icon usuarios-stat-icon--blue"><i class="pi pi-users"></i></div>
-    <div class="usuarios-stat-info"><span class="usuarios-stat-number">{{ totalUsuarios }}</span><span class="usuarios-stat-label">Total</span></div>
+    <div class="usuarios-stat-icon usuarios-stat-icon--blue">
+      <i class="pi pi-users"></i>
+    </div>
+    <div class="usuarios-stat-info">
+      <span class="usuarios-stat-number">{{ totalUsuarios }}</span>
+      <span class="usuarios-stat-label">Total</span>
+    </div>
   </div>
+
   <div class="usuarios-stat-item">
-    <div class="usuarios-stat-icon usuarios-stat-icon--green"><i class="pi pi-check-circle"></i></div>
-    <div class="usuarios-stat-info"><span class="usuarios-stat-number">{{ activosCount }}</span><span class="usuarios-stat-label">Activos</span></div>
+    <div class="usuarios-stat-icon usuarios-stat-icon--green">
+      <i class="pi pi-check-circle"></i>
+    </div>
+    <div class="usuarios-stat-info">
+      <span class="usuarios-stat-number">{{ usuariosActivos }}</span>
+      <span class="usuarios-stat-label">Activos</span>
+    </div>
   </div>
+
   <div class="usuarios-stat-item">
-    <div class="usuarios-stat-icon usuarios-stat-icon--red"><i class="pi pi-times-circle"></i></div>
-    <div class="usuarios-stat-info"><span class="usuarios-stat-number">{{ inactivosCount }}</span><span class="usuarios-stat-label">Inactivos</span></div>
+    <div class="usuarios-stat-icon usuarios-stat-icon--red">
+      <i class="pi pi-times-circle"></i>
+    </div>
+    <div class="usuarios-stat-info">
+      <span class="usuarios-stat-number">{{ usuariosInactivos }}</span>
+      <span class="usuarios-stat-label">Inactivos</span>
+    </div>
   </div>
+
   <div class="usuarios-stat-item">
-    <div class="usuarios-stat-icon usuarios-stat-icon--purple"><i class="pi pi-users"></i></div>
-    <div class="usuarios-stat-info"><span class="usuarios-stat-number">{{ adminCount }}</span><span class="usuarios-stat-label">Administradores</span></div>
+    <div class="usuarios-stat-icon usuarios-stat-icon--purple">
+      <i class="pi pi-shield"></i>
+    </div>
+    <div class="usuarios-stat-info">
+      <span class="usuarios-stat-number">{{ administradoresCount }}</span>
+      <span class="usuarios-stat-label">Administradores</span>
+    </div>
   </div>
 </div>
 
+<!-- ============================================================
+     TABLA DE USUARIOS
+     ============================================================ -->
 <div class="usuarios-table-card">
-  <p-table [value]="filteredUsuarios" [paginator]="true" [rows]="5" dataKey="usuarioId" [rowHover]="true" [rowsPerPageOptions]="[5, 10, 20]" [showCurrentPageReport]="true" currentPageReportTemplate="{first} - {last} de {totalRecords}">
+  <p-table 
+    [value]="listaFiltrada" 
+    [paginator]="true" 
+    [rows]="5" 
+    dataKey="usuarioId" 
+    [rowHover]="true" 
+    [rowsPerPageOptions]="[5, 10, 20]"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="{first} - {last} de {totalRecords}">
+
     <ng-template #header>
       <tr>
         <th style="width: 3rem">#</th>
@@ -48,42 +109,140 @@
         <th>Teléfono</th>
         <th>Rol</th>
         <th>Estado</th>
-        <th>Fecha Creación</th>
+        <th>Fecha</th>
         <th style="width: 10rem; text-align: center">Acciones</th>
       </tr>
     </ng-template>
+
     <ng-template #body let-u let-i="rowIndex">
       <tr>
         <td><span class="usuarios-row-number">{{ i + 1 }}</span></td>
         <td>
           <div class="usuarios-person">
-            <span [class]="'usuarios-avatar usuarios-avatar--' + getRolAvatarColor(u.rolId, u.nombreUsuario)">{{ getInitials(u.nombreUsuario) }}</span>
+            <span [class]="'usuarios-avatar usuarios-avatar--' + utils.obtenerColorAvatar(u.rolId, u.nombreUsuario)">
+              {{ utils.obtenerIniciales(u.nombreUsuario) }}
+            </span>
             <span class="usuarios-person-name">{{ u.nombreUsuario }}</span>
           </div>
         </td>
-        <td><span class="usuarios-info-cell">{{ u.correo }}</span></td>
+        <td><span class="usuarios-info-cell">{{ u.correo || '—' }}</span></td>
         <td><span class="usuarios-info-cell">{{ u.telefono || '—' }}</span></td>
-        <td><span class="usuarios-badge usuarios-badge--rol" [class]="'usuarios-badge--' + getRolBadgeClass(u.rolId)">{{ getRolNombre(u.rolId) }}</span></td>
-        <td><span class="usuarios-badge usuarios-badge--estado" [class]="u.activo ? 'usuarios-badge--activo' : 'usuarios-badge--inactivo'">{{ u.activo ? 'Activo' : 'Inactivo' }}</span></td>
-        <td><span class="usuarios-info-cell">{{ u.fechaCreacion }}</span></td>
+        <td>
+          <span [class]="'usuarios-badge usuarios-badge--rol ' + utils.obtenerClaseBadgeRol(u.rolId)">
+            {{ utils.obtenerNombreRol(u.rolId) }}
+          </span>
+        </td>
+        <td>
+          <span class="usuarios-badge usuarios-badge--estado" [class]="u.activo ? 'usuarios-badge--activo' : 'usuarios-badge--inactivo'">
+            {{ u.activo ? 'Activo' : 'Inactivo' }}
+          </span>
+        </td>
+        <td><span class="usuarios-info-cell">{{ u.fechaCreacion | date:'dd/MM/yyyy' }}</span></td>
         <td>
           <div class="usuarios-actions">
-            <button class="usuarios-action-btn usuarios-action-btn--view" pTooltip="Ver Detalle" tooltipPosition="top"><i class="pi pi-id-card"></i></button>
-            <button class="usuarios-action-btn usuarios-action-btn--edit" pTooltip="Editar" tooltipPosition="top" (click)="openUsuarioDialog(u)"><i class="pi pi-pencil"></i></button>
-            <button class="usuarios-action-btn" [class]="u.activo ? 'usuarios-action-btn--danger' : 'usuarios-action-btn--success'" [pTooltip]="u.activo ? 'Desactivar' : 'Activar'" tooltipPosition="top" (click)="toggleUsuarioActivo(u)"><i [class]="u.activo ? 'pi pi-eye-slash' : 'pi pi-eye'"></i></button>
+            <button class="usuarios-action-btn usuarios-action-btn--view" pTooltip="Ver Detalle" tooltipPosition="top" (click)="verDetalle(u)">
+              <i class="pi pi-id-card"></i>
+            </button>
+            <button class="usuarios-action-btn usuarios-action-btn--edit" pTooltip="Editar" tooltipPosition="top" (click)="abrirModalUsuario(u)">
+              <i class="pi pi-pencil"></i>
+            </button>
+            <button class="usuarios-action-btn" [class]="u.activo ? 'usuarios-action-btn--danger' : 'usuarios-action-btn--success'" [pTooltip]="u.activo ? 'Desactivar' : 'Activar'" tooltipPosition="top" (click)="togglearEstado(u)">
+              <i [class]="u.activo ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+            </button>
           </div>
         </td>
       </tr>
     </ng-template>
+
     <ng-template #emptymessage>
-      <tr><td colspan="8">
-        <div class="usuarios-empty"><i class="pi pi-user-minus"></i><p>No se encontraron usuarios</p><span>Intenta con otros términos de búsqueda</span></div>
-      </td></tr>
+      <tr>
+        <td colspan="8">
+          <div class="usuarios-empty">
+            <i class="pi pi-user-minus"></i>
+            <p>No se encontraron usuarios</p>
+            <span>Intenta con otros términos de búsqueda</span>
+          </div>
+        </td>
+      </tr>
     </ng-template>
+
   </p-table>
 </div>
 
-<p-dialog header="{{ usuarioForm.usuarioId ? 'Editar' : 'Nuevo' }} Usuario" [(visible)]="usuarioDialog" [modal]="true" [style]="{width: '550px', 'max-height': '90vh'}" [breakpoints]="{'768px': '95vw'}" [draggable]="false">
+<!-- ============================================================
+     MODAL: DETALLE DEL USUARIO
+     ============================================================ -->
+<p-dialog 
+  header="Detalle del Usuario" 
+  [(visible)]="detalleDialog" 
+  [modal]="true" 
+  [style]="{width: '500px'}" 
+  [draggable]="false">
+
+  @if (detalleLoading) {
+    <div class="detalle-loading">
+      <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+      <p>Cargando detalles...</p>
+    </div>
+  }
+
+  @if (usuarioDetalle && !detalleLoading) {
+    <div class="detalle-content">
+      <div class="detalle-header">
+        <div [class]="'detalle-avatar detalle-avatar--' + utils.obtenerColorAvatar(usuarioDetalle.rolId)">
+          {{ utils.obtenerIniciales(usuarioDetalle.nombreUsuario) }}
+        </div>
+        <div class="detalle-info">
+          <h3>{{ usuarioDetalle.nombreUsuario }}</h3>
+          <span [class]="'usuarios-badge usuarios-badge--rol ' + utils.obtenerClaseBadgeRol(usuarioDetalle.rolId)">
+            {{ utils.obtenerNombreRol(usuarioDetalle.rolId) }}
+          </span>
+          <span class="detalle-estado" [class]="usuarioDetalle.activo ? 'detalle-estado--activo' : 'detalle-estado--inactivo'">
+            <i [class]="usuarioDetalle.activo ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>
+            {{ usuarioDetalle.activo ? 'Activo' : 'Inactivo' }}
+          </span>
+        </div>
+      </div>
+
+      <p-divider />
+
+      <div class="detalle-fields">
+        <div class="detalle-field">
+          <label><i class="pi pi-user"></i> ID</label>
+          <span>{{ usuarioDetalle.usuarioId }}</span>
+        </div>
+        <div class="detalle-field">
+          <label><i class="pi pi-envelope"></i> Correo</label>
+          <span>{{ usuarioDetalle.correo || '—' }}</span>
+        </div>
+        <div class="detalle-field">
+          <label><i class="pi pi-phone"></i> Teléfono</label>
+          <span>{{ usuarioDetalle.telefono || '—' }}</span>
+        </div>
+        <div class="detalle-field">
+          <label><i class="pi pi-calendar"></i> Fecha Creación</label>
+          <span>{{ usuarioDetalle.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+      </div>
+    </div>
+  }
+
+  <ng-template #footer>
+    <p-button label="Cerrar" icon="pi pi-times" [text]="true" (onClick)="cerrarDetalle()" />
+  </ng-template>
+
+</p-dialog>
+
+<!-- ============================================================
+     MODAL: CREAR / EDITAR USUARIO
+     ============================================================ -->
+<p-dialog 
+  [header]="esEdicion ? 'Editar Usuario' : 'Nuevo Usuario'" 
+  [(visible)]="usuarioDialog" 
+  [modal]="true" 
+  [style]="{width: '550px'}" 
+  [draggable]="false">
+
   <div class="usuarios-dialog-form">
     <div class="usuarios-form-row">
       <div class="usuarios-field">
@@ -97,21 +256,36 @@
     </div>
     <div class="usuarios-form-row">
       <div class="usuarios-field">
-        <label>Telefono</label>
+        <label>Teléfono</label>
         <input pInputText [(ngModel)]="usuarioForm.telefono" />
       </div>
       <div class="usuarios-field">
         <label>Rol *</label>
-        <p-select [(ngModel)]="usuarioForm.rolId" [options]="roles" optionLabel="nombreRol" optionValue="rolId" placeholder="Seleccionar rol" [style]="{width: '100%'}" appendTo="body" />
+        <p-select 
+          [(ngModel)]="usuarioForm.rolId" 
+          [options]="listaRoles" 
+          optionLabel="nombreRol" 
+          optionValue="rolId" 
+          placeholder="Seleccionar rol" 
+          [style]="{width: '100%'}" 
+          appendTo="body" />
       </div>
     </div>
     <div class="usuarios-field">
-      <label>{{ isEditing ? 'Nueva Contraseña' : 'Contraseña *' }}</label>
-      <p-password class="usuarios-password" [(ngModel)]="usuarioForm.clave" [toggleMask]="true" [feedback]="!isEditing" [style]="{width: '100%'}" [inputStyle]="{width: '100%'}" [placeholder]="isEditing ? 'Dejar vacio para no cambiar' : 'Ingrese contraseña'" appendTo="body" />
+      <label>{{ esEdicion ? 'Nueva Contraseña' : 'Contraseña *' }}</label>
+      <p-password 
+        [(ngModel)]="usuarioForm.clave" 
+        [toggleMask]="true" 
+        [feedback]="!esEdicion" 
+        [placeholder]="esEdicion ? 'Dejar vacío para no cambiar' : 'Ingrese contraseña'" 
+        [style]="{width: '100%'}" 
+        [inputStyle]="{width: '100%'}" />
     </div>
   </div>
+
   <ng-template #footer>
-    <p-button label="Cancelar" icon="pi pi-times" [text]="true" (onClick)="usuarioDialog = false" />
-    <p-button label="Guardar" icon="pi pi-check" (onClick)="saveUsuario()" />
+    <p-button label="Cancelar" icon="pi pi-times" [text]="true" (onClick)="cerrarModalUsuario()" />
+    <p-button label="Guardar" icon="pi pi-check" (onClick)="guardarUsuario()" />
   </ng-template>
+
 </p-dialog>

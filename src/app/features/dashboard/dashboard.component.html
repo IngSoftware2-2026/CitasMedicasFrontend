@@ -7,7 +7,10 @@
 <div class="dashboard-header">
   <div class="dashboard-header-left">
     <h1>Dashboard</h1>
-    <p class="dashboard-subtitle">Resumen del sistema</p>
+    <p class="dashboard-subtitle">Resumen del sistema de gestión clínica</p>
+  </div>
+  <div class="dashboard-header-right">
+    <span class="dashboard-date">{{ currentDate }}</span>
   </div>
 </div>
 
@@ -16,7 +19,7 @@
   <div class="dashboard-banner-user">
     <div class="dashboard-banner-avatar">{{ userInitials }}</div>
     <div class="dashboard-banner-info">
-      <span class="dashboard-banner-name">{{ userName }}</span>
+      <span class="dashboard-banner-name">Bienvenido, {{ userName }}</span>
       <span class="dashboard-banner-email">{{ userEmail }}</span>
     </div>
     <span class="dashboard-banner-badge">{{ userRole }}</span>
@@ -31,24 +34,24 @@
   </div>
 </div>
 
-<!-- STATS -->
+<!-- STATS ROW -->
 <div class="dashboard-stats">
   <div class="dashboard-stat">
     <div class="dashboard-stat-icon dashboard-stat-icon--blue">
       <i class="pi pi-calendar"></i>
     </div>
     <div class="dashboard-stat-info">
-      <span class="dashboard-stat-number">3</span>
-      <span class="dashboard-stat-label">Citas Hoy</span>
+      <span class="dashboard-stat-number">{{ stats.totalCitas }}</span>
+      <span class="dashboard-stat-label">Total Citas</span>
     </div>
   </div>
   <div class="dashboard-stat">
-    <div class="dashboard-stat-icon dashboard-stat-icon--orange">
-      <i class="pi pi-clipboard"></i>
+    <div class="dashboard-stat-icon dashboard-stat-icon--green">
+      <i class="pi pi-check-circle"></i>
     </div>
     <div class="dashboard-stat-info">
-      <span class="dashboard-stat-number">3</span>
-      <span class="dashboard-stat-label">Solicitudes</span>
+      <span class="dashboard-stat-number">{{ stats.citasConfirmadas }}</span>
+      <span class="dashboard-stat-label">Confirmadas</span>
     </div>
   </div>
   <div class="dashboard-stat">
@@ -56,60 +59,133 @@
       <i class="pi pi-users"></i>
     </div>
     <div class="dashboard-stat-info">
-      <span class="dashboard-stat-number">8</span>
+      <span class="dashboard-stat-number">{{ stats.totalPacientes }}</span>
       <span class="dashboard-stat-label">Pacientes</span>
     </div>
   </div>
   <div class="dashboard-stat">
-    <div class="dashboard-stat-icon dashboard-stat-icon--green">
+    <div class="dashboard-stat-icon dashboard-stat-icon--orange">
       <i class="pi pi-user"></i>
     </div>
     <div class="dashboard-stat-info">
-      <span class="dashboard-stat-number">5</span>
+      <span class="dashboard-stat-number">{{ stats.totalDoctores }}</span>
       <span class="dashboard-stat-label">Doctores</span>
     </div>
   </div>
-</div>
-
-<!-- ACCESOS RÁPIDOS -->
-<div class="dashboard-section">
-  <h2 class="dashboard-section-title">⚡ Accesos Rápidos</h2>
-  <div class="dashboard-quick-actions">
-    <button class="dashboard-quick-btn" routerLink="/citas">Nueva Cita</button>
-    <button class="dashboard-quick-btn" routerLink="/pacientes">Nuevo Paciente</button>
-    <button class="dashboard-quick-btn" routerLink="/solicitudes">Solicitudes</button>
-    <button class="dashboard-quick-btn" routerLink="/usuarios">Usuarios</button>
-  </div>
-</div>
-
-<!-- PRÓXIMAS CITAS -->
-<div class="dashboard-section">
-  <div class="dashboard-section-header">
-    <h2 class="dashboard-section-title">🕐 Próximas Citas</h2>
-    <a class="dashboard-section-link">Ver todas →</a>
-  </div>
-  <div class="dashboard-citas-list">
-    <div class="dashboard-citas-item">
-      <div class="dashboard-citas-time">
-        <span class="dashboard-citas-hora">09:00</span>
-        <span class="dashboard-citas-fecha">18/3/2026</span>
-      </div>
-      <div class="dashboard-citas-info">
-        <span class="dashboard-citas-paciente">Juan Carlos Mendoza Reyes</span>
-        <span class="dashboard-citas-doctor">Dr. Roberto García</span>
-      </div>
-      <button class="dashboard-citas-room">Consultorio 1 ›</button>
+  <div class="dashboard-stat">
+    <div class="dashboard-stat-icon dashboard-stat-icon--red">
+      <i class="pi pi-inbox"></i>
     </div>
-    <div class="dashboard-citas-item">
-      <div class="dashboard-citas-time">
-        <span class="dashboard-citas-hora">10:00</span>
-        <span class="dashboard-citas-fecha">18/3/2026</span>
-      </div>
-      <div class="dashboard-citas-info">
-        <span class="dashboard-citas-paciente">María Elena Flores Vega</span>
-        <span class="dashboard-citas-doctor">Dr. Roberto García</span>
-      </div>
-      <button class="dashboard-citas-room">Consultorio 1 ›</button>
+    <div class="dashboard-stat-info">
+      <span class="dashboard-stat-number">{{ stats.solicitudesPendientes }}</span>
+      <span class="dashboard-stat-label">Solicitudes</span>
     </div>
   </div>
+  <div class="dashboard-stat">
+    <div class="dashboard-stat-icon dashboard-stat-icon--cyan">
+      <i class="pi pi-building"></i>
+    </div>
+    <div class="dashboard-stat-info">
+      <span class="dashboard-stat-number">{{ stats.totalSalasActivas }}</span>
+      <span class="dashboard-stat-label">Salas</span>
+    </div>
+  </div>
+</div>
+
+<!-- BENTO GRID -->
+<div class="bento-grid">
+  <!-- ESTADOS - 6 columns -->
+  <div class="bento-box bento-estados">
+    <h2 class="bento-title">📊 Estados de Citas</h2>
+    <div class="bento-estados-list">
+      @for (stat of distributionStats; track stat.label) {
+        <div class="bento-estado-item">
+          <div class="bento-estado-info">
+            <i [class]="stat.icon"></i>
+            <span>{{ stat.label }}</span>
+          </div>
+          <div class="bento-estado-bar">
+            <div class="bento-estado-fill" [style.width.%]="stat.pct" [style.background-color]="stat.color"></div>
+          </div>
+          <span class="bento-estado-count">{{ stat.count }}</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- SALAS DISPONIBLES - 6 columns -->
+  <div class="bento-box bento-salas">
+    <div class="bento-header">
+      <h2 class="bento-title">🏥 Disponibilidad</h2>
+      <a class="bento-link" routerLink="/salas">Ver →</a>
+    </div>
+    <div class="bento-salas-grid">
+      @for (i of [0,1,2,3]; track i) {
+        <div class="bento-sala" [class.sala-occupied]="i === 1" [class.sala-maint]="i === 3">
+          <i [class]="i === 1 ? 'pi pi-spin pi-spinner' : i === 3 ? 'pi pi-wrench' : 'pi pi-check-circle'"></i>
+          <span>Sala {{ i + 1 }}</span>
+          <small>{{ i === 1 ? 'En uso' : i === 3 ? 'Mantenimiento' : 'Libre' }}</small>
+        </div>
+      }
+    </div>
+  </div>
+  <!-- ACCESOS RÁPIDOS - Full width -->
+  <div class="bento-box bento-quick">
+    <h2 class="bento-title">⚡ Accesos Rápidos</h2>
+    <div class="bento-quick-grid">
+      <button class="bento-quick-btn" routerLink="/citas">
+        <i class="pi pi-plus-circle"></i>
+        <span>Nueva Cita</span>
+      </button>
+      <button class="bento-quick-btn" routerLink="/pacientes">
+        <i class="pi pi-user-plus"></i>
+        <span>Nuevo Paciente</span>
+      </button>
+      <button class="bento-quick-btn" routerLink="/doctores">
+        <i class="pi pi-id-card"></i>
+        <span>Nuevo Doctor</span>
+      </button>
+      <button class="bento-quick-btn" routerLink="/solicitudes">
+        <i class="pi pi-inbox"></i>
+        <span>Solicitudes</span>
+      </button>
+      <button class="bento-quick-btn" routerLink="/usuarios">
+        <i class="pi pi-users"></i>
+        <span>Usuarios</span>
+      </button>
+      <button class="bento-quick-btn" routerLink="/especialidades">
+        <i class="pi pi-list"></i>
+        <span>Especialidades</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- PRÓXIMAS CITAS - Full width -->
+  <div class="bento-box bento-citas">
+    <div class="bento-header">
+      <h2 class="bento-title">🕐 Próximas Citas</h2>
+      <a class="bento-link" routerLink="/citas">Ver todas →</a>
+    </div>
+    <div class="bento-citas-grid">
+      @for (cita of recentCitas.slice(0, 4); track cita.citaId) {
+        <div class="bento-citas-row">
+          <div class="bento-citas-time">{{ cita.inicio | date:'HH:mm' }}</div>
+          <div class="bento-citas-date">{{ cita.inicio | date:'dd/MM' }}</div>
+          <div class="bento-citas-avatar" [style.background-color]="getAvatarColor(cita.pacienteId)">
+            {{ cita.pacienteInitials }}
+          </div>
+          <div class="bento-citas-info">
+            <span class="bento-citas-name">{{ cita.pacienteNombre }}</span>
+            <span class="bento-citas-doc">{{ cita.doctorNombre }}</span>
+          </div>
+          <div class="bento-citas-sala">
+            <i class="pi pi-building"></i> Sala {{ cita.salaId }}
+          </div>
+          <span class="bento-citas-badge badge--{{ cita.estadoCodigo }}">{{ cita.estadoNombre }}</span>
+        </div>
+      }
+    </div>
+  </div>
+
+
 </div>

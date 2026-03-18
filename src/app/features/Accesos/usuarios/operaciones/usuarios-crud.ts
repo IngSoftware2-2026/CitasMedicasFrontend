@@ -1,142 +1,202 @@
-import { Injectable, inject, ChangeDetectorRef } from '@angular/core';
+/**
+ * ============================================================
+ * CRUD: Operaciones de Crear, Leer, Actualizar, Eliminar
+ * ============================================================
+ * Maneja todas las operaciones de base de datos para usuarios.
+ */
+
+import { Injectable, inject } from '@angular/core';
+import { ChangeDetectorRef } from '@angular/core';
 import { MessageService } from 'primeng/api';
+import { Subject, takeUntil } from 'rxjs';
+
+// Servicios
 import { UsuarioService } from '../../../../core/services/Accesos/usuario.service';
+
+// Modelos
 import { Usuario } from '../../../../core/models/Accesos/usuario.model';
-import { Subject, takeUntil, BehaviorSubject } from 'rxjs';
 
 @Injectable()
 export class UsuariosCrud {
+
+  // ============================================================
+  // DEPENDENCIAS
+  // ============================================================
+  
   private usuarioService = inject(UsuarioService);
   private messageService = inject(MessageService);
   private cdr: ChangeDetectorRef | null = null;
+
+  // ============================================================
+  // ESTADO
+  // ============================================================
   
   private destroy$ = new Subject<void>();
-  private usuariosSubject = new BehaviorSubject<Usuario[]>([]);
-  usuarios$ = this.usuariosSubject.asObservable();
-  
-  get usuarios(): Usuario[] {
-    return this.usuariosSubject.getValue();
-  }
 
-  setCdr(cdr: ChangeDetectorRef) {
+  // ============================================================
+  // CONFIGURACIÓN
+  // ============================================================
+  
+  setCdr(cdr: ChangeDetectorRef): void {
     this.cdr = cdr;
   }
 
-  constructor() {
-    this.loadUsuarios();
-  }
-
-  private loadUsuarios(): void {
-    console.log('Cargando usuarios...');
+  // ============================================================
+  // MÉTODOS PÚBLICOS
+  // ============================================================
+  
+  /**
+   * Carga la lista de usuarios desde el API.
+   */
+  cargarUsuarios(): void {
     this.usuarioService.listar()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (data) => {
-          console.log('Usuarios cargados:', data);
-          this.usuariosSubject.next(data);
+        next: (usuarios) => {
+          this.usuariosSubject.next(usuarios);
           this.cdr?.detectChanges();
         },
-        error: (err) => {
-          console.error('Error cargando usuarios:', err);
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar usuarios' });
+        error: (error) => {
+          console.error('Error al cargar usuarios:', error);
+          this.mostrarMensaje('error', 'Error', 'No se pudieron cargar los usuarios');
           this.usuariosSubject.next([]);
-          this.cdr?.detectChanges();
         }
       });
   }
 
-  save(u: Partial<Usuario>, isEdit: boolean): void {
-    if (!u.nombreUsuario || !u.correo || !u.rolId) {
-      this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Nombre, correo y rol son obligatorios' });
-      return;
-    }
-    if (!isEdit && !u.clave) {
-      this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'La contraseña es obligatoria para nuevos usuarios' });
+  /**
+   * Guarda (crea o actualiza) un usuario.
+   */
+  guardar(datos: Partial<Usuario>, esEdicion: boolean): void {
+    if (!datos.nombreUsuario?.trim()) {
+      this.mostrarMensaje('warn', 'Requerido', 'El nombre de usuario es obligatorio');
       return;
     }
 
-    if (isEdit && u.usuarioId) {
-      this.usuarioService.actualizarUsuario(u.usuarioId, u)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            this.loadUsuarios();
-            this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Usuario actualizado' });
-            this.cdr?.detectChanges();
-          },
-          error: (err) => {
-            console.error('Error actualizando usuario:', err);
-            this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.mensaje || 'Error al actualizar usuario' });
-            this.cdr?.detectChanges();
-          }
-        });
+    if (!datos.correo?.trim()) {
+      this.mostrarMensaje('warn', 'Requerido', 'El correo es obligatorio');
+      return;
+    }
+
+    if (esEdicion) {
+      this.actualizar(datos);
     } else {
-      console.log('Datos a insertar:', JSON.stringify(u));
-      this.usuarioService.insertar(u)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            this.loadUsuarios();
-            this.messageService.add({ severity: 'success', summary: 'Creado', detail: 'Usuario creado' });
-            this.cdr?.detectChanges();
-          },
-          error: (err) => {
-            console.error('Error insertar usuario:', err);
-            this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.mensaje || 'Error al crear usuario' });
-            this.cdr?.detectChanges();
-          }
-        });
+      this.crear(datos);
     }
   }
 
-  delete(u: Usuario, onConfirm: () => void): void {
-    console.log('=== INICIANDO ELIMINACIÓN DE USUARIO ===');
-    console.log('Usuario ID:', u.usuarioId);
-    console.log('Nombre:', u.nombreUsuario);
-    this.usuarioService.eliminarUsuario(u.usuarioId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (result) => {
-          console.log('=== ELIMINACIÓN EXITOSA ===', result);
-          this.loadUsuarios();
-          this.messageService.add({ severity: 'success', summary: 'Eliminado', detail: 'Usuario eliminado' });
-          onConfirm();
-          this.cdr?.detectChanges();
-        },
-        error: (err) => {
-          console.error('=== ERROR ELIMINANDO USUARIO ===', err);
-          console.error('Status:', err.status);
-          console.error('Message:', err.message);
-          console.error('Error body:', err.error);
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.mensaje || err?.error?.message || err?.message || 'Error al eliminar usuario' });
-          this.cdr?.detectChanges();
-        }
-      });
-  }
+  /**
+   * Activa o desactiva un usuario.
+   */
+  toggleEstado(usuario: Usuario): void {
+    const nuevoEstado = !usuario.activo;
+    const accion = nuevoEstado ? 'activado' : 'desactivado';
 
-  toggle(u: Usuario): void {
-    const newActivo = !u.activo;
     const payload = {
-      nombreUsuario: u.nombreUsuario || '',
-      correo: u.correo || '',
-      telefono: u.telefono || '',
-      rolId: u.rolId || 1,
-      activo: newActivo
+      nombreUsuario: usuario.nombreUsuario || '',
+      correo: usuario.correo || '',
+      telefono: usuario.telefono || '',
+      rolId: usuario.rolId || 1,
+      activo: nuevoEstado
     };
-    console.log('Toggle payload:', JSON.stringify(payload));
-    this.usuarioService.actualizarUsuario(u.usuarioId, payload)
+
+    this.usuarioService.actualizarUsuario(usuario.usuarioId!, payload)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.loadUsuarios();
-          this.messageService.add({ severity: 'info', summary: newActivo ? 'Activado' : 'Desactivado', detail: `${u.nombreUsuario} ${newActivo ? 'activado' : 'desactivado'}` });
-          this.cdr?.detectChanges();
+          this.cargarUsuarios();
+          this.mostrarMensaje('success', 'Éxito', `Usuario ${accion} correctamente`);
         },
-        error: (err) => {
-          console.error('Error toggle usuario:', err);
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al cambiar estado' });
-          this.cdr?.detectChanges();
+        error: (error) => {
+          console.error('Error al cambiar estado:', error);
+          this.mostrarMensaje('error', 'Error', 'No se pudo cambiar el estado');
         }
       });
+  }
+
+  /**
+   * Obtiene los detalles de un usuario por ID.
+   */
+  obtenerDetalle(usuarioId: number): Promise<Usuario | null> {
+    return new Promise((resolve) => {
+      this.usuarioService.obtenerPorId(usuarioId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (usuario) => {
+            resolve(usuario);
+          },
+          error: (error) => {
+            console.error('Error al obtener detalle:', error);
+            this.mostrarMensaje('error', 'Error', 'No se pudo cargar los detalles');
+            resolve(null);
+          }
+        });
+    });
+  }
+
+  /**
+   * Elimina un usuario.
+   */
+  eliminar(usuario: Usuario): void {
+    this.usuarioService.eliminarUsuario(usuario.usuarioId!)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.cargarUsuarios();
+          this.mostrarMensaje('success', 'Eliminado', 'Usuario eliminado correctamente');
+        },
+        error: (error) => {
+          console.error('Error al eliminar:', error);
+          this.mostrarMensaje('error', 'Error', 'No se pudo eliminar el usuario');
+        }
+      });
+  }
+
+  // ============================================================
+  // PROPIEDADES (compatibilidad con código existente)
+  // ============================================================
+  
+  private usuariosSubject = new Subject<Usuario[]>();
+  usuarios$ = this.usuariosSubject.asObservable();
+
+  // ============================================================
+  // MÉTODOS PRIVADOS
+  // ============================================================
+  
+  private crear(datos: Partial<Usuario>): void {
+    this.usuarioService.insertar(datos)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.cargarUsuarios();
+          this.mostrarMensaje('success', 'Creado', 'Usuario creado exitosamente');
+        },
+        error: (error) => {
+          console.error('Error al crear:', error);
+          this.mostrarMensaje('error', 'Error', 'No se pudo crear el usuario');
+        }
+      });
+  }
+
+  private actualizar(datos: Partial<Usuario>): void {
+    if (!datos.usuarioId) return;
+
+    this.usuarioService.actualizarUsuario(datos.usuarioId, datos)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.cargarUsuarios();
+          this.mostrarMensaje('success', 'Actualizado', 'Usuario actualizado exitosamente');
+        },
+        error: (error) => {
+          console.error('Error al actualizar:', error);
+          this.mostrarMensaje('error', 'Error', 'No se pudo actualizar el usuario');
+        }
+      });
+  }
+
+  private mostrarMensaje(severity: 'success' | 'error' | 'warn' | 'info', summary: string, detail: string): void {
+    this.messageService.add({ severity, summary, detail });
+    this.cdr?.detectChanges();
   }
 }
