@@ -204,10 +204,6 @@
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-color);
-  margin: 0 0 10px;
-}
-
-.dashboard-section-header .dashboard-section-title {
   margin: 0;
 }
 
@@ -255,193 +251,64 @@
   gap: 8px;
 }
 
-.dashboard-citas-list {
+.dashboard-citas-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
+  gap: 16px;
+  padding: 12px;
   background: var(--surface-section);
   border-radius: 8px;
 }
 
-.dashboard-citas-list {
+.dashboard-citas-time {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  min-width: 60px;
 }
 
-.dashboard-citas-list {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  background: var(--surface-section);
-  border-radius: 8px;
+.dashboard-citas-hora {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary-color);
 }
 
-.dashboard-citas-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.dashboard-citas-fecha {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
 }
 
-.dashboard-citas-list {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  background: var(--surface-section);
-  border-radius: 8px;
-}
-
-.dashboard-citas-list {
+.dashboard-citas-info {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 
-.dashboard-citas-list {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  background: var(--surface-section);
-  border-radius: 8px;
+.dashboard-citas-paciente {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-color);
 }
 
-.dashboard-citas-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.dashboard-citas-doctor {
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
 }
 
-.dashboard-citas-list {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  background: var(--surface-section);
-  border-radius: 8px;
+.dashboard-citas-room {
+  background: transparent;
+  border: 1px solid var(--surface-border);
+  color: var(--primary-color);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: all 0.2s;
 }
 
-.dashboard-citas-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.dashboard-citas-list {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  background: var(--surface-section);
-  border-radius: 8px;
-}
-
-.dashboard-citas-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.dashboard-citas-list {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  background: var(--surface-section);
-  border-radius: 8px;
-}
-
-.dashboard-citas-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.dashboard-citas-list {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  background: var(--surface-section);
-  border-radius: 8px;
-}
-
-.dashboard-citas-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.dashboard-citas-list {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  background: var(--surface-section);
-  border-radius: 8px;
-}
-
-.dashboard-citas-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.dashboard-citas-list {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  background: var(--surface-section);
-  border-radius: 8px;
-}
-
-.dashboard-citas-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.dashboard-citas-list {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  background: var(--surface-section);
-  border-radius: 8px;
-}
-
-.dashboard-citas-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.dashboard-citas-list {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  background: var(--surface-section);
-  border-radius: 8px;
-}
-
-.dashboard-citas-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.dashboard-citas-list {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  background: var(--surface-section);
-  border-radius: 8px;
+.dashboard-citas-room:hover {
+  background: var(--primary-bg);
+  border-color: var(--primary-color);
 }
 
 /* ===== RESPONSIVE ===== */
@@ -479,7 +346,7 @@
     grid-template-columns: 1fr;
   }
   
-  .dashboard-citas-list {
+  .dashboard-citas-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
