@@ -1,7 +1,15 @@
-<p-toolbar>
-  <ng-template #start><h2 class="m-0"><i class="pi pi-user"></i> Gestión de Doctores</h2></ng-template>
-  <ng-template #end><p-button label="Nuevo Doctor" icon="pi pi-plus" (onClick)="openDoctorDialog()" /></ng-template>
-</p-toolbar>
+<div class="page-header-container">
+  <div class="page-header-left">
+    <div class="page-header-icon">
+      <i class="pi pi-user"></i>
+    </div>
+    <div class="page-header-text">
+      <h2>Doctores</h2>
+      <p>Gestión de doctores del sistema</p>
+    </div>
+  </div>
+  <p-button label="Nuevo Doctor" icon="pi pi-plus" (onClick)="openDoctorDialog()" />
+</div>
 
 <!-- Search & Filter Bar -->
 <div class="doc-toolbar">

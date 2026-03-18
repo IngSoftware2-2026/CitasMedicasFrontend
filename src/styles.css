@@ -367,3 +367,46 @@ body {
 .mod-empty p { font-size: 1rem; font-weight: 600; color: var(--text-color); }
 .mod-empty span { font-size: 0.85rem; color: var(--text-color-secondary); }
 
+/* ===== PAGE HEADER (Roles style) ===== */
+.page-header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--card-radius);
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+
+.page-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.page-header-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #1a56db 0%, #3b82f6 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.25rem;
+}
+
+.page-header-text h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.page-header-text p {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+  margin: 4px 0 0;
+}
+

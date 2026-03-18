@@ -1,7 +1,15 @@
-<p-toolbar>
-  <ng-template #start><h2 class="m-0"><i class="pi pi-calendar"></i> Citas</h2></ng-template>
-  <ng-template #end><p-button label="Nueva Cita" icon="pi pi-plus" (onClick)="openCitaDialog()" /></ng-template>
-</p-toolbar>
+<div class="page-header-container">
+  <div class="page-header-left">
+    <div class="page-header-icon">
+      <i class="pi pi-calendar"></i>
+    </div>
+    <div class="page-header-text">
+      <h2>Citas</h2>
+      <p>Gestión de citas médicas</p>
+    </div>
+  </div>
+  <p-button label="Nueva Cita" icon="pi pi-plus" (onClick)="openCitaDialog()" />
+</div>
 
 <div class="mod-stats mod-stats-4">
   <div class="mod-stat-item">

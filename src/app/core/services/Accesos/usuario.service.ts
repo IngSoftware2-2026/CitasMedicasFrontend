@@ -78,13 +78,11 @@ export class UsuarioService extends ConexionService {
    */
   insertar(datos: Partial<Usuario>): Observable<Usuario> {
     const payload = {
-      usuarioId: 0,
       nombreUsuario: datos.nombreUsuario || '',
       correo: datos.correo || '',
       telefono: datos.telefono || '',
-      claveHash: datos.clave ? this.convertirStringABase64(datos.clave) : null,
-      rolId: datos.rolId ?? 1,
-      activo: datos.activo ?? true
+      clave: datos.clave || '',
+      rolId: datos.rolId ?? 1
     };
     console.log('Payload insertar:', JSON.stringify(payload));
     return this.crear<Usuario>('/Accesos/Usuarios/Insertar', payload).pipe(
@@ -112,7 +110,6 @@ export class UsuarioService extends ConexionService {
       nombreUsuario: datos.nombreUsuario || '',
       correo: datos.correo || '',
       telefono: datos.telefono || '',
-      claveHash: datos.clave ? this.convertirStringABase64(datos.clave) : null,
       rolId: datos.rolId ?? 1,
       activo: datos.activo ?? true
     };
@@ -130,15 +127,6 @@ export class UsuarioService extends ConexionService {
     );
   }
 
-  private convertirStringABase64(cadena: string): string {
-    return btoa(cadena);
-  }
-
-  /**
-   * Elimina un usuario del sistema.
-   * @param id - ID del usuario a eliminar
-   * @returns Observable con true si fue exitoso
-   */
   eliminarUsuario(id: number): Observable<boolean> {
     console.log('Eliminar usuario ID:', id);
     return this.eliminar<boolean>('/Accesos/Usuarios/Eliminar?usuarioId=' + id).pipe(

@@ -7,10 +7,10 @@ export interface Usuario {
   correo: string;
   telefono?: string;
   clave?: string;
-  claveHash?: string | null;
+  claveHash?: string;
   rolId: number;
   activo: boolean;
-  fechaCreacion: string;
+  fechaCreacion?: string;
 }
 
 /** Request para iniciar sesión */

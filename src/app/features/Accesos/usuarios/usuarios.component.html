@@ -1,14 +1,15 @@
-<p-toolbar>
-  <ng-template #start>
-    <div class="page-header">
-      <h2 class="m-0"><i class="pi pi-users"></i> Gestión de Usuarios</h2>
-      <span class="page-subtitle">Administrar usuarios del sistema</span>
+<div class="page-header-container">
+  <div class="page-header-left">
+    <div class="page-header-icon">
+      <i class="pi pi-users"></i>
     </div>
-  </ng-template>
-  <ng-template #end>
-    <p-button label="Nuevo Usuario" icon="pi pi-plus" styleClass="p-button-rounded p-button-blue" (onClick)="openUsuarioDialog()" />
-  </ng-template>
-</p-toolbar>
+    <div class="page-header-text">
+      <h2>Gestión de Usuarios</h2>
+      <p>Administrar usuarios del sistema</p>
+    </div>
+  </div>
+  <p-button label="Nuevo Usuario" icon="pi pi-plus" styleClass="p-button-rounded p-button-blue" (onClick)="openUsuarioDialog()" />
+</div>
 
 <div class="usuarios-filters">
   <p-iconfield class="usuarios-search">

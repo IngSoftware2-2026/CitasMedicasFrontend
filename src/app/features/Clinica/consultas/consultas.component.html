@@ -1,7 +1,15 @@
-<p-toolbar>
-  <ng-template #start><h2 class="m-0"><i class="pi pi-file-edit"></i> Consultas Medicas</h2></ng-template>
-  <ng-template #end><p-button label="Nueva Consulta" icon="pi pi-plus" (onClick)="openConsultaDialog()" /></ng-template>
-</p-toolbar>
+<div class="page-header-container">
+  <div class="page-header-left">
+    <div class="page-header-icon">
+      <i class="pi pi-file-edit"></i>
+    </div>
+    <div class="page-header-text">
+      <h2>Consultas Médicas</h2>
+      <p>Historial de consultas</p>
+    </div>
+  </div>
+  <p-button label="Nueva Consulta" icon="pi pi-plus" (onClick)="openConsultaDialog()" />
+</div>
 <div class="card-grid consulta-grid">
   @for (c of consultas; track c.consultaId) {
   <p-card styleClass="consulta-card">

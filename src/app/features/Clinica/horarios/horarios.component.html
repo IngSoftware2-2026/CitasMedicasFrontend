@@ -1,7 +1,15 @@
-<p-toolbar>
-  <ng-template #start><h2 class="m-0"><i class="pi pi-clock"></i> Horarios de Doctores</h2></ng-template>
-  <ng-template #end><p-button label="Nuevo Horario" icon="pi pi-plus" (onClick)="openHorarioDialog()" /></ng-template>
-</p-toolbar>
+<div class="page-header-container">
+  <div class="page-header-left">
+    <div class="page-header-icon">
+      <i class="pi pi-clock"></i>
+    </div>
+    <div class="page-header-text">
+      <h2>Horarios de Doctores</h2>
+      <p>Gestión de horarios</p>
+    </div>
+  </div>
+  <p-button label="Nuevo Horario" icon="pi pi-plus" (onClick)="openHorarioDialog()" />
+</div>
 @for (d of doctores; track d.medicoId) {
   @if (data.getHorariosDeDoctor(d.medicoId).length > 0) {
   <p-card styleClass="horario-group">

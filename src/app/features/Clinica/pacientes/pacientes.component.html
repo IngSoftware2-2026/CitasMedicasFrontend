@@ -1,7 +1,15 @@
-<p-toolbar>
-  <ng-template #start><h2 class="m-0"><i class="pi pi-users"></i> Pacientes</h2></ng-template>
-  <ng-template #end><p-button label="Nuevo Paciente" icon="pi pi-plus" (onClick)="openPacienteDialog()" /></ng-template>
-</p-toolbar>
+<div class="page-header-container">
+  <div class="page-header-left">
+    <div class="page-header-icon">
+      <i class="pi pi-users"></i>
+    </div>
+    <div class="page-header-text">
+      <h2>Pacientes</h2>
+      <p>Gestión de pacientes del sistema</p>
+    </div>
+  </div>
+  <p-button label="Nuevo Paciente" icon="pi pi-plus" (onClick)="openPacienteDialog()" />
+</div>
 
 <div class="mod-stats mod-stats-3">
   <div class="mod-stat-item">
