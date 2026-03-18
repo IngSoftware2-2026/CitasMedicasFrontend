@@ -1,8 +1,8 @@
 
-# 💙 MediCitas Pro
+# 💙 MediCitas
 
 Sistema web para la gestión integral de citas médicas desarrollado con **Angular 21** y **PrimeNG 21**.  
-Diseño moderno con **modo oscuro**, sistema de **autenticación por roles y permisos**, y UI completamente responsive.
+Diseño moderno con **modo oscuro**, sistema de **autenticación por roles y permisos**, UI completamente responsive y nuevo diseño de interfaz.
 
 ---
 
@@ -189,20 +189,34 @@ src/
 
 ### Login
 
-Pantalla de inicio de sesión con diseño split-screen:
+Pantalla de inicio de sesión con diseño moderno:
 
-* **Panel izquierdo:** Branding con logo SVG, descripción del sistema y features animadas con backdrop-blur
-* **Tarjeta de login:** Logo + título, campos de correo y contraseña con íconos, checkbox "Recordar sesión" (localStorage), enlace "¿Olvidaste tu contraseña?" (diálogo de recuperación), botón "Iniciar Sesión", enlace "Contacta al administrador" (diálogo con datos de contacto)
-* Fondo con gradiente azul-púrpura, diseño responsive
+* **Fondo degradado azul** con gradiente de #1e3a8a a #60a5fa
+* **Tarjeta blanca** centrada con sombra suave y bordes redondeados
+* **Logo** con ícono azul cuadrado y cruz blanca + "MediCitas" en bold
+* **Campos:** Usuario o Correo, Contraseña (con toggle ver/ocultar)
+* **Botón** "Iniciar Sesión" en azul #1a56db
+* **Footer:** "¿Olvidaste tu contraseña?" y "MediCitas © 2026"
 
 ### Dashboard
 
-Panel de resumen con:
+Panel de resumen completamente rediseñado:
 
-* Tarjetas de estadísticas (pacientes, doctores, citas, salas)
-* Tabla de citas recientes con avatares y tags de estado
-* Distribución de citas por estado
-* Títulos de features con gradiente decorativo
+* **Breadcrumb** "🏠 Inicio / Dashboard"
+* **Banner de usuario** con avatar, nombre, email y badge de rol
+* **4 tarjetas de estadísticas:** Citas Hoy, Solicitudes, Pacientes, Doctores
+* **Accesos Rápidos:** botones para Nueva Cita, Nuevo Paciente, Solicitudes, Usuarios
+* **Próximas Citas:** lista con hora, paciente, doctor y consultorio
+
+### Layout Principal
+
+Sidebar moderno con diseño limpio:
+
+* **Sidebar blanco** de 220px con borde derecho gris
+* **Logo** MediCitas con ícono azul y cruz blanca
+* **Secciones** "PRINCIPAL" y "GESTIÓN" con label gris uppercase
+* **Footer** con avatar azul, nombre de usuario, rol y botón logout rojo
+* **Responsive:** sidebar fijo en móvil con overlay y botón hamburguesa
 
 ### Módulos de gestión (tabla modernizada)
 
@@ -356,7 +370,7 @@ El frontend está diseñado para consumir una API REST conectada a **SQL Server*
 * **MockDataService** — Singleton con `providedIn: 'root'`, helpers de consulta y contadores de ID.
 * **Sidebar dinámico** — Menú filtrado por permisos del usuario autenticado con `AuthService.hasPermission()`.
 * **Dark mode** — Toggle persistente con CSS custom properties y tema Aura.
-* **Rama activa:** `modelos-organizacion-carpetas`.
+* **Rama activa:** `Bento_Japones`.
 * Asistencia de inteligencia artificial para desarrollo, diseño y documentación.
 
 ---
