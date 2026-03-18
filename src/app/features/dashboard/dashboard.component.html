@@ -1,111 +1,115 @@
-<h2><i class="pi pi-chart-bar"></i> Dashboard</h2>
+<!-- BREADCRUMB -->
+<div class="dashboard-breadcrumb">
+  <span>🏠 Inicio / Dashboard</span>
+</div>
 
-<div class="dashboard-grid">
-  <div class="dashboard-stat-card dashboard-stat-card--blue" (click)="navigateTo('pacientes')">
-    <div class="dashboard-stat-icon-wrap dashboard-stat-icon-wrap--blue"><i class="pi pi-users"></i></div>
-    <div class="dashboard-stat-text">
-      <span class="dashboard-stat-number">{{ totalPacientes }}</span>
-      <span class="dashboard-stat-label">Pacientes Activos</span>
-    </div>
-    <i class="pi pi-arrow-up-right dashboard-stat-arrow"></i>
-  </div>
-  <div class="dashboard-stat-card dashboard-stat-card--green" (click)="navigateTo('doctores')">
-    <div class="dashboard-stat-icon-wrap dashboard-stat-icon-wrap--green"><i class="pi pi-user"></i></div>
-    <div class="dashboard-stat-text">
-      <span class="dashboard-stat-number">{{ totalDoctores }}</span>
-      <span class="dashboard-stat-label">Doctores Activos</span>
-    </div>
-    <i class="pi pi-arrow-up-right dashboard-stat-arrow"></i>
-  </div>
-  <div class="dashboard-stat-card dashboard-stat-card--purple" (click)="navigateTo('citas')">
-    <div class="dashboard-stat-icon-wrap dashboard-stat-icon-wrap--purple"><i class="pi pi-calendar"></i></div>
-    <div class="dashboard-stat-text">
-      <span class="dashboard-stat-number">{{ citasConfirmadas }}</span>
-      <span class="dashboard-stat-label">Citas Confirmadas</span>
-    </div>
-    <i class="pi pi-arrow-up-right dashboard-stat-arrow"></i>
-  </div>
-  <div class="dashboard-stat-card dashboard-stat-card--orange" (click)="navigateTo('solicitudes')">
-    <div class="dashboard-stat-icon-wrap dashboard-stat-icon-wrap--orange"><i class="pi pi-clipboard"></i></div>
-    <div class="dashboard-stat-text">
-      <span class="dashboard-stat-number">{{ solicitudesPendientes }}</span>
-      <span class="dashboard-stat-label">Solicitudes Pendientes</span>
-    </div>
-    <i class="pi pi-arrow-up-right dashboard-stat-arrow"></i>
-  </div>
-  <div class="dashboard-stat-card dashboard-stat-card--teal" (click)="navigateTo('salas')">
-    <div class="dashboard-stat-icon-wrap dashboard-stat-icon-wrap--teal"><i class="pi pi-building"></i></div>
-    <div class="dashboard-stat-text">
-      <span class="dashboard-stat-number">{{ totalSalasActivas }}</span>
-      <span class="dashboard-stat-label">Salas Activas</span>
-    </div>
-    <i class="pi pi-arrow-up-right dashboard-stat-arrow"></i>
-  </div>
-  <div class="dashboard-stat-card dashboard-stat-card--pink" (click)="navigateTo('especialidades')">
-    <div class="dashboard-stat-icon-wrap dashboard-stat-icon-wrap--pink"><i class="pi pi-briefcase"></i></div>
-    <div class="dashboard-stat-text">
-      <span class="dashboard-stat-number">{{ totalEspecialidades }}</span>
-      <span class="dashboard-stat-label">Especialidades</span>
-    </div>
-    <i class="pi pi-arrow-up-right dashboard-stat-arrow"></i>
-  </div>
-  <div class="dashboard-stat-card dashboard-stat-card--indigo" (click)="navigateTo('admin')">
-    <div class="dashboard-stat-icon-wrap dashboard-stat-icon-wrap--indigo"><i class="pi pi-shield"></i></div>
-    <div class="dashboard-stat-text">
-      <span class="dashboard-stat-number">2</span>
-      <span class="dashboard-stat-label">Catálogo Permisos</span>
-    </div>
-    <i class="pi pi-arrow-up-right dashboard-stat-arrow"></i>
+<!-- HEADER -->
+<div class="dashboard-header">
+  <div class="dashboard-header-left">
+    <h1>Dashboard</h1>
+    <p class="dashboard-subtitle">Resumen del sistema</p>
   </div>
 </div>
 
-<div class="dashboard-bottom-section">
-  <p-card styleClass="dashboard-meter-card">
-    <div class="dashboard-distribution-section">
-      <div class="dashboard-distribution-header">
-        <h3><i class="pi pi-chart-pie"></i> Distribución de Citas</h3>
-        <span class="dashboard-distribution-total">{{ totalCitas }} total</span>
-      </div>
-      <p-metergroup [value]="meterData" />
-      <div class="dashboard-distribution-breakdown">
-        @for (s of distributionStats; track s.label) {
-          <div class="dashboard-distribution-item">
-            <div class="dashboard-distribution-item-header">
-              <span class="dashboard-distribution-dot" [style.background]="s.color"></span>
-              <span class="dashboard-distribution-label">{{ s.label }}</span>
-              <span class="dashboard-distribution-count">{{ s.count }}</span>
-            </div>
-            <div class="dashboard-distribution-bar-track">
-              <div class="dashboard-distribution-bar-fill" [style.width.%]="s.pct" [style.background]="s.color"></div>
-            </div>
-            <span class="dashboard-distribution-percentage">{{ s.pct }}%</span>
-          </div>
-        }
-      </div>
+<!-- BANNER -->
+<div class="dashboard-banner">
+  <div class="dashboard-banner-user">
+    <div class="dashboard-banner-avatar">{{ userInitials }}</div>
+    <div class="dashboard-banner-info">
+      <span class="dashboard-banner-name">{{ userName }}</span>
+      <span class="dashboard-banner-email">{{ userEmail }}</span>
     </div>
-  </p-card>
+    <span class="dashboard-banner-badge">{{ userRole }}</span>
+  </div>
+  <div class="dashboard-banner-actions">
+    <button class="dashboard-banner-btn dashboard-banner-btn--config" (click)="goToConfig()">
+      <i class="pi pi-cog"></i> Configuración
+    </button>
+    <button class="dashboard-banner-btn dashboard-banner-btn--logout" (click)="logout()">
+      <i class="pi pi-sign-out"></i> Salir
+    </button>
+  </div>
+</div>
 
-  <p-card styleClass="dashboard-recent-card">
-    <div class="dashboard-recent-section">
-      <div class="dashboard-recent-header">
-        <h3><i class="pi pi-clock"></i> Citas Recientes</h3>
-      </div>
-      <div class="dashboard-recent-list">
-        @for (c of recentCitas; track c.citaId) {
-          <div class="dashboard-recent-item">
-            <p-avatar [label]="c.pacienteInitials" shape="circle" styleClass="dashboard-recent-avatar" />
-            <div class="dashboard-recent-info">
-              <span class="dashboard-recent-patient">{{ c.pacienteNombre }}</span>
-              <span class="dashboard-recent-doctor"><i class="pi pi-user"></i> {{ c.doctorNombre }}</span>
-            </div>
-            <div class="dashboard-recent-meta">
-              <span class="dashboard-recent-date"><i class="pi pi-calendar"></i> {{ c.inicio | date:'dd MMM' }}</span>
-              <span class="dashboard-recent-time">{{ c.inicio | date:'HH:mm' }}</span>
-            </div>
-            <p-tag [value]="c.estadoNombre" [severity]="data.getEstadoCitaSeverity(c.estadoCodigo)" [rounded]="true" />
-          </div>
-        }
-      </div>
+<!-- STATS -->
+<div class="dashboard-stats">
+  <div class="dashboard-stat">
+    <div class="dashboard-stat-icon dashboard-stat-icon--blue">
+      <i class="pi pi-calendar"></i>
     </div>
-  </p-card>
+    <div class="dashboard-stat-info">
+      <span class="dashboard-stat-number">3</span>
+      <span class="dashboard-stat-label">Citas Hoy</span>
+    </div>
+  </div>
+  <div class="dashboard-stat">
+    <div class="dashboard-stat-icon dashboard-stat-icon--orange">
+      <i class="pi pi-clipboard"></i>
+    </div>
+    <div class="dashboard-stat-info">
+      <span class="dashboard-stat-number">3</span>
+      <span class="dashboard-stat-label">Solicitudes</span>
+    </div>
+  </div>
+  <div class="dashboard-stat">
+    <div class="dashboard-stat-icon dashboard-stat-icon--purple">
+      <i class="pi pi-users"></i>
+    </div>
+    <div class="dashboard-stat-info">
+      <span class="dashboard-stat-number">8</span>
+      <span class="dashboard-stat-label">Pacientes</span>
+    </div>
+  </div>
+  <div class="dashboard-stat">
+    <div class="dashboard-stat-icon dashboard-stat-icon--green">
+      <i class="pi pi-user"></i>
+    </div>
+    <div class="dashboard-stat-info">
+      <span class="dashboard-stat-number">5</span>
+      <span class="dashboard-stat-label">Doctores</span>
+    </div>
+  </div>
+</div>
+
+<!-- ACCESOS RÁPIDOS -->
+<div class="dashboard-section">
+  <h2 class="dashboard-section-title">⚡ Accesos Rápidos</h2>
+  <div class="dashboard-quick-actions">
+    <button class="dashboard-quick-btn" routerLink="/citas">Nueva Cita</button>
+    <button class="dashboard-quick-btn" routerLink="/pacientes">Nuevo Paciente</button>
+    <button class="dashboard-quick-btn" routerLink="/solicitudes">Solicitudes</button>
+    <button class="dashboard-quick-btn" routerLink="/usuarios">Usuarios</button>
+  </div>
+</div>
+
+<!-- PRÓXIMAS CITAS -->
+<div class="dashboard-section">
+  <div class="dashboard-section-header">
+    <h2 class="dashboard-section-title">🕐 Próximas Citas</h2>
+    <a class="dashboard-section-link">Ver todas →</a>
+  </div>
+  <div class="dashboard-citas-list">
+    <div class="dashboard-cita-item">
+      <div class="dashboard-cita-time">
+        <span class="dashboard-cita-hora">09:00</span>
+        <span class="dashboard-cita-fecha">18/3/2026</span>
+      </div>
+      <div class="dashboard-cita-info">
+        <span class="dashboard-cita-paciente">Juan Carlos Mendoza Reyes</span>
+        <span class="dashboard-cita-doctor">Dr. Roberto García</span>
+      </div>
+      <button class="dashboard-cita-room">Consultorio 1 ›</button>
+    </div>
+    <div class="dashboard-cita-item">
+      <div class="dashboard-cita-time">
+        <span class="dashboard-cita-hora">10:00</span>
+        <span class="dashboard-cita-fecha">18/3/2026</span>
+      </div>
+      <div class="dashboard-cita-info">
+        <span class="dashboard-cita-paciente">María Elena Flores Vega</span>
+        <span class="dashboard-cita-doctor">Dr. Roberto García</span>
+      </div>
+      <button class="dashboard-cita-room">Consultorio 1 ›</button>
+    </div>
+  </div>
 </div>

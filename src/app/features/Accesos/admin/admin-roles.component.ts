@@ -37,7 +37,7 @@ import {
           </div>
           <div>
             <h2>Gestión de Roles</h2>
-            <p>Administra los roles y permisos del sistema</p>
+            <p>Administrar roles del sistema</p>
           </div>
         </div>
         <p-button label="Nuevo Rol" icon="pi pi-plus" styleClass="p-button-rounded p-button-white" (onClick)="openRolDialog()" />
@@ -49,9 +49,9 @@ import {
           <div class="role-card-header">
             <div class="role-info">
               <div class="role-avatar" [class]="getAvatarClass(r.codigoRol)">
-                <i class="pi pi-id-card"></i>
+                <i [class]="getRoleIcon(r.codigoRol)"></i>
               </div>
-              <div>
+              <div class="role-details">
                 <h3>{{ r.nombreRol || 'Sin nombre' }}</h3>
                 <span class="role-code">{{ r.codigoRol || 'SIN CÓDIGO' }}</span>
               </div>
@@ -60,6 +60,9 @@ import {
               <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info" size="small" pTooltip="Editar rol" tooltipPosition="top" (onClick)="openRolDialog(r)" />
               <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small" pTooltip="Eliminar rol" tooltipPosition="top" (onClick)="deleteRol(r)" />
             </div>
+          </div>
+          <div class="role-card-footer">
+            <span class="role-id">ID: {{ r.rolId }}</span>
           </div>
 
           <div class="role-card-body">
@@ -153,7 +156,19 @@ export class AdminRolesComponent {
     if (c.includes('DOCTOR') || c.includes('MEDICO')) return 'role-avatar--doctor';
     if (c.includes('RECEP') || c.includes('RECEPCION')) return 'role-avatar--recep';
     if (c.includes('PACIENTE')) return 'role-avatar--paciente';
+    if (c.includes('DEV')) return 'role-avatar--developer';
     return 'role-avatar--default';
+  }
+
+  getRoleIcon(codigo: string | undefined): string {
+    if (!codigo) return 'pi pi-user';
+    const c = codigo.toUpperCase();
+    if (c.includes('ADMIN')) return 'pi pi-shield';
+    if (c.includes('DOCTOR') || c.includes('MEDICO')) return 'pi pi-user-plus';
+    if (c.includes('RECEP') || c.includes('RECEPCION')) return 'pi pi-briefcase';
+    if (c.includes('PACIENTE')) return 'pi pi-heart';
+    if (c.includes('DEV')) return 'pi pi-code';
+    return 'pi pi-user';
   }
 
   rolTienePermiso(rid: number, pid: number) { return this.permisoRolOps.tienePermiso(rid, pid); }

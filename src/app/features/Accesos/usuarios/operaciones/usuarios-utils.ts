@@ -50,14 +50,42 @@ export class UsuariosUtils {
     return name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('');
   }
 
-  getRolAvatarColor(rolId: number): string {
+  getRolAvatarColor(rolId: number, nombreUsuario?: string): string {
+    const codigo = this.getRolCodigo(rolId);
+    if (nombreUsuario && nombreUsuario.toLowerCase().includes('doctor')) {
+      return '--purple-dark';
+    }
+    if (nombreUsuario && (nombreUsuario.toLowerCase().includes('admin') || nombreUsuario.toLowerCase().includes('ad'))) {
+      return '--purple';
+    }
+    if (nombreUsuario && nombreUsuario.toLowerCase().includes('recepcion')) {
+      return '--blue';
+    }
+    if (nombreUsuario && nombreUsuario.toLowerCase().includes('paciente')) {
+      return '--blue-dark';
+    }
+    if (nombreUsuario && nombreUsuario.toLowerCase().includes('dev')) {
+      return '--gray';
+    }
+    switch (codigo) {
+      case 'ADMIN': return '--purple';
+      case 'DOCTOR': return '--green';
+      case 'RECEP': return '--blue';
+      case 'PACIENTE': return '--blue-dark';
+      case 'DEV': return '--gray';
+      default: return '--indigo';
+    }
+  }
+
+  getRolBadgeClass(rolId: number): string {
     const codigo = this.getRolCodigo(rolId);
     switch (codigo) {
-      case 'ADMIN': return '--red';
-      case 'DOCTOR': return '--teal';
-      case 'RECEP': return '--amber';
-      case 'PACIENTE': return '--blue';
-      default: return '--indigo';
+      case 'ADMIN': return 'badge-admin';
+      case 'DOCTOR': return 'badge-doctor';
+      case 'RECEP': return 'badge-recep';
+      case 'PACIENTE': return 'badge-paciente';
+      case 'DEV': return 'badge-dev';
+      default: return 'badge-default';
     }
   }
 

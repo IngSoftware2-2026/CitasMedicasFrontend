@@ -26,6 +26,7 @@ import { Subject, takeUntil } from 'rxjs';
 })
 export class UsuariosComponent implements OnInit, OnDestroy {
   searchUsuario = '';
+  selectedRoleFilter: number | null = null;
   usuarioDialog = false;
   usuarioForm: Partial<Usuario> = {};
   isEditing = false;
@@ -36,6 +37,15 @@ export class UsuariosComponent implements OnInit, OnDestroy {
   adminCount = 0;
   filteredUsuariosList: Usuario[] = [];
   rolesList: any[] = [];
+
+  roleFilterOptions = [
+    { label: 'Todos', value: null },
+    { label: 'Administrador', value: 1 },
+    { label: 'Doctor', value: 2 },
+    { label: 'Recepcion', value: 3 },
+    { label: 'Paciente', value: 4 },
+    { label: 'DEVELOPER', value: 5 }
+  ];
 
   private destroy$ = new Subject<void>();
 
@@ -77,12 +87,25 @@ export class UsuariosComponent implements OnInit, OnDestroy {
   }
 
   updateCounts(): void {
-    const usuarios = this.crud.usuarios;
-    this.totalUsuarios = usuarios.length;
-    this.activosCount = usuarios.filter(u => u.activo).length;
-    this.inactivosCount = usuarios.filter(u => !u.activo).length;
-    this.adminCount = usuarios.filter(u => u.rolId === 1).length;
-    this.filteredUsuariosList = this.utils.filterUsuarios(this.searchUsuario, usuarios);
+    let usuarios = this.crud.usuarios;
+    
+    if (this.selectedRoleFilter !== null) {
+      usuarios = usuarios.filter(u => u.rolId === this.selectedRoleFilter);
+    }
+    
+    if (this.searchUsuario) {
+      const search = this.searchUsuario.toLowerCase();
+      usuarios = usuarios.filter(u => 
+        u.nombreUsuario?.toLowerCase().includes(search) ||
+        u.correo?.toLowerCase().includes(search)
+      );
+    }
+    
+    this.totalUsuarios = this.crud.usuarios.length;
+    this.activosCount = this.crud.usuarios.filter(u => u.activo).length;
+    this.inactivosCount = this.crud.usuarios.filter(u => !u.activo).length;
+    this.adminCount = this.crud.usuarios.filter(u => u.rolId === 1).length;
+    this.filteredUsuariosList = usuarios;
     this.rolesList = [...this.utils.roles];
   }
 
@@ -91,12 +114,18 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     this.updateCounts();
   }
 
+  onRoleFilterChange(value: number | null): void {
+    this.selectedRoleFilter = value;
+    this.updateCounts();
+  }
+
   getInitials(name: string) { return this.utils.getInitials(name); }
-  getRolAvatarColor(rolId: number) { return this.utils.getRolAvatarColor(rolId); }
+  getRolAvatarColor(rolId: number, nombreUsuario?: string) { return this.utils.getRolAvatarColor(rolId, nombreUsuario); }
 
   getRolNombre(rolId: number) { return this.utils.getRolNombre(rolId); }
   getRolCodigo(rolId: number) { return this.utils.getRolCodigo(rolId); }
   getRolSeverity(rolId: number) { return this.utils.getRolSeverity(rolId); }
+  getRolBadgeClass(rolId: number) { return this.utils.getRolBadgeClass(rolId); }
 
   openUsuarioDialog(u?: Usuario): void {
     this.isEditing = !!u;

@@ -1,11 +1,26 @@
 <p-toolbar>
-  <ng-template #start><h2 class="m-0"><i class="pi pi-user"></i> Gestión de Usuarios</h2></ng-template>
-  <ng-template #end><p-button label="Nuevo Usuario" icon="pi pi-plus" (onClick)="openUsuarioDialog()" /></ng-template>
+  <ng-template #start>
+    <div class="page-header">
+      <h2 class="m-0"><i class="pi pi-users"></i> Gestión de Usuarios</h2>
+      <span class="page-subtitle">Administrar usuarios del sistema</span>
+    </div>
+  </ng-template>
+  <ng-template #end>
+    <p-button label="Nuevo Usuario" icon="pi pi-plus" styleClass="p-button-rounded p-button-blue" (onClick)="openUsuarioDialog()" />
+  </ng-template>
 </p-toolbar>
+
+<div class="usuarios-filters">
+  <p-iconfield class="usuarios-search">
+    <p-inputicon styleClass="pi pi-search" />
+    <input pInputText [(ngModel)]="searchUsuario" (ngModelChange)="onSearchChange($event)" placeholder="Buscar" />
+  </p-iconfield>
+  <p-select [options]="roleFilterOptions" [(ngModel)]="selectedRoleFilter" (ngModelChange)="onRoleFilterChange($event)" optionLabel="label" optionValue="value" placeholder="Todos" [style]="{'minWidth': '150px'}" appendTo="body" />
+</div>
 
 <div class="usuarios-stats">
   <div class="usuarios-stat-item">
-    <div class="usuarios-stat-icon usuarios-stat-icon--accent"><i class="pi pi-users"></i></div>
+    <div class="usuarios-stat-icon usuarios-stat-icon--blue"><i class="pi pi-users"></i></div>
     <div class="usuarios-stat-info"><span class="usuarios-stat-number">{{ totalUsuarios }}</span><span class="usuarios-stat-label">Total</span></div>
   </div>
   <div class="usuarios-stat-item">
@@ -13,26 +28,17 @@
     <div class="usuarios-stat-info"><span class="usuarios-stat-number">{{ activosCount }}</span><span class="usuarios-stat-label">Activos</span></div>
   </div>
   <div class="usuarios-stat-item">
-    <div class="usuarios-stat-icon usuarios-stat-icon--red"><i class="pi pi-ban"></i></div>
+    <div class="usuarios-stat-icon usuarios-stat-icon--red"><i class="pi pi-times-circle"></i></div>
     <div class="usuarios-stat-info"><span class="usuarios-stat-number">{{ inactivosCount }}</span><span class="usuarios-stat-label">Inactivos</span></div>
   </div>
   <div class="usuarios-stat-item">
-    <div class="usuarios-stat-icon usuarios-stat-icon--purple"><i class="pi pi-shield"></i></div>
+    <div class="usuarios-stat-icon usuarios-stat-icon--purple"><i class="pi pi-users"></i></div>
     <div class="usuarios-stat-info"><span class="usuarios-stat-number">{{ adminCount }}</span><span class="usuarios-stat-label">Administradores</span></div>
   </div>
 </div>
 
 <div class="usuarios-table-card">
-  <p-table [value]="filteredUsuarios" [paginator]="true" [rows]="5" dataKey="usuarioId" [rowHover]="true" [rowsPerPageOptions]="[5, 10, 20]">
-    <ng-template #caption>
-      <div class="usuarios-table-caption">
-        <p-iconfield class="usuarios-search">
-          <p-inputicon styleClass="pi pi-search" />
-          <input pInputText [(ngModel)]="searchUsuario" (ngModelChange)="onSearchChange($event)" placeholder="Buscar por usuario, correo o rol..." />
-        </p-iconfield>
-        <span class="usuarios-table-count">{{ filteredUsuarios.length }} usuarios</span>
-      </div>
-    </ng-template>
+  <p-table [value]="filteredUsuarios" [paginator]="true" [rows]="5" dataKey="usuarioId" [rowHover]="true" [rowsPerPageOptions]="[5, 10, 20]" [showCurrentPageReport]="true" currentPageReportTemplate="{first} - {last} de {totalRecords}">
     <ng-template #header>
       <tr>
         <th style="width: 3rem">#</th>
@@ -50,19 +56,20 @@
         <td><span class="usuarios-row-number">{{ i + 1 }}</span></td>
         <td>
           <div class="usuarios-person">
-            <span [class]="'usuarios-avatar usuarios-avatar--' + getRolAvatarColor(u.rolId)">{{ getInitials(u.nombreUsuario) }}</span>
+            <span [class]="'usuarios-avatar usuarios-avatar--' + getRolAvatarColor(u.rolId, u.nombreUsuario)">{{ getInitials(u.nombreUsuario) }}</span>
             <span class="usuarios-person-name">{{ u.nombreUsuario }}</span>
           </div>
         </td>
-        <td><span class="usuarios-info-cell"><i class="pi pi-envelope"></i> {{ u.correo }}</span></td>
-        <td><span class="usuarios-info-cell"><i class="pi pi-phone"></i> {{ u.telefono || '—' }}</span></td>
-        <td><p-tag [value]="getRolNombre(u.rolId)" [severity]="getRolSeverity(u.rolId)" [rounded]="true" /></td>
-        <td><p-tag [value]="u.activo ? 'Activo' : 'Inactivo'" [severity]="u.activo ? 'success' : 'danger'" [rounded]="true" /></td>
-        <td><span class="usuarios-info-cell"><i class="pi pi-calendar"></i> {{ u.fechaCreacion }}</span></td>
+        <td><span class="usuarios-info-cell">{{ u.correo }}</span></td>
+        <td><span class="usuarios-info-cell">{{ u.telefono || '—' }}</span></td>
+        <td><span class="usuarios-badge usuarios-badge--rol" [class]="'usuarios-badge--' + getRolBadgeClass(u.rolId)">{{ getRolNombre(u.rolId) }}</span></td>
+        <td><span class="usuarios-badge usuarios-badge--estado" [class]="u.activo ? 'usuarios-badge--activo' : 'usuarios-badge--inactivo'">{{ u.activo ? 'Activo' : 'Inactivo' }}</span></td>
+        <td><span class="usuarios-info-cell">{{ u.fechaCreacion }}</span></td>
         <td>
           <div class="usuarios-actions">
+            <button class="usuarios-action-btn usuarios-action-btn--view" pTooltip="Ver Detalle" tooltipPosition="top"><i class="pi pi-id-card"></i></button>
             <button class="usuarios-action-btn usuarios-action-btn--edit" pTooltip="Editar" tooltipPosition="top" (click)="openUsuarioDialog(u)"><i class="pi pi-pencil"></i></button>
-            <button class="usuarios-action-btn usuarios-action-btn--warn" [pTooltip]="u.activo ? 'Desactivar' : 'Activar'" tooltipPosition="top" (click)="toggleUsuarioActivo(u)"><i [class]="u.activo ? 'pi pi-eye-slash' : 'pi pi-eye'"></i></button>
+            <button class="usuarios-action-btn" [class]="u.activo ? 'usuarios-action-btn--danger' : 'usuarios-action-btn--success'" [pTooltip]="u.activo ? 'Desactivar' : 'Activar'" tooltipPosition="top" (click)="toggleUsuarioActivo(u)"><i [class]="u.activo ? 'pi pi-eye-slash' : 'pi pi-eye'"></i></button>
           </div>
         </td>
       </tr>

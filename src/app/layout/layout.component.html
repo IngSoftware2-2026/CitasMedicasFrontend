@@ -1,34 +1,64 @@
 <p-toast />
 <p-confirmDialog />
 
-<div class="app-layout" [class.collapsed]="barraLateralColapsada">
+<div class="app-layout">
+  <!-- Mobile Toggle -->
+  <button class="sidebar-toggle-mobile" (click)="toggleSidebar()">
+    <i class="pi pi-bars"></i>
+  </button>
+
+  <!-- Overlay -->
+  <div class="sidebar-overlay" [class.show]="sidebarAbierta" (click)="toggleSidebar()"></div>
+
   <!-- SIDEBAR -->
-  <aside class="sidebar">
+  <aside class="sidebar" [class.open]="sidebarAbierta">
     <div class="sidebar-brand">
-      <i class="pi pi-heart-fill"></i>
-      @if (!barraLateralColapsada) { <span>{{ title }}</span> }
+      <span class="brand-icon">+</span>
+      <span>MediCitas</span>
     </div>
+    
+    <div class="sidebar-section">
+      <span class="sidebar-section-title">PRINCIPAL</span>
+    </div>
+    
     <nav class="sidebar-nav">
-      @if (tienePermiso('VER_DASHBOARD')) { <a routerLink="/dashboard" routerLinkActive="active"><i class="pi pi-chart-bar"></i> @if (!barraLateralColapsada) { <span>Dashboard</span> }</a> }
-      @if (tienePermiso('GESTIONAR_PACIENTES')) { <a routerLink="/pacientes" routerLinkActive="active"><i class="pi pi-users"></i> @if (!barraLateralColapsada) { <span>Pacientes</span> }</a> }
-      @if (tienePermiso('GESTIONAR_DOCTORES')) { <a routerLink="/doctores" routerLinkActive="active"><i class="pi pi-user"></i> @if (!barraLateralColapsada) { <span>Doctores</span> }</a> }
-      @if (tienePermiso('VER_CITAS') || tienePermiso('GESTIONAR_CITAS')) { <a routerLink="/citas" routerLinkActive="active"><i class="pi pi-calendar"></i> @if (!barraLateralColapsada) { <span>Citas</span> }</a> }
-      @if (tienePermiso('GESTIONAR_SOLICITUDES')) { <a routerLink="/solicitudes" routerLinkActive="active"><i class="pi pi-clipboard"></i> @if (!barraLateralColapsada) { <span>Solicitudes</span> }</a> }
-      @if (tienePermiso('GESTIONAR_CATALOGOS')) { <a routerLink="/salas" routerLinkActive="active"><i class="pi pi-building"></i> @if (!barraLateralColapsada) { <span>Salas</span> }</a> }
-      @if (tienePermiso('GESTIONAR_CATALOGOS')) { <a routerLink="/especialidades" routerLinkActive="active"><i class="pi pi-briefcase"></i> @if (!barraLateralColapsada) { <span>Especialidades</span> }</a> }
-      @if (tienePermiso('GESTIONAR_ROLES')) { <a routerLink="/permisos" routerLinkActive="active"><i class="pi pi-lock"></i> @if (!barraLateralColapsada) { <span>Permisos</span> }</a> }
-      @if (tienePermiso('VER_CONSULTAS')) { <a routerLink="/consultas" routerLinkActive="active"><i class="pi pi-file-edit"></i> @if (!barraLateralColapsada) { <span>Consultas</span> }</a> }
-      @if (tienePermiso('GESTIONAR_CATALOGOS')) { <a routerLink="/horarios" routerLinkActive="active"><i class="pi pi-clock"></i> @if (!barraLateralColapsada) { <span>Horarios</span> }</a> }
-      @if (tienePermiso('GESTIONAR_USUARIOS')) { <a routerLink="/usuarios" routerLinkActive="active"><i class="pi pi-id-card"></i> @if (!barraLateralColapsada) { <span>Usuarios</span> }</a> }
-      @if (tienePermiso('GESTIONAR_ROLES')) { <a routerLink="/admin" routerLinkActive="active"><i class="pi pi-shield"></i> @if (!barraLateralColapsada) { <span>Administracion</span> }</a> }
+      @if (tienePermiso('VER_DASHBOARD')) { 
+        <a routerLink="/dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+          <i class="pi pi-chart-bar"></i> 
+          <span>Dashboard</span>
+        </a> 
+      }
+      
+      <div class="sidebar-section-inline">
+        <span class="sidebar-section-title">GESTIÓN</span>
+      </div>
+      
+      @if (tienePermiso('GESTIONAR_PACIENTES')) { <a routerLink="/pacientes" routerLinkActive="active" (click)="closeSidebarOnMobile()"><i class="pi pi-users"></i> <span>Pacientes</span></a> }
+      @if (tienePermiso('GESTIONAR_DOCTORES')) { <a routerLink="/doctores" routerLinkActive="active" (click)="closeSidebarOnMobile()"><i class="pi pi-user"></i> <span>Doctores</span></a> }
+      @if (tienePermiso('GESTIONAR_SOLICITUDES')) { <a routerLink="/solicitudes" routerLinkActive="active" (click)="closeSidebarOnMobile()"><i class="pi pi-clipboard"></i> <span>Solicitudes</span></a> }
+      @if (tienePermiso('VER_CITAS') || tienePermiso('GESTIONAR_CITAS')) { <a routerLink="/citas" routerLinkActive="active" (click)="closeSidebarOnMobile()"><i class="pi pi-calendar"></i> <span>Citas</span></a> }
+      @if (tienePermiso('GESTIONAR_USUARIOS')) { <a routerLink="/usuarios" routerLinkActive="active" (click)="closeSidebarOnMobile()"><i class="pi pi-id-card"></i> <span>Usuarios</span></a> }
+      @if (tienePermiso('GESTIONAR_ROLES')) { <a routerLink="/admin" routerLinkActive="active" (click)="closeSidebarOnMobile()"><i class="pi pi-shield"></i> <span>Roles</span></a> }
+      @if (tienePermiso('GESTIONAR_CATALOGOS')) { <a routerLink="/salas" routerLinkActive="active" (click)="closeSidebarOnMobile()"><i class="pi pi-building"></i> <span>Salas</span></a> }
+      @if (tienePermiso('GESTIONAR_CATALOGOS')) { <a routerLink="/especialidades" routerLinkActive="active" (click)="closeSidebarOnMobile()"><i class="pi pi-briefcase"></i> <span>Especialidades</span></a> }
+      @if (tienePermiso('GESTIONAR_ROLES')) { <a routerLink="/permisos" routerLinkActive="active" (click)="closeSidebarOnMobile()"><i class="pi pi-lock"></i> <span>Permisos</span></a> }
+      @if (tienePermiso('VER_CONSULTAS')) { <a routerLink="/consultas" routerLinkActive="active" (click)="closeSidebarOnMobile()"><i class="pi pi-file-edit"></i> <span>Consultas</span></a> }
+      @if (tienePermiso('GESTIONAR_CATALOGOS')) { <a routerLink="/horarios" routerLinkActive="active" (click)="closeSidebarOnMobile()"><i class="pi pi-clock"></i> <span>Horarios</span></a> }
+      <a routerLink="/configuraciones" routerLinkActive="active" (click)="closeSidebarOnMobile()"><i class="pi pi-cog"></i> <span>Configuración</span></a>
     </nav>
+    
     <div class="sidebar-footer">
-      <button class="sidebar-theme-toggle" (click)="tema.cambiar()" [attr.title]="tema.estaOscuro() ? 'Modo claro' : 'Modo oscuro'">
-        <i class="pi" [class.pi-moon]="!tema.estaOscuro()" [class.pi-sun]="tema.estaOscuro()"></i>
-        @if (!barraLateralColapsada) { <span>{{ tema.estaOscuro() ? 'Modo claro' : 'Modo oscuro' }}</span> }
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar">{{ userInitials }}</div>
+        <div class="sidebar-user-info">
+          <span class="sidebar-user-name">{{ userName }}</span>
+          <span class="sidebar-user-role">{{ userRole }}</span>
+        </div>
+      </div>
+      <button class="sidebar-logout" (click)="cerrarSesion()">
+        <i class="pi pi-sign-out"></i> 
+        <span>Cerrar Sesión</span>
       </button>
-      <button class="sidebar-toggle" (click)="barraLateralColapsada = !barraLateralColapsada"><i class="pi" [class.pi-angle-left]="!barraLateralColapsada" [class.pi-angle-right]="barraLateralColapsada"></i></button>
-      <button class="sidebar-logout" (click)="cerrarSesion()"><i class="pi pi-sign-out"></i> @if (!barraLateralColapsada) { <span>Cerrar Sesion</span> }</button>
     </div>
   </aside>
 

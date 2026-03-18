@@ -15,8 +15,19 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 export class LayoutComponent {
   title = 'MediCitas Pro';
   barraLateralColapsada = false;
+  sidebarAbierta = false;
 
   constructor(private auth: AuthService, public tema: ThemeService) {}
+
+  toggleSidebar(): void {
+    this.sidebarAbierta = !this.sidebarAbierta;
+  }
+
+  closeSidebarOnMobile(): void {
+    if (window.innerWidth <= 1200) {
+      this.sidebarAbierta = false;
+    }
+  }
 
   tienePermiso(_permiso: string): boolean {
     return true;
@@ -28,6 +39,23 @@ export class LayoutComponent {
 
   get estaOscuro(): boolean {
     return this.tema.estaOscuro();
+  }
+
+  get userName(): string {
+    return localStorage.getItem('nombreUsuario') || 'admin3';
+  }
+
+  get userRole(): string {
+    return localStorage.getItem('rolNombre') || 'Administrador';
+  }
+
+  get userInitials(): string {
+    const name = this.userName;
+    return name.charAt(0).toUpperCase();
+  }
+
+  get userEmail(): string {
+    return localStorage.getItem('correo') || 'admin@medicitas.hn';
   }
 
   cambiarTema(): void {

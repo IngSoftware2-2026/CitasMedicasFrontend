@@ -17,6 +17,11 @@ export class LoginComponent {
   loginUser = 'admin2';
   loginPass = 'admin123';
   loginError = '';
+  showPassword = false;
+
+  togglePassword(): void {
+    this.showPassword = !this.showPassword;
+  }
 
   login(): void {
     if (!this.loginUser || !this.loginPass) {

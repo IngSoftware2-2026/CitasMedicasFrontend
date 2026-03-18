@@ -13,6 +13,7 @@ import { ConsultasComponent } from './features/Clinica/consultas/consultas.compo
 import { HorariosComponent } from './features/Clinica/horarios/horarios.component';
 import { AdminComponent } from './features/Accesos/admin/admin.component';
 import { UsuariosComponent } from './features/Accesos/usuarios/usuarios.component';
+import { ConfiguracionesComponent } from './features/Accesos/configuraciones/configuraciones.component';
 import { authGuard } from './core/guards/auth.guard';
 import { permissionGuard } from './core/guards/permission.guard';
 import { PERMISSIONS } from './core/constants/permissions';
@@ -31,6 +32,7 @@ const ROUTES = {
   HORARIOS: 'horarios',
   USUARIOS: 'usuarios',
   ADMIN: 'admin',
+  CONFIGURACIONES: 'configuraciones',
   EMPTY: ''
 } as const;
 
@@ -112,6 +114,12 @@ export const routes: Routes = [
         component: AdminComponent,
         canActivate: [permissionGuard],
         data: { permission: PERMISSIONS.GESTIONAR_ROLES }
+      },
+      {
+        path: ROUTES.CONFIGURACIONES,
+        component: ConfiguracionesComponent,
+        canActivate: [permissionGuard],
+        data: { permission: PERMISSIONS.VER_DASHBOARD }
       },
       { path: ROUTES.EMPTY, redirectTo: ROUTES.DASHBOARD, pathMatch: 'full' }
     ]

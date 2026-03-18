@@ -1,0 +1,105 @@
+<div class="config-breadcrumb">
+  <span>🏠 Inicio / Configuración</span>
+</div>
+
+<div class="config-header">
+  <h1>Configuración</h1>
+  <p class="config-subtitle">Administrar preferencias del sistema</p>
+</div>
+
+<div class="config-content">
+  <div class="config-section">
+    <h2 class="config-section-title">
+      <i class="pi pi-user"></i>
+      Información del Usuario
+    </h2>
+    <div class="config-card">
+      <div class="config-user-header">
+        <div class="config-user-avatar">{{ userInitials }}</div>
+        <div class="config-user-info">
+          <span class="config-user-name">{{ userName }}</span>
+          <span class="config-user-email">{{ userEmail }}</span>
+        </div>
+      </div>
+      <div class="config-fields">
+        <div class="config-field">
+          <label>Nombre de Usuario</label>
+          <span>{{ userName }}</span>
+        </div>
+        <div class="config-field">
+          <label>Correo Electrónico</label>
+          <span>{{ userEmail }}</span>
+        </div>
+        <div class="config-field">
+          <label>Rol</label>
+          <span class="config-badge">{{ userRole }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="config-section">
+    <h2 class="config-section-title">
+      <i class="pi pi-palette"></i>
+      Apariencia
+    </h2>
+    <div class="config-card">
+      <div class="config-option">
+        <div class="config-option-info">
+          <span class="config-option-title">Modo Oscuro</span>
+          <span class="config-option-desc">Cambiar entre modo claro y oscuro</span>
+        </div>
+        <label class="config-switch">
+          <input type="checkbox" [checked]="isDarkMode" (change)="toggleTheme()">
+          <span class="config-slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="config-section">
+    <h2 class="config-section-title">
+      <i class="pi pi-bell"></i>
+      Notificaciones
+    </h2>
+    <div class="config-card">
+      <div class="config-option">
+        <div class="config-option-info">
+          <span class="config-option-title">Notificaciones de Citas</span>
+          <span class="config-option-desc">Recibir alertas de nuevas citas</span>
+        </div>
+        <label class="config-switch">
+          <input type="checkbox" checked>
+          <span class="config-slider"></span>
+        </label>
+      </div>
+      <div class="config-option">
+        <div class="config-option-info">
+          <span class="config-option-title">Notificaciones de Solicitudes</span>
+          <span class="config-option-desc">Recibir alertas de nuevas solicitudes</span>
+        </div>
+        <label class="config-switch">
+          <input type="checkbox" checked>
+          <span class="config-slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="config-section">
+    <h2 class="config-section-title">
+      <i class="pi pi-info-circle"></i>
+      Información del Sistema
+    </h2>
+    <div class="config-card">
+      <div class="config-field">
+        <label>Versión de la Aplicación</label>
+        <span>1.0.0</span>
+      </div>
+      <div class="config-field">
+        <label>API Backend</label>
+        <span class="config-link">{{ apiUrl }}</span>
+      </div>
+    </div>
+  </div>
+</div>
