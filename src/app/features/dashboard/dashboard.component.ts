@@ -1,6 +1,5 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { DatePipe } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
@@ -13,7 +12,7 @@ import { DashboardStats, DashboardUtils } from './operaciones';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, DatePipe, CardModule, TableModule, TagModule, MeterGroupModule, AvatarModule],
+  imports: [RouterLink, CardModule, TableModule, TagModule, MeterGroupModule, AvatarModule],
   providers: [MockDataService, DashboardStats, DashboardUtils],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
