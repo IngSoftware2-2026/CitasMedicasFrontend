@@ -1,3 +1,5 @@
+<p-confirmDialog />
+
 <div class="page-header-container">
   <div class="page-header-left">
     <div class="page-header-icon">
@@ -5,7 +7,7 @@
     </div>
     <div class="page-header-text">
       <h2>Especialidades</h2>
-      <p>Gestión de especialidades</p>
+      <p>Gestión del catálogo de especialidades médicas</p>
     </div>
   </div>
   <p-button label="Nueva Especialidad" icon="pi pi-plus" (onClick)="openEspecialidadDialog()" />
@@ -14,7 +16,7 @@
 <div class="mod-stats mod-stats-3">
   <div class="mod-stat-item">
     <div class="mod-stat-icon --accent"><i class="pi pi-list"></i></div>
-    <div class="mod-stat-info"><span class="mod-stat-num">{{ filteredEspecialidades.length }}</span><span class="mod-stat-label">Total</span></div>
+    <div class="mod-stat-info"><span class="mod-stat-num">{{ especialidadesList.length }}</span><span class="mod-stat-label">Total</span></div>
   </div>
   <div class="mod-stat-item">
     <div class="mod-stat-icon --green"><i class="pi pi-check-circle"></i></div>
@@ -26,8 +28,16 @@
   </div>
 </div>
 
+<!-- Loading Indicator -->
+@if (loadingList) {
+  <div class="doc-loading" style="display:flex; align-items:center; gap:0.75rem; padding:2rem; justify-content:center; color:var(--text-color-secondary)">
+    <i class="pi pi-spin pi-spinner" style="font-size:1.5rem"></i>
+    <span>Cargando especialidades...</span>
+  </div>
+}
+
 <div class="mod-table-card">
-  <p-table [value]="filteredEspecialidades" [paginator]="true" [rows]="10" dataKey="especialidadId" [rowHover]="true">
+  <p-table [value]="filteredEspecialidades" [paginator]="true" [rows]="10" dataKey="especialidadId" [rowHover]="true" [loading]="loadingList">
     <ng-template #caption>
       <div class="mod-caption">
         <p-iconfield class="mod-search">
@@ -58,7 +68,7 @@
         <td>
           <div class="mod-actions">
             <button class="mod-action-btn --edit" pTooltip="Editar" tooltipPosition="top" (click)="openEspecialidadDialog(e)"><i class="pi pi-pencil"></i></button>
-            <button class="mod-action-btn --danger" pTooltip="Eliminar" tooltipPosition="top" (click)="deleteEspecialidad(e)"><i class="pi pi-trash"></i></button>
+            <button class="mod-action-btn --danger" pTooltip="Desactivar" tooltipPosition="top" (click)="deleteEspecialidad(e)"><i class="pi pi-trash"></i></button>
           </div>
         </td>
       </tr>
@@ -72,12 +82,28 @@
 </div>
 
 <!-- ESPECIALIDAD DIALOG -->
-<p-dialog header="{{ especialidadForm['especialidadId'] ? 'Editar' : 'Nueva' }} Especialidad" [(visible)]="especialidadDialog" [modal]="true" [style]="{width: '400px'}">
+<p-dialog header="{{ especialidadForm['especialidadId'] ? 'Editar' : 'Nueva' }} Especialidad" [(visible)]="especialidadDialog" [modal]="true" [style]="{width: '420px'}" styleClass="p-fluid">
   <div class="dialog-form">
-    <div class="field"><label>Nombre *</label><input pInputText [(ngModel)]="especialidadForm['nombre']" /></div>
+    <div class="field" [class.field-error]="formErrors['nombre']">
+      <label>Nombre *</label>
+      <input pInputText [(ngModel)]="especialidadForm['nombre']" placeholder="Ej: Cardiología" />
+      @if (formErrors['nombre']) {
+        <small class="error-msg"><i class="pi pi-exclamation-circle"></i> {{ formErrors['nombre'] }}</small>
+      }
+    </div>
+
+    @if (especialidadForm['especialidadId']) {
+      <div class="field">
+        <label>Estado</label>
+        <div style="margin-top: 0.5rem; display:flex; align-items:center; gap:0.5rem">
+          <p-checkbox [(ngModel)]="especialidadForm['activo']" [binary]="true"></p-checkbox>
+          <span style="font-size:0.9rem; color:var(--text-color-secondary)">{{ especialidadForm['activo'] ? 'Activa' : 'Inactiva' }}</span>
+        </div>
+      </div>
+    }
   </div>
-  <ng-template #footer>
+  <ng-template pTemplate="footer">
     <p-button label="Cancelar" icon="pi pi-times" [text]="true" (onClick)="especialidadDialog = false" />
-    <p-button label="Guardar" icon="pi pi-check" (onClick)="saveEspecialidad()" />
+    <p-button label="{{ saving ? 'Guardando...' : 'Guardar' }}" icon="{{ saving ? 'pi pi-spin pi-spinner' : 'pi pi-check' }}" (onClick)="saveEspecialidad()" [disabled]="saving" />
   </ng-template>
 </p-dialog>

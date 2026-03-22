@@ -16,6 +16,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { Doctor, DoctorDetalle, DoctorEspecialidad } from '../../../core/models/Clinica/Doctores/doctor.model';
 import { DoctoresService } from '../../../core/services/Clinica/doctores.service';
 import { UsuarioService } from '../../../core/services/Accesos/usuario.service';
+import { EspecialidadesService } from '../../../core/services/Clinica/especialidades.service';
+import { Especialidad } from '../../../core/models/Catalogos/especialidad.model';
 import { Usuario } from '../../../core/models/Accesos/usuario.model';
 
 @Component({
@@ -68,6 +70,7 @@ export class DoctoresComponent implements OnInit {
 
   // --- Fallback to mock data for others, but fetch real salas ---
   salasList: any[] = [];
+  especialidadesList: Especialidad[] = [];
 
   private colorClasses = ['color-indigo', 'color-teal', 'color-purple', 'color-blue', 'color-amber', 'color-rose'];
 
@@ -80,7 +83,7 @@ export class DoctoresComponent implements OnInit {
 
   get doctores() { return this.doctoresList; }
   get salas() { return this.salasList; }
-  get especialidades() { return this.data.especialidades; }
+  get especialidades() { return this.especialidadesList; }
 
   get filteredDoctores(): Doctor[] {
     const term = (this.searchDoctor || '').toLowerCase();
@@ -108,6 +111,7 @@ export class DoctoresComponent implements OnInit {
 
   private doctoresService = inject(DoctoresService);
   private usuarioService = inject(UsuarioService);
+  private especialidadesService = inject(EspecialidadesService);
   private cdr = inject(ChangeDetectorRef);
 
   constructor(
@@ -117,12 +121,29 @@ export class DoctoresComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.cargarEspecialidades();
     this.cargarDoctores();
     this.cargarUsuarios();
     this.cargarSalas();
   }
 
   // ==================== DATA LOADING ====================
+
+  cargarEspecialidades() {
+    this.especialidadesService.listar().subscribe({
+      next: (esps) => {
+        // Solo mostrar especialidades activas en los dropdowns
+        this.especialidadesList = esps.filter(e => e.activo);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('[DoctoresComponent] Error cargando especialidades:', err);
+        // Si falla el backend, fallback a MockData para no romper la UI
+        this.especialidadesList = this.data.especialidades;
+        this.cdr.detectChanges();
+      }
+    });
+  }
 
   cargarDoctores() {
     this.loadingList = true;
