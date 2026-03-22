@@ -1,3 +1,5 @@
+<p-confirmDialog />
+
 <div class="page-header-container">
   <div class="page-header-left">
     <div class="page-header-icon">
@@ -17,33 +19,63 @@
     <p-inputicon styleClass="pi pi-search" />
     <input pInputText [(ngModel)]="searchDoctor" placeholder="Buscar doctor por nombre o especialidad..." />
   </p-iconfield>
-  <select class="doc-filter-select" [(ngModel)]="filterEspecialidad">
-    <option value="">Todas las especialidades</option>
+
+  <!-- Search by ID -->
+  <div class="doc-search-id">
+    <input pInputText type="number" [(ngModel)]="searchDoctorId" placeholder="Médico ID" class="doc-id-input" min="1"
+      (keydown.enter)="buscarPorId()" />
+    <button class="doc-btn doc-btn--accent" (click)="buscarPorId()" [disabled]="searchingById">
+      @if (searchingById) {
+        <i class="pi pi-spin pi-spinner"></i>
+      } @else {
+        <i class="pi pi-search"></i>
+      }
+      Buscar por ID
+    </button>
+  </div>
+
+  <select class="doc-filter-select" [(ngModel)]="filterEspecialidadId" (ngModelChange)="onFilterEspecialidad()">
+    <option [ngValue]="null">Todas las especialidades</option>
     @for (e of especialidades; track e.especialidadId) {
-      <option [value]="e.nombre">{{ e.nombre }}</option>
+      <option [ngValue]="e.especialidadId">{{ e.nombre }}</option>
     }
   </select>
   <span class="mod-caption-count">{{ filteredDoctores.length }} doctores</span>
 </div>
 
+<!-- Loading Indicator -->
+@if (loadingList) {
+  <div class="doc-loading">
+    <i class="pi pi-spin pi-spinner"></i>
+    <span>Cargando doctores...</span>
+  </div>
+}
+
 <!-- Doctor Cards Grid -->
 <div class="doc-card-grid">
   @for (d of filteredDoctores; track d.medicoId) {
   <div class="doc-card" [class.doc-card--inactive]="!d.activo">
-    <!-- Gradient Banner -->
     <div [class]="'doc-card-banner ' + getColorClass(d.medicoId)"></div>
 
-    <!-- Avatar -->
+    <div class="doc-card-status-badge">
+      <span [class]="d.activo ? 'status-dot status-dot--active' : 'status-dot status-dot--inactive'"></span>
+      <span class="status-label">{{ d.activo ? 'Activo' : 'Inactivo' }}</span>
+    </div>
+
     <div class="doc-card-avatar-wrap">
       <div [class]="'doc-card-avatar ' + getColorClass(d.medicoId)">
         {{ getInitials(d.nombrePublico) }}
       </div>
     </div>
 
-    <!-- Body -->
     <div class="doc-card-body">
       <h4 class="doc-card-name">{{ d.nombrePublico }}</h4>
-      <span class="doc-card-specialty">{{ data.getDoctorEspecialidad(d.medicoId) }}</span>
+      <span class="doc-card-specialty">{{ getDoctorEspecialidadDisplay(d) }}</span>
+      <span class="doc-card-id"
+            pTooltip="Médico ID es el identificador auto-generado del doctor en la clínica. Es diferente del Usuario ID que vincula al usuario del sistema."
+            tooltipPosition="bottom">
+        Médico ID: {{ d.medicoId }}
+      </span>
 
       <div class="doc-card-stats">
         <span><i class="pi pi-users"></i> {{ getCitasCount(d.medicoId) }} pacientes</span>
@@ -51,21 +83,23 @@
       </div>
     </div>
 
-    <!-- Schedule Footer -->
     <div class="doc-card-schedule">
       <span><i class="pi pi-clock"></i> {{ getHorarioResumen(d.medicoId) }}</span>
       <span class="doc-card-schedule-sep">|</span>
-      <span><i class="pi pi-building"></i> {{ data.getDoctorSala(d.medicoId) }}</span>
+      <span><i class="pi pi-building"></i> {{ getDoctorSalaDisplay(d) }}</span>
     </div>
 
-    <!-- Actions -->
     <div class="doc-card-actions">
-      <button class="doc-btn doc-btn--outline" (click)="openDoctorDetail(d)"><i class="pi pi-eye"></i> Ver</button>
-      <button class="doc-btn doc-btn--filled" (click)="openDoctorDialog(d)"><i class="pi pi-pencil"></i> Editar</button>
+      <button class="doc-btn doc-btn--outline" (click)="openDoctorDetail(d)" pTooltip="Ver detalle completo">
+        <i class="pi pi-eye"></i> Ver
+      </button>
+      <button class="doc-btn doc-btn--filled" (click)="openDoctorDialog(d)" pTooltip="Editar información">
+        <i class="pi pi-pencil"></i> Editar
+      </button>
     </div>
   </div>
   }
-  @if (filteredDoctores.length === 0) {
+  @if (filteredDoctores.length === 0 && !loadingList) {
     <div class="doc-empty-state">
       <i class="pi pi-user-minus"></i>
       <p>No se encontraron doctores</p>
@@ -74,61 +108,327 @@
   }
 </div>
 
-<!-- DOCTOR DETAIL DIALOG -->
-<p-dialog header="Detalle del Doctor" [(visible)]="doctorDetailDialog" [modal]="true" [style]="{width: '600px'}">
+<!-- ==================== DOCTOR DETAIL DIALOG ==================== -->
+<p-dialog header="Detalle del Doctor" [(visible)]="doctorDetailDialog" [modal]="true" [style]="{width: '650px'}" styleClass="doc-detail-dialog">
   @if (detailDoctor) {
   <div class="doc-detail-header">
     <div [class]="'doc-detail-avatar ' + getColorClass(detailDoctor.medicoId)">
       {{ getInitials(detailDoctor.nombrePublico) }}
     </div>
-    <div>
+    <div class="doc-detail-header-info">
       <h3>{{ detailDoctor.nombrePublico }}</h3>
-      <p-tag [value]="data.getDoctorEspecialidad(detailDoctor.medicoId)" severity="info" [rounded]="true" />
+      <div class="doc-detail-meta">
+        <p-tag [value]="'Médico ID: ' + detailDoctor.medicoId" severity="secondary" [rounded]="true" />
+        <p-tag [value]="detailDoctor.activo ? 'Activo' : 'Inactivo'" [severity]="detailDoctor.activo ? 'success' : 'danger'" [rounded]="true" />
+      </div>
     </div>
   </div>
-  <div class="detail-grid">
-    <div class="detail-item"><label>Sala</label><p><i class="pi pi-building"></i> {{ data.getDoctorSala(detailDoctor.medicoId) }}</p></div>
-    <div class="detail-item"><label>Estado</label><p><p-tag [value]="detailDoctor.activo ? 'Activo' : 'Inactivo'" [severity]="detailDoctor.activo ? 'success' : 'danger'" [rounded]="true" /></p></div>
-    <div class="detail-item"><label>Duración Consulta</label><p>{{ detailDoctor.duracionDefaultMinutos }} min</p></div>
-    <div class="detail-item"><label>Intervalo</label><p>{{ detailDoctor.duracionIntervaloMinutos }} min</p></div>
-    <div class="detail-item"><label>Buffer</label><p>{{ detailDoctor.minutosBuffer }} min</p></div>
-    <div class="detail-item"><label>Pacientes Atendidos</label><p>{{ getCitasCount(detailDoctor.medicoId) }}</p></div>
-  </div>
-  <h4 class="doc-detail-schedule-title"><i class="pi pi-calendar"></i> Horarios</h4>
-  <div class="doc-detail-horarios">
-    @for (h of data.getHorariosDeDoctor(detailDoctor.medicoId); track h.horarioId) {
-      <div class="doc-detail-horario-item">
-        <span class="doc-detail-day">{{ getDiaSemana(h.diaSemana) }}</span>
-        <span class="doc-detail-time">{{ h.horaInicio }} - {{ h.horaFin }}</span>
+
+  @if (detailLoading) {
+    <div class="doc-detail-loading">
+      <i class="pi pi-spin pi-spinner"></i> Cargando detalles...
+    </div>
+  } @else {
+
+    <div class="detail-section">
+      <h4 class="detail-section-title"><i class="pi pi-info-circle"></i> Información General</h4>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>Sala Predeterminada</label>
+          <p><i class="pi pi-building"></i> {{ getDoctorSalaDisplay(detailDoctor) }}</p>
+        </div>
+        <div class="detail-item">
+          <label>Duración Consulta</label>
+          <p><i class="pi pi-clock"></i> {{ detailDoctor.duracionDefaultMinutos }} min</p>
+        </div>
+        <div class="detail-item">
+          <label>Intervalo</label>
+          <p><i class="pi pi-stopwatch"></i> {{ detailDoctor.duracionIntervaloMinutos }} min</p>
+        </div>
+        <div class="detail-item">
+          <label>Buffer</label>
+          <p><i class="pi pi-hourglass"></i> {{ detailDoctor.minutosBuffer }} min</p>
+        </div>
+        <div class="detail-item">
+          <label>Pacientes Atendidos</label>
+          <p><i class="pi pi-users"></i> {{ getCitasCount(detailDoctor.medicoId) }}</p>
+        </div>
+        <div class="detail-item">
+          <label>Calificación</label>
+          <p><i class="pi pi-star-fill" style="color:#f59e0b"></i> {{ getRating(detailDoctor.medicoId) }}</p>
+        </div>
       </div>
-    }
-    @if (data.getHorariosDeDoctor(detailDoctor.medicoId).length === 0) {
-      <p class="text-muted">Sin horarios registrados</p>
-    }
-  </div>
+    </div>
+
+    <div class="detail-section">
+      <h4 class="detail-section-title"><i class="pi pi-bookmark"></i> Especialidades</h4>
+      @if (detailDoctor.especialidades && detailDoctor.especialidades.length > 0) {
+        <div class="detail-especialidades">
+          @for (esp of detailDoctor.especialidades; track esp.especialidadId) {
+            <div class="detail-esp-chip" [class.is-principal]="esp.principal">
+              <i [class]="esp.principal ? 'pi pi-star-fill' : 'pi pi-tag'"></i>
+              <span>{{ esp.nombreEspecialidad || getEspecialidadNombre(esp.especialidadId) }}</span>
+              @if (esp.principal) {
+                <span class="principal-badge">Principal</span>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="text-muted" style="padding: 0.5rem 0"><i class="pi pi-info-circle" style="margin-right:0.5rem"></i>Sin especialidades registradas</p>
+      }
+    </div>
+
+    <div class="detail-section">
+      <h4 class="detail-section-title"><i class="pi pi-calendar"></i> Horarios</h4>
+      <div class="doc-detail-horarios">
+        @for (h of data.getHorariosDeDoctor(detailDoctor.medicoId); track h.horarioId) {
+          <div class="doc-detail-horario-item">
+            <span class="doc-detail-day">{{ getDiaSemana(h.diaSemana) }}</span>
+            <span class="doc-detail-time">{{ h.horaInicio }} - {{ h.horaFin }}</span>
+          </div>
+        }
+        @if (data.getHorariosDeDoctor(detailDoctor.medicoId).length === 0) {
+          <p class="text-muted">Sin horarios registrados</p>
+        }
+      </div>
+    </div>
+  }
   }
 </p-dialog>
 
-<!-- DOCTOR DIALOG -->
-<p-dialog header="{{ doctorForm['medicoId'] ? 'Editar' : 'Nuevo' }} Doctor" [(visible)]="doctorDialog" [modal]="true" [style]="{width: '550px'}">
-  <div class="dialog-form">
-    <div class="field"><label>Nombre Publico *</label><input pInputText [(ngModel)]="doctorForm['nombrePublico']" /></div>
-    <div class="form-row">
-      <div class="field"><label>Sala</label>
-        <select class="p-inputtext" [(ngModel)]="doctorForm['salaPredeterminadaId']">
-          <option [ngValue]="undefined">Sin sala</option>
-          @for (s of salas; track s.salaId) { <option [ngValue]="s.salaId">{{ s.nombreSala }}</option> }
-        </select>
+<!-- ==================== DOCTOR FORM DIALOG ==================== -->
+<p-dialog header="{{ doctorForm['medicoId'] ? 'Editar' : 'Nuevo' }} Doctor" [(visible)]="doctorDialog" [modal]="true" [style]="{width: '580px'}" styleClass="p-fluid doc-form-dialog">
+
+  @if (doctorForm['medicoId']) {
+    <div class="doc-tabs">
+      <div class="doc-tab" [class.active]="activeTab === 'general'" (click)="activeTab = 'general'">
+        <i class="pi pi-user"></i> Datos Generales
       </div>
-      <div class="field"><label>Duracion Default (min)</label><input pInputText type="number" [(ngModel)]="doctorForm['duracionDefaultMinutos']" /></div>
+      <div class="doc-tab" [class.active]="activeTab === 'especialidades'" (click)="activeTab = 'especialidades'">
+        <i class="pi pi-bookmark"></i> Especialidades
+        @if (doctorForm['especialidades']?.length) {
+          <span class="tab-badge">{{ doctorForm['especialidades'].length }}</span>
+        }
+      </div>
     </div>
-    <div class="form-row">
-      <div class="field"><label>Intervalo (min)</label><input pInputText type="number" [(ngModel)]="doctorForm['duracionIntervaloMinutos']" /></div>
-      <div class="field"><label>Buffer (min)</label><input pInputText type="number" [(ngModel)]="doctorForm['minutosBuffer']" /></div>
+  }
+
+  <!-- TAB: GENERAL -->
+  @if (activeTab === 'general' || !doctorForm['medicoId']) {
+    <div class="dialog-form">
+      <div class="field" [class.field-error]="formErrors['nombrePublico']">
+        <label>Nombre Público *</label>
+        <input pInputText [(ngModel)]="doctorForm['nombrePublico']" placeholder="Ej: Dr. Juan Pérez" />
+        @if (formErrors['nombrePublico']) {
+          <small class="error-msg"><i class="pi pi-exclamation-circle"></i> {{ formErrors['nombrePublico'] }}</small>
+        }
+      </div>
+
+      <div class="form-row">
+        <div class="field" style="flex:1" [class.field-error]="formErrors['usuarioId']">
+          <label>Usuario del Sistema *</label>
+          @if (!doctorForm['medicoId']) {
+            @if (!manualUsuarioEntry && usuarios.length > 0) {
+              <!-- DROPDOWN MODE -->
+              <select class="p-inputtext" [(ngModel)]="doctorForm['usuarioId']" style="width:100%">
+                <option [ngValue]="null">Seleccione un usuario...</option>
+                <!-- If there are unlinked users, show them first -->
+                @if (getAvailableUsuarios().length > 0) {
+                  @for (u of getAvailableUsuarios(); track u.usuarioId) {
+                    <option [ngValue]="u.usuarioId">{{ u.nombreUsuario }} — {{ u.correo }} (ID: {{ u.usuarioId }})</option>
+                  }
+                } @else {
+                  <!-- All active users are linked, show all anyway -->
+                  @for (u of getAllUsuarios(); track u.usuarioId) {
+                    <option [ngValue]="u.usuarioId">{{ u.nombreUsuario }} — {{ u.correo }} (ID: {{ u.usuarioId }})</option>
+                  }
+                }
+              </select>
+              @if (formErrors['usuarioId']) {
+                <small class="error-msg"><i class="pi pi-exclamation-circle"></i> {{ formErrors['usuarioId'] }}</small>
+              } @else {
+                <small class="help-text"><i class="pi pi-info-circle"></i> Un doctor se vincula a un usuario existente del sistema. <a class="link-toggle" (click)="toggleManualEntry()">¿Ingresar ID manualmente?</a></small>
+              }
+            } @else {
+              <!-- MANUAL ID MODE (fallback or user toggled) -->
+              <input pInputText type="number" [(ngModel)]="doctorForm['usuarioId']" style="width:100%" placeholder="Ingrese el Usuario ID" min="1" />
+              @if (formErrors['usuarioId']) {
+                <small class="error-msg"><i class="pi pi-exclamation-circle"></i> {{ formErrors['usuarioId'] }}</small>
+              } @else {
+                <small class="help-text"><i class="pi pi-info-circle"></i> Ingrese el ID de un usuario existente en Accesos &gt; Usuarios.
+                  @if (usuarios.length > 0) {
+                    <a class="link-toggle" (click)="toggleManualEntry()">Usar lista desplegable</a>
+                  }
+                </small>
+              }
+            }
+          } @else {
+            <!-- EXISTING DOCTOR: show user info read-only -->
+            <input pInputText [value]="'Usuario ID: ' + doctorForm['usuarioId']" disabled style="width:100%" />
+            <small class="help-text"><i class="pi pi-lock"></i> El usuario vinculado no puede cambiarse tras su creación</small>
+          }
+        </div>
+        <div class="field">
+          <label>Estado</label>
+          <div style="margin-top: 0.5rem; display:flex; align-items:center; gap:0.5rem">
+            <p-checkbox [(ngModel)]="doctorForm['activo']" [binary]="true"></p-checkbox>
+            <span style="font-size:0.9rem; color:var(--text-color-secondary)">{{ doctorForm['activo'] ? 'Activo' : 'Inactivo' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ID explanation for existing doctors -->
+      @if (doctorForm['medicoId']) {
+        <div class="id-explainer">
+          <i class="pi pi-id-card"></i>
+          <div>
+            <strong>Médico ID: {{ doctorForm['medicoId'] }}</strong>
+            <span>— identificador autogenerado del doctor en la clínica</span>
+          </div>
+        </div>
+      }
+
+      <div class="form-row">
+        <div class="field">
+          <label>Sala Predeterminada</label>
+          <select class="p-inputtext" [(ngModel)]="doctorForm['salaPredeterminadaId']">
+            <option [ngValue]="null">Sin sala</option>
+            @for (s of salas; track s.salaId) { <option [ngValue]="s.salaId">{{ s.nombreSala }}</option> }
+          </select>
+        </div>
+        <div class="field" [class.field-error]="formErrors['duracionDefaultMinutos']">
+          <label>Duración Default (min) *</label>
+          <input pInputText type="number" [(ngModel)]="doctorForm['duracionDefaultMinutos']" min="1" placeholder="30" />
+          @if (formErrors['duracionDefaultMinutos']) {
+            <small class="error-msg"><i class="pi pi-exclamation-circle"></i> {{ formErrors['duracionDefaultMinutos'] }}</small>
+          }
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="field" [class.field-error]="formErrors['duracionIntervaloMinutos']">
+          <label>Intervalo (min) *</label>
+          <input pInputText type="number" [(ngModel)]="doctorForm['duracionIntervaloMinutos']" min="1" placeholder="10" />
+          @if (formErrors['duracionIntervaloMinutos']) {
+            <small class="error-msg"><i class="pi pi-exclamation-circle"></i> {{ formErrors['duracionIntervaloMinutos'] }}</small>
+          }
+        </div>
+        <div class="field">
+          <label>Buffer (min)</label>
+          <input pInputText type="number" [(ngModel)]="doctorForm['minutosBuffer']" min="0" placeholder="0" />
+        </div>
+      </div>
+
+      <!-- ESPECIALIDADES PARA NUEVO DOCTOR (MÚLTIPLES) -->
+      @if (!doctorForm['medicoId']) {
+        <div class="creation-specialties-section" [class.field-error]="formErrors['especialidades']">
+          <h4 class="creation-esp-title">
+            <i class="pi pi-bookmark"></i> Especialidades *
+            <span class="creation-esp-count">{{ creationEspecialidades.length }} agregada{{ creationEspecialidades.length !== 1 ? 's' : '' }}</span>
+          </h4>
+
+          @if (formErrors['especialidades']) {
+            <small class="error-msg" style="margin-bottom:0.75rem"><i class="pi pi-exclamation-circle"></i> {{ formErrors['especialidades'] }}</small>
+          }
+
+          <!-- Added specialties list -->
+          @if (creationEspecialidades.length > 0) {
+            <div class="specialty-list" style="margin-bottom:1rem">
+              @for (esp of creationEspecialidades; track esp.especialidadId) {
+                <div class="specialty-item" [class.is-principal]="esp.principal">
+                  <div class="sp-info">
+                    <i [class]="esp.principal ? 'pi pi-star-fill sp-icon-principal' : 'pi pi-tag sp-icon'"></i>
+                    <span class="sp-name">{{ esp.nombre }}</span>
+                    @if (esp.principal) {
+                      <p-tag severity="success" value="Principal" [rounded]="true"></p-tag>
+                    }
+                  </div>
+                  <div class="sp-actions">
+                    @if (!esp.principal) {
+                      <button pButton icon="pi pi-star" class="p-button-text p-button-warning p-button-sm"
+                              (click)="setCreationPrincipal(esp)" pTooltip="Hacer Principal"
+                              style="padding: 0.25rem 0.5rem"></button>
+                    }
+                    <button pButton icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm"
+                            (click)="removeCreationEspecialidad(esp)" pTooltip="Quitar"
+                            style="padding: 0.25rem 0.5rem"></button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Add specialty selector -->
+          <div class="add-specialty-box">
+            <div class="field" style="flex:1; margin-bottom:0">
+              <label style="font-size:0.85rem">Añadir Especialidad</label>
+              <select class="p-inputtext" [(ngModel)]="newCreationEspId" style="width:100%; border-top-right-radius:0; border-bottom-right-radius:0">
+                <option [ngValue]="null">Seleccione...</option>
+                @for (e of getAvailableCreationEspecialidades(); track e.especialidadId) {
+                  <option [ngValue]="e.especialidadId">{{ e.nombre }}</option>
+                }
+              </select>
+            </div>
+            <button pButton icon="pi pi-plus" (click)="addCreationEspecialidad()" [disabled]="!newCreationEspId"
+                    label="Agregar" style="margin-bottom:0; border-top-left-radius:0; border-bottom-left-radius:0"></button>
+          </div>
+
+          <small class="help-text" style="margin-top:0.5rem">
+            <i class="pi pi-info-circle"></i> Un médico debe tener al menos una especialidad. La primera añadida se marca como principal automáticamente.
+            Se guardan en la tabla <strong>tbDoctorEspecialidades</strong>.
+          </small>
+        </div>
+      }
     </div>
-  </div>
-  <ng-template #footer>
-    <p-button label="Cancelar" icon="pi pi-times" [text]="true" (onClick)="doctorDialog = false" />
-    <p-button label="Guardar" icon="pi pi-check" (onClick)="saveDoctor()" />
+  }
+
+  <!-- TAB: ESPECIALIDADES (EDIT MODE) -->
+  @if (activeTab === 'especialidades' && doctorForm['medicoId']) {
+    <div class="dialog-form">
+      <div class="specialty-list">
+        @for (esp of doctorForm['especialidades'] || []; track esp.especialidadId) {
+          <div class="specialty-item" [class.is-principal]="esp.principal">
+             <div class="sp-info">
+                 <i [class]="esp.principal ? 'pi pi-star-fill sp-icon-principal' : 'pi pi-tag sp-icon'"></i>
+                 <span class="sp-name">{{ esp.nombreEspecialidad || getEspecialidadNombre(esp.especialidadId) }}</span>
+                 @if(esp.principal) { <p-tag severity="success" value="Principal" [rounded]="true"></p-tag> }
+             </div>
+             <div class="sp-actions">
+                 @if(!esp.principal) {
+                    <button pButton icon="pi pi-star" class="p-button-text p-button-warning p-button-sm" (click)="setPrincipal(esp)" pTooltip="Hacer Principal" style="padding: 0.25rem 0.5rem"></button>
+                 }
+                 <button pButton icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" (click)="removeSpecialty(esp)" [disabled]="(doctorForm['especialidades'] || []).length <= 1 || esp.principal" [pTooltip]="esp.principal ? 'No puede eliminar la principal' : 'Eliminar especialidad'" style="padding: 0.25rem 0.5rem"></button>
+             </div>
+          </div>
+        }
+        @if (!doctorForm['especialidades'] || doctorForm['especialidades'].length === 0) {
+          <div class="specialty-empty">
+            <i class="pi pi-info-circle"></i>
+            Este doctor aún no tiene especialidades asignadas. Use el selector de abajo para agregarle una.
+          </div>
+        }
+      </div>
+
+      <div class="add-specialty-box">
+        <div class="field" style="flex:1; margin-bottom:0">
+          <label style="font-size:0.85rem">Añadir Especialidad</label>
+          <select class="p-inputtext" [(ngModel)]="newEspecialidadId" style="width:100%; border-top-right-radius:0; border-bottom-right-radius:0">
+            <option [ngValue]="null">Seleccione...</option>
+            @for (e of getAvailableEspecialidades(); track e.especialidadId) {
+              <option [ngValue]="e.especialidadId">{{ e.nombre }}</option>
+            }
+          </select>
+        </div>
+        <button pButton icon="pi pi-plus" (click)="addSpecialty()" [disabled]="!newEspecialidadId" label="Agregar" style="margin-bottom:0; border-top-left-radius:0; border-bottom-left-radius:0"></button>
+      </div>
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button label="{{ activeTab === 'general' ? 'Cancelar' : 'Cerrar' }}" icon="pi pi-times" [text]="true" (click)="doctorDialog = false" />
+    @if (activeTab === 'general') {
+      <p-button label="{{ saving ? 'Guardando...' : 'Guardar' }}" icon="{{ saving ? 'pi pi-spin pi-spinner' : 'pi pi-check' }}" (click)="saveDoctor()" [disabled]="saving" />
+    }
   </ng-template>
 </p-dialog>
