@@ -1,34 +1,68 @@
 import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { AuthService } from '../core/services/auth.service';
-import { ThemeService } from '../core/services/theme.service';
+import { AuthService } from '../core/services/Accesos/auth.service';
+import { ThemeService } from '../core/shared/theme.service';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { MessageService, ConfirmationService } from 'primeng/api';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, ToastModule, ConfirmDialogModule],
-  providers: [MessageService, ConfirmationService],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, ToastModule, ConfirmDialogModule],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css'
 })
 export class LayoutComponent {
   title = 'MediCitas Pro';
-  sidebarCollapsed = false;
+  barraLateralColapsada = false;
+  sidebarAbierta = false;
 
-  constructor(private auth: AuthService, public theme: ThemeService) {}
+  constructor(private auth: AuthService, public tema: ThemeService) {}
 
-  can(permission: string): boolean {
-    return this.auth.hasPermission(permission);
+  toggleSidebar(): void {
+    this.sidebarAbierta = !this.sidebarAbierta;
+  }
+
+  closeSidebarOnMobile(): void {
+    if (window.innerWidth <= 1200) {
+      this.sidebarAbierta = false;
+    }
+  }
+
+  tienePermiso(_permiso: string): boolean {
+    return true;
+  }
+
+  get estaAutenticado(): boolean {
+    return this.auth.estaAutenticado();
+  }
+
+  get estaOscuro(): boolean {
+    return this.tema.isDark();
   }
 
   get userName(): string {
-    return this.auth.currentUser()?.nombreUsuario ?? '';
+    return localStorage.getItem('nombreUsuario') || 'admin3';
   }
 
-  logout(): void {
-    this.auth.logout();
+  get userRole(): string {
+    return localStorage.getItem('rolNombre') || 'Administrador';
+  }
+
+  get userInitials(): string {
+    const name = this.userName;
+    return name.charAt(0).toUpperCase();
+  }
+
+  get userEmail(): string {
+    return localStorage.getItem('correo') || 'admin@medicitas.hn';
+  }
+
+  cambiarTema(): void {
+    this.tema.toggle();
+  }
+
+  cerrarSesion(): void {
+    this.auth.cerrarSesion();
   }
 }

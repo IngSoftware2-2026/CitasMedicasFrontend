@@ -1,41 +1,128 @@
 import { Routes } from '@angular/router';
+import { LayoutComponent } from './layout/layout.component';
+import { LoginComponent } from './features/Accesos/login/login.component';
+import { DashboardComponent } from './features/dashboard/dashboard.component';
+import { PacientesComponent } from './features/Clinica/pacientes/pacientes.component';
+import { DoctoresComponent } from './features/Clinica/doctores/doctores.component';
+import { CitasComponent } from './features/Clinica/citas/citas.component';
+import { SolicitudesComponent } from './features/Clinica/solicitudes/solicitudes.component';
+import { SalasComponent } from './features/Catalogos/salas/salas.component';
+import { EspecialidadesComponent } from './features/Catalogos/especialidades/especialidades.component';
+import { PermisosComponent } from './features/Catalogos/permisos/permisos.component';
+import { ConsultasComponent } from './features/Clinica/consultas/consultas.component';
+import { HorariosComponent } from './features/Clinica/horarios/horarios.component';
+import { AdminComponent } from './features/Accesos/admin/admin.component';
+import { UsuariosComponent } from './features/Accesos/usuarios/usuarios.component';
+import { ConfiguracionesComponent } from './features/Accesos/configuraciones/configuraciones.component';
 import { authGuard } from './core/guards/auth.guard';
 import { permissionGuard } from './core/guards/permission.guard';
 import { PERMISSIONS } from './core/constants/permissions';
-import { LayoutComponent } from './layout/layout.component';
-import { LoginComponent } from './features/login/login.component';
-import { DashboardComponent } from './features/dashboard/dashboard.component';
-import { PacientesComponent } from './features/pacientes/pacientes.component';
-import { DoctoresComponent } from './features/doctores/doctores.component';
-import { CitasComponent } from './features/citas/citas.component';
-import { SolicitudesComponent } from './features/solicitudes/solicitudes.component';
-import { SalasComponent } from './features/salas/salas.component';
-import { EspecialidadesComponent } from './features/especialidades/especialidades.component';
-import { ConsultasComponent } from './features/consultas/consultas.component';
-import { HorariosComponent } from './features/horarios/horarios.component';
-import { AdminComponent } from './features/admin/admin.component';
-import { UsuariosComponent } from './features/usuarios/usuarios.component';
+
+const ROUTES = {
+  LOGIN: 'login',
+  DASHBOARD: 'dashboard',
+  PACIENTES: 'pacientes',
+  DOCTORES: 'doctores',
+  CITAS: 'citas',
+  SOLICITUDES: 'solicitudes',
+  SALAS: 'salas',
+  ESPECIALIDADES: 'especialidades',
+  PERMISOS: 'permisos',
+  CONSULTAS: 'consultas',
+  HORARIOS: 'horarios',
+  USUARIOS: 'usuarios',
+  ADMIN: 'admin',
+  CONFIGURACIONES: 'configuraciones',
+  EMPTY: ''
+} as const;
 
 export const routes: Routes = [
-  { path: 'login', component: LoginComponent },
+  { path: ROUTES.LOGIN, component: LoginComponent },
   {
-    path: '',
+    path: ROUTES.EMPTY,
     component: LayoutComponent,
     canActivate: [authGuard],
     children: [
-      { path: 'dashboard', component: DashboardComponent, canActivate: [permissionGuard], data: { permission: PERMISSIONS.VER_DASHBOARD } },
-      { path: 'pacientes', component: PacientesComponent, canActivate: [permissionGuard], data: { permission: PERMISSIONS.GESTIONAR_PACIENTES } },
-      { path: 'doctores', component: DoctoresComponent, canActivate: [permissionGuard], data: { permission: PERMISSIONS.GESTIONAR_DOCTORES } },
-      { path: 'citas', component: CitasComponent, canActivate: [permissionGuard], data: { permission: PERMISSIONS.VER_CITAS } },
-      { path: 'solicitudes', component: SolicitudesComponent, canActivate: [permissionGuard], data: { permission: PERMISSIONS.GESTIONAR_SOLICITUDES } },
-      { path: 'salas', component: SalasComponent, canActivate: [permissionGuard], data: { permission: PERMISSIONS.GESTIONAR_CATALOGOS } },
-      { path: 'especialidades', component: EspecialidadesComponent, canActivate: [permissionGuard], data: { permission: PERMISSIONS.GESTIONAR_CATALOGOS } },
-      { path: 'consultas', component: ConsultasComponent, canActivate: [permissionGuard], data: { permission: PERMISSIONS.VER_CONSULTAS } },
-      { path: 'horarios', component: HorariosComponent, canActivate: [permissionGuard], data: { permission: PERMISSIONS.GESTIONAR_CATALOGOS } },
-      { path: 'usuarios', component: UsuariosComponent, canActivate: [permissionGuard], data: { permission: PERMISSIONS.GESTIONAR_USUARIOS } },
-      { path: 'admin', component: AdminComponent, canActivate: [permissionGuard], data: { permission: PERMISSIONS.GESTIONAR_ROLES } },
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
+      {
+        path: ROUTES.DASHBOARD,
+        component: DashboardComponent,
+        canActivate: [permissionGuard],
+        data: { permission: PERMISSIONS.VER_DASHBOARD }
+      },
+      {
+        path: ROUTES.PACIENTES,
+        component: PacientesComponent,
+        canActivate: [permissionGuard],
+        data: { permission: PERMISSIONS.GESTIONAR_PACIENTES }
+      },
+      {
+        path: ROUTES.DOCTORES,
+        component: DoctoresComponent,
+        canActivate: [permissionGuard],
+        data: { permission: PERMISSIONS.GESTIONAR_DOCTORES }
+      },
+      {
+        path: ROUTES.CITAS,
+        component: CitasComponent,
+        canActivate: [permissionGuard],
+        data: { permission: PERMISSIONS.VER_CITAS }
+      },
+      {
+        path: ROUTES.SOLICITUDES,
+        component: SolicitudesComponent,
+        canActivate: [permissionGuard],
+        data: { permission: PERMISSIONS.GESTIONAR_SOLICITUDES }
+      },
+      {
+        path: ROUTES.SALAS,
+        component: SalasComponent,
+        canActivate: [permissionGuard],
+        data: { permission: PERMISSIONS.GESTIONAR_CATALOGOS }
+      },
+      {
+        path: ROUTES.ESPECIALIDADES,
+        component: EspecialidadesComponent,
+        canActivate: [permissionGuard],
+        data: { permission: PERMISSIONS.GESTIONAR_CATALOGOS }
+      },
+      {
+        path: ROUTES.PERMISOS,
+        component: PermisosComponent,
+        canActivate: [permissionGuard],
+        data: { permission: PERMISSIONS.GESTIONAR_ROLES }
+      },
+      {
+        path: ROUTES.CONSULTAS,
+        component: ConsultasComponent,
+        canActivate: [permissionGuard],
+        data: { permission: PERMISSIONS.VER_CONSULTAS }
+      },
+      {
+        path: ROUTES.HORARIOS,
+        component: HorariosComponent,
+        canActivate: [permissionGuard],
+        data: { permission: PERMISSIONS.GESTIONAR_CATALOGOS }
+      },
+      {
+        path: ROUTES.USUARIOS,
+        component: UsuariosComponent,
+        canActivate: [permissionGuard],
+        data: { permission: PERMISSIONS.GESTIONAR_USUARIOS }
+      },
+      {
+        path: ROUTES.ADMIN,
+        component: AdminComponent,
+        canActivate: [permissionGuard],
+        data: { permission: PERMISSIONS.GESTIONAR_ROLES }
+      },
+      {
+        path: ROUTES.CONFIGURACIONES,
+        component: ConfiguracionesComponent,
+        canActivate: [permissionGuard],
+        data: { permission: PERMISSIONS.VER_DASHBOARD }
+      },
+      { path: ROUTES.EMPTY, redirectTo: ROUTES.DASHBOARD, pathMatch: 'full' }
     ]
   },
-  { path: '**', redirectTo: 'login' }
+  { path: '**', redirectTo: ROUTES.LOGIN }
 ];

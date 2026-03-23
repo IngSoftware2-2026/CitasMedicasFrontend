@@ -1,0 +1,205 @@
+.config-breadcrumb {
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+}
+
+.config-header {
+  margin-bottom: 24px;
+}
+
+.config-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin: 0 0 4px 0;
+}
+
+.config-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-color-secondary);
+  margin: 0;
+}
+
+.config-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.config-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 16px;
+}
+
+.config-section-title i {
+  color: var(--primary-color);
+}
+
+.config-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--card-radius);
+  padding: 20px;
+}
+
+.config-user-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--surface-border);
+  margin-bottom: 20px;
+}
+
+.config-user-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.config-user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.config-user-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.config-user-email {
+  font-size: 0.9rem;
+  color: var(--text-color-secondary);
+}
+
+.config-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.config-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.config-field label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-color-secondary);
+}
+
+.config-field span {
+  font-size: 0.95rem;
+  color: var(--text-color);
+}
+
+.config-badge {
+  display: inline-block;
+  background: rgba(168, 85, 247, 0.12);
+  color: #a855f7;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.config-link {
+  color: var(--primary-color);
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+.config-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.config-option:last-child {
+  border-bottom: none;
+}
+
+.config-option-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.config-option-title {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.config-option-desc {
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+}
+
+.config-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+}
+
+.config-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.config-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.3s;
+  border-radius: 26px;
+}
+
+.config-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.config-switch input:checked + .config-slider {
+  background-color: var(--primary-color);
+}
+
+.config-switch input:checked + .config-slider:before {
+  transform: translateX(22px);
+}
+
+@media (max-width: 768px) {
+  .config-fields {
+    grid-template-columns: 1fr;
+  }
+}

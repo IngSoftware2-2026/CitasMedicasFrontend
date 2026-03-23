@@ -1,0 +1,127 @@
+<div class="page-header-container">
+  <div class="page-header-left">
+    <div class="page-header-icon">
+      <i class="pi pi-clipboard"></i>
+    </div>
+    <div class="page-header-text">
+      <h2>Solicitudes de Cita</h2>
+      <p>Gestión de solicitudes</p>
+    </div>
+  </div>
+</div>
+
+<!-- Stats summary -->
+<div class="sol-stats">
+  <div class="sol-stat-item">
+    <div class="sol-stat-icon total"><i class="pi pi-list"></i></div>
+    <div class="sol-stat-info">
+      <span class="sol-stat-num">{{ solicitudesView.length }}</span>
+      <span class="sol-stat-label">Total</span>
+    </div>
+  </div>
+  <div class="sol-stat-item">
+    <div class="sol-stat-icon pending"><i class="pi pi-clock"></i></div>
+    <div class="sol-stat-info">
+      <span class="sol-stat-num">{{ countByEstado(1) }}</span>
+      <span class="sol-stat-label">Pendientes</span>
+    </div>
+  </div>
+  <div class="sol-stat-item">
+    <div class="sol-stat-icon confirmed"><i class="pi pi-check-circle"></i></div>
+    <div class="sol-stat-info">
+      <span class="sol-stat-num">{{ countByEstado(3) }}</span>
+      <span class="sol-stat-label">Confirmadas</span>
+    </div>
+  </div>
+  <div class="sol-stat-item">
+    <div class="sol-stat-icon rejected"><i class="pi pi-times-circle"></i></div>
+    <div class="sol-stat-info">
+      <span class="sol-stat-num">{{ countByEstado(4) + countByEstado(5) }}</span>
+      <span class="sol-stat-label">Rechazadas / Canceladas</span>
+    </div>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="sol-table-card">
+  <p-table [value]="solicitudesView" [paginator]="true" [rows]="8" [tableStyle]="{'min-width': '60rem'}" dataKey="solicitudId" [rowHover]="true" [showGridlines]="false">
+    <ng-template #caption>
+      <div class="sol-caption">
+        <p-iconfield class="sol-search">
+          <p-inputicon styleClass="pi pi-search" />
+          <input pInputText [(ngModel)]="searchSolicitud" placeholder="Buscar por paciente, doctor, motivo o estado..." />
+        </p-iconfield>
+        <span class="sol-caption-count">{{ solicitudesView.length }} solicitudes</span>
+      </div>
+    </ng-template>
+    <ng-template #header>
+      <tr>
+        <th style="width: 3rem">#</th>
+        <th>Paciente</th>
+        <th>Doctor</th>
+        <th>Fecha & Hora</th>
+        <th>Duración</th>
+        <th>Motivo</th>
+        <th>Estado</th>
+        <th style="width: 10rem; text-align: center">Acciones</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-s let-i="rowIndex">
+      <tr class="sol-row">
+        <td><span class="sol-row-num">{{ i + 1 }}</span></td>
+        <td>
+          <div class="sol-person">
+            <span class="sol-avatar patient">{{ getInitials(s.pacienteNombre) }}</span>
+            <span class="sol-person-name">{{ s.pacienteNombre }}</span>
+          </div>
+        </td>
+        <td>
+          <div class="sol-person">
+            <span class="sol-avatar doctor">{{ getInitials(s.doctorNombre) }}</span>
+            <span class="sol-person-name">{{ s.doctorNombre }}</span>
+          </div>
+        </td>
+        <td>
+          <div class="sol-datetime">
+            <span class="sol-date"><i class="pi pi-calendar"></i> {{ s.fechaHoraInicio | date:'dd MMM yyyy' }}</span>
+            <span class="sol-time"><i class="pi pi-clock"></i> {{ s.fechaHoraInicio | date:'HH:mm' }} hrs</span>
+          </div>
+        </td>
+        <td><span class="sol-duration"><i class="pi pi-stopwatch"></i> {{ s.duracionMinutos }} min</span></td>
+        <td><span class="sol-motivo">{{ s.motivo ?? '—' }}</span></td>
+        <td><p-tag [value]="s.estadoNombre" [severity]="data.getEstadoSolicitudSeverity(s.estadoCodigo)" [rounded]="true" /></td>
+        <td>
+          <div class="sol-actions">
+            @if (s.estadoId === 1) {
+              <button class="sol-action-btn confirm" pTooltip="Confirmar" tooltipPosition="top" (click)="cambiarEstadoSolicitud(s, 3)">
+                <i class="pi pi-check"></i>
+              </button>
+              <button class="sol-action-btn reject" pTooltip="Rechazar" tooltipPosition="top" (click)="cambiarEstadoSolicitud(s, 4)">
+                <i class="pi pi-ban"></i>
+              </button>
+            }
+            @if (s.estadoId === 1 || s.estadoId === 2) {
+              <button class="sol-action-btn cancel" pTooltip="Cancelar" tooltipPosition="top" (click)="cambiarEstadoSolicitud(s, 5)">
+                <i class="pi pi-times"></i>
+              </button>
+            }
+            @if (s.estadoId !== 1 && s.estadoId !== 2) {
+              <span class="sol-no-actions">—</span>
+            }
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="8">
+          <div class="sol-empty">
+            <i class="pi pi-inbox"></i>
+            <p>No se encontraron solicitudes</p>
+            <span>Intenta con otros términos de búsqueda</span>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

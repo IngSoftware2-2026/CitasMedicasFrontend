@@ -1,8 +1,8 @@
 
-# 💙 MediCitas Pro
+# 💙 MediCitas
 
 Sistema web para la gestión integral de citas médicas desarrollado con **Angular 21** y **PrimeNG 21**.  
-Diseño moderno con **modo oscuro**, sistema de **autenticación por roles y permisos**, y UI completamente responsive.
+Diseño moderno con **modo oscuro**, sistema de **autenticación por roles y permisos**, UI completamente responsive y nuevo diseño de interfaz.
 
 ---
 
@@ -189,20 +189,34 @@ src/
 
 ### Login
 
-Pantalla de inicio de sesión con diseño split-screen:
+Pantalla de inicio de sesión con diseño moderno:
 
-* **Panel izquierdo:** Branding con logo SVG, descripción del sistema y features animadas con backdrop-blur
-* **Tarjeta de login:** Logo + título, campos de correo y contraseña con íconos, checkbox "Recordar sesión" (localStorage), enlace "¿Olvidaste tu contraseña?" (diálogo de recuperación), botón "Iniciar Sesión", enlace "Contacta al administrador" (diálogo con datos de contacto)
-* Fondo con gradiente azul-púrpura, diseño responsive
+* **Fondo degradado azul** con gradiente de #1e3a8a a #60a5fa
+* **Tarjeta blanca** centrada con sombra suave y bordes redondeados
+* **Logo** con ícono azul cuadrado y cruz blanca + "MediCitas" en bold
+* **Campos:** Usuario o Correo, Contraseña (con toggle ver/ocultar)
+* **Botón** "Iniciar Sesión" en azul #1a56db
+* **Footer:** "¿Olvidaste tu contraseña?" y "MediCitas © 2026"
 
 ### Dashboard
 
-Panel de resumen con:
+Panel de resumen completamente rediseñado:
 
-* Tarjetas de estadísticas (pacientes, doctores, citas, salas)
-* Tabla de citas recientes con avatares y tags de estado
-* Distribución de citas por estado
-* Títulos de features con gradiente decorativo
+* **Breadcrumb** "🏠 Inicio / Dashboard"
+* **Banner de usuario** con avatar, nombre, email y badge de rol
+* **4 tarjetas de estadísticas:** Citas Hoy, Solicitudes, Pacientes, Doctores
+* **Accesos Rápidos:** botones para Nueva Cita, Nuevo Paciente, Solicitudes, Usuarios
+* **Próximas Citas:** lista con hora, paciente, doctor y consultorio
+
+### Layout Principal
+
+Sidebar moderno con diseño limpio:
+
+* **Sidebar blanco** de 220px con borde derecho gris
+* **Logo** MediCitas con ícono azul y cruz blanca
+* **Secciones** "PRINCIPAL" y "GESTIÓN" con label gris uppercase
+* **Footer** con avatar azul, nombre de usuario, rol y botón logout rojo
+* **Responsive:** sidebar fijo en móvil con overlay y botón hamburguesa
 
 ### Módulos de gestión (tabla modernizada)
 
@@ -356,6 +370,180 @@ El frontend está diseñado para consumir una API REST conectada a **SQL Server*
 * **MockDataService** — Singleton con `providedIn: 'root'`, helpers de consulta y contadores de ID.
 * **Sidebar dinámico** — Menú filtrado por permisos del usuario autenticado con `AuthService.hasPermission()`.
 * **Dark mode** — Toggle persistente con CSS custom properties y tema Aura.
-* **Rama activa:** `modelos-organizacion-carpetas`.
+* **Rama activa:** `Bento_Japones`.
 * Asistencia de inteligencia artificial para desarrollo, diseño y documentación.
+
+---
+
+## Cómo agregar un nuevo servicio
+
+Esta sección explica cómo crear un nuevo servicio que se conecte al backend API REST.
+
+### 1. Estructura de archivos
+
+```
+src/app/core/
+├── services/
+│   ├── Http/
+│   │   └── conexion.service.ts    ← Servicio base HTTP
+│   └── Accesos/
+│       ├── rol.service.ts          ← Ejemplo: servicio de roles
+│       ├── usuario.service.ts     ← Ejemplo: servicio de usuarios
+│       └── auth.service.ts        ← Ejemplo: autenticación
+└── models/
+    └── Accesos/
+        ├── rol.model.ts
+        ├── usuario.model.ts
+        └── permiso.model.ts
+```
+
+### 2. Servicio base: ConexionService
+
+**Archivo:** `core/services/Http/conexion.service.ts`
+
+Proporciona métodos genéricos para HTTP:
+
+| Método | Uso | Ejemplo |
+|--------|-----|---------|
+| `obtener<T>(endpoint)` | GET | `obtener('/Modulo/Recurso/Listar')` |
+| `crear<T>(endpoint, cuerpo)` | POST | `crear('/Modulo/Recurso/Insertar', datos)` |
+| `actualizar<T>(endpoint, cuerpo)` | PUT | `actualizar('/Modulo/Recurso/Editar', datos)` |
+| `eliminar<T>(endpoint)` | DELETE | `eliminar('/Modulo/Recurso/Eliminar?id=1')` |
+
+**Características:**
+- URL Base configurada en `environment.ts`
+- API Key agregada automáticamente por interceptor
+- Respuestas normalizadas (`exitoso`/`success`, `datos`/`data`)
+
+### 3. Ejemplo: Crear RolService
+
+**Paso 1 - Crear el modelo (si no existe):**
+```typescript
+// src/app/core/models/Accesos/rol.model.ts
+export interface Rol {
+  rolId: number;
+  codigoRol: string;
+  nombreRol: string;
+  activo: boolean;
+}
+```
+
+**Paso 2 - Crear el servicio:**
+```typescript
+// src/app/core/services/Accesos/rol.service.ts
+import { Injectable } from '@angular/core';
+import { Observable, map } from 'rxjs';
+import { ConexionService } from '../Http/conexion.service';
+import { Rol } from '../../models/Accesos/rol.model';
+
+@Injectable({ providedIn: 'root' })
+export class RolService extends ConexionService {
+
+  listar(): Observable<Rol[]> {
+    return this.obtener<Rol[]>('/Accesos/Roles/Listar').pipe(
+      map((respuesta: any) => {
+        const exitoso = respuesta.exitoso ?? respuesta.success;
+        const datos = respuesta.datos ?? respuesta.data;
+        
+        if (exitoso && datos) {
+          return datos as Rol[];
+        }
+        throw new Error('Error al listar roles');
+      })
+    );
+  }
+
+  insertar(datos: Partial<Rol>): Observable<Rol> {
+    return this.crear<Rol>('/Accesos/Roles/Insertar', datos).pipe(
+      map((respuesta: any) => {
+        const exitoso = respuesta.exitoso ?? respuesta.success;
+        const datos = respuesta.datos ?? respuesta.data;
+        
+        if (exitoso && datos) {
+          return datos as Rol;
+        }
+        throw new Error(respuesta.mensaje || 'Error al insertar rol');
+      })
+    );
+  }
+
+  actualizarRol(id: number, datos: Partial<Rol>): Observable<Rol> {
+    return this.crear<Rol>('/Accesos/Roles/Editar', { rolId: id, ...datos }).pipe(
+      map((respuesta: any) => {
+        const exitoso = respuesta.exitoso ?? respuesta.success;
+        const datos = respuesta.datos ?? respuesta.data;
+        
+        if (exitoso && datos) {
+          return datos as Rol;
+        }
+        throw new Error(respuesta.mensaje || 'Error al actualizar rol');
+      })
+    );
+  }
+
+  eliminarRol(id: number): Observable<boolean> {
+    return this.eliminar<boolean>('/Accesos/Roles/Eliminar?rolId=' + id).pipe(
+      map((respuesta: any) => {
+        const exitoso = respuesta.exitoso ?? respuesta.success;
+        
+        if (exitoso) {
+          return true;
+        }
+        throw new Error(respuesta.mensaje || 'Error al eliminar rol');
+      })
+    );
+  }
+}
+```
+
+### 4. Endpoint del Backend
+
+El frontend se conecta a endpoints REST con este formato:
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/Accesos/Roles/Listar` | Listar todos los roles |
+| POST | `/Accesos/Roles/Insertar` | Crear nuevo rol |
+| PUT | `/Accesos/Roles/Editar` | Actualizar rol |
+| DELETE | `/Accesos/Roles/Eliminar?rolId={id}` | Eliminar rol |
+
+**Headers requeridos:**
+- `XApiKey`: `4b567cb1c6b24b51ab55248f8e66e5cc`
+- `Content-Type`: `application/json`
+
+### 5. Respuesta del Backend
+
+Todos los endpoints devuelven el mismo formato:
+
+```json
+{
+  "type": 200,
+  "code": 200,
+  "success": true,
+  "message": "Operación completada exitosamente.",
+  "data": [/* datos */]
+}
+```
+
+Los servicios transforman la respuesta:
+- `respuesta.exitoso` o `respuesta.success` → boolean
+- `respuesta.datos` o `respuesta.data` → T
+
+### 6. Uso en componentes
+
+```typescript
+// En tu componente
+constructor(private rolService: RolService) {}
+
+cargarRoles() {
+  this.rolService.listar().subscribe({
+    next: (roles) => {
+      this.roles = roles;
+    },
+    error: (err) => {
+      console.error('Error:', err);
+    }
+  });
+}
+```
 

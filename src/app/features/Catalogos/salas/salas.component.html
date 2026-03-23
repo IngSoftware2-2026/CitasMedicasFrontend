@@ -1,0 +1,51 @@
+<div class="page-header-container">
+  <div class="page-header-left">
+    <div class="page-header-icon">
+      <i class="pi pi-building"></i>
+    </div>
+    <div class="page-header-text">
+      <h2>Salas</h2>
+      <p>Gestión de salas</p>
+    </div>
+  </div>
+  <p-button label="Nueva Sala" icon="pi pi-plus" (onClick)="openSalaDialog()" />
+</div>
+<div class="salas-search-bar">
+  <p-iconfield class="mod-search">
+    <p-inputicon styleClass="pi pi-search" />
+    <input pInputText [(ngModel)]="searchSala" placeholder="Buscar por nombre, código o ubicación..." />
+  </p-iconfield>
+  <span class="mod-caption-count">{{ filteredSalas.length }} salas</span>
+</div>
+<div class="card-grid">
+  @for (s of filteredSalas; track s.salaId) {
+  <p-card [styleClass]="'sala-card' + (!s.activo ? ' inactive' : '')">
+    <div class="sala-header">
+      <p-tag [value]="s.codigoSala" severity="info" />
+      <p-tag [value]="s.activo ? 'Activa' : 'Inactiva'" [severity]="s.activo ? 'success' : 'danger'" />
+    </div>
+    <h4>{{ s.nombreSala }}</h4>
+    <small><i class="pi pi-map-marker"></i> {{ s.ubicacion || 'Sin ubicacion' }}</small>
+    <p-divider />
+    <div class="doc-actions">
+      <p-button icon="pi pi-pencil" label="Editar" [outlined]="true" severity="info" size="small" (onClick)="openSalaDialog(s)" />
+      <p-button icon="pi pi-trash" label="Eliminar" [outlined]="true" severity="danger" size="small" (onClick)="deleteSala(s)" />
+    </div>
+  </p-card>
+  }
+</div>
+
+<!-- SALA DIALOG -->
+<p-dialog header="{{ salaForm['salaId'] ? 'Editar' : 'Nueva' }} Sala" [(visible)]="salaDialog" [modal]="true" [style]="{width: '450px'}">
+  <div class="dialog-form">
+    <div class="form-row">
+      <div class="field"><label>Codigo *</label><input pInputText [(ngModel)]="salaForm['codigoSala']" /></div>
+      <div class="field"><label>Nombre *</label><input pInputText [(ngModel)]="salaForm['nombreSala']" /></div>
+    </div>
+    <div class="field"><label>Ubicacion</label><input pInputText [(ngModel)]="salaForm['ubicacion']" /></div>
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" icon="pi pi-times" [text]="true" (onClick)="salaDialog = false" />
+    <p-button label="Guardar" icon="pi pi-check" (onClick)="saveSala()" />
+  </ng-template>
+</p-dialog>

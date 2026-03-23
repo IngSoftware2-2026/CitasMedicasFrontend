@@ -1,0 +1,328 @@
+:host {
+  display: block;
+}
+
+.permisos-container {
+  padding: 1rem;
+}
+
+.permisos-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-600) 100%);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.permisos-header-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.permisos-header-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.permisos-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.permisos-header p {
+  margin: 0.25rem 0 0;
+  opacity: 0.9;
+  font-size: 0.9rem;
+}
+
+.permisos-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.permisos-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: var(--surface-card);
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+}
+
+.permisos-stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.permisos-stat-icon--primary {
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--primary-color);
+}
+
+.permisos-stat-icon--green {
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--green-500);
+}
+
+.permisos-stat-icon--amber {
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--amber-500);
+}
+
+.permisos-stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.permisos-stat-number {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-color);
+  line-height: 1;
+}
+
+.permisos-stat-label {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+  margin-top: 0.25rem;
+}
+
+.permisos-table-card {
+  background: var(--surface-card);
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+  overflow: hidden;
+}
+
+.permisos-table-caption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.permisos-search {
+  width: 350px;
+}
+
+.permisos-table-count {
+  font-size: 0.9rem;
+  color: var(--text-color-secondary);
+}
+
+.permisos-row-number {
+  font-size: 0.85rem;
+  color: var(--text-color-muted);
+}
+
+.permisos-person {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.permisos-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(168, 85, 247, 0.1);
+  color: var(--purple-500);
+  font-size: 0.85rem;
+}
+
+.permisos-person-name {
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.permiso-description {
+  font-size: 0.9rem;
+  color: var(--text-color-secondary);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.permiso-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.role-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.role-chip--admin {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--red-500);
+}
+
+.role-chip--doctor {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--blue-500);
+}
+
+.role-chip--recep {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--amber-500);
+}
+
+.role-chip--paciente {
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--green-500);
+}
+
+.permiso-no-roles {
+  font-size: 0.8rem;
+  color: var(--text-color-muted);
+  font-style: italic;
+}
+
+.permisos-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.permisos-empty {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-color-secondary);
+}
+
+.permisos-empty i {
+  font-size: 3rem;
+  color: var(--text-color-muted);
+  margin-bottom: 1rem;
+}
+
+.permisos-empty p {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.permisos-empty span {
+  font-size: 0.85rem;
+  color: var(--text-color-muted);
+}
+
+/* Dialog styles */
+:host ::ng-deep .permiso-dialog .p-dialog-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-600) 100%);
+  color: white;
+  border-radius: 16px 16px 0 0;
+  padding: 1.25rem 1.5rem;
+}
+
+:host ::ng-deep .permiso-dialog .p-dialog-header .p-dialog-title {
+  font-weight: 600;
+}
+
+:host ::ng-deep .permiso-dialog .p-dialog-content {
+  padding: 1.5rem;
+}
+
+:host ::ng-deep .permiso-dialog .p-dialog-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--surface-border);
+}
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dialog-field label {
+  font-weight: 500;
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+
+.dialog-field label .required {
+  color: #ef4444;
+}
+
+.dialog-field input {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.dialog-field input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-100);
+  outline: none;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+}
+
+@media (max-width: 1024px) {
+  .permisos-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .permisos-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .permisos-table-caption {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .permisos-search {
+    width: 100%;
+  }
+}

@@ -1,0 +1,55 @@
+<div class="login-wrapper">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">+</div>
+      <span class="login-logo-text">MediCitas</span>
+    </div>
+    
+    <p class="login-subtitle">Bienvenido de nuevo</p>
+    
+    <div class="login-field">
+      <label class="login-label">Usuario o Correo</label>
+      <input 
+        class="login-input" 
+        type="text" 
+        [(ngModel)]="loginUser" 
+        placeholder="Ingresa tu usuario o correo"
+        (keyup.enter)="login()"
+      />
+    </div>
+    
+    <div class="login-field">
+      <label class="login-label">Contraseña</label>
+      <div class="login-input-wrapper">
+        <input 
+          class="login-input" 
+          [type]="showPassword ? 'text' : 'password'" 
+          [(ngModel)]="loginPass" 
+          placeholder="Ingresa tu contraseña"
+          (keyup.enter)="login()"
+        />
+        <button 
+          type="button" 
+          class="login-password-toggle" 
+          (click)="togglePassword()"
+        >
+          {{ showPassword ? '👁️' : '👁️‍🗨️' }}
+        </button>
+      </div>
+    </div>
+    
+    @if (loginError) {
+      <div class="login-error">{{ loginError }}</div>
+    }
+    
+    <button class="login-button" (click)="login()">Iniciar Sesión</button>
+    
+    <div class="login-forgot">
+      <a href="#">¿Olvidaste tu contraseña?</a>
+    </div>
+    
+    <div class="login-footer">
+      MediCitas © 2026
+    </div>
+  </div>
+</div>

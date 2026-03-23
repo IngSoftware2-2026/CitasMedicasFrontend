@@ -1,0 +1,452 @@
+.usuarios-filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.usuarios-search {
+  flex: 1;
+  max-width: 300px;
+}
+
+.page-header {
+  display: flex;
+  flex-direction: column;
+}
+
+.page-header h2 {
+  margin: 0;
+}
+
+.page-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+  font-weight: 400;
+  margin-top: 4px;
+}
+
+.usuarios-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.usuarios-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--surface-card);
+  border-radius: var(--card-radius);
+  border: 1px solid var(--surface-border);
+}
+
+.usuarios-stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.usuarios-stat-icon--blue { background: rgba(59, 130, 246, 0.12); color: #3b82f6; }
+.usuarios-stat-icon--green { background: rgba(34, 197, 94, 0.12); color: #22c55e; }
+.usuarios-stat-icon--red { background: rgba(249, 115, 22, 0.12); color: #f97316; }
+.usuarios-stat-icon--purple { background: rgba(168, 85, 247, 0.12); color: #a855f7; }
+
+.usuarios-stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.usuarios-stat-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-color);
+  line-height: 1;
+}
+
+.usuarios-stat-label {
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+  margin-top: 2px;
+}
+
+.usuarios-table-card {
+  background: var(--surface-card);
+  border-radius: var(--card-radius);
+  border: 1px solid var(--surface-border);
+  padding: 16px;
+}
+
+.usuarios-row-number {
+  font-size: 0.85rem;
+  color: var(--text-color-muted);
+}
+
+.usuarios-person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.usuarios-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.usuarios-avatar--purple-dark { background: #7c3aed; }
+.usuarios-avatar--purple { background: #a855f7; }
+.usuarios-avatar--green { background: #22c55e; }
+.usuarios-avatar--blue { background: #3b82f6; }
+.usuarios-avatar--blue-dark { background: #1d4ed8; }
+.usuarios-avatar--gray { background: #4b5563; }
+.usuarios-avatar--indigo { background: #6366f1; }
+.usuarios-avatar--red { background: #ef4444; }
+.usuarios-avatar--teal { background: #14b8a6; }
+.usuarios-avatar--amber { background: #f59e0b; }
+
+.usuarios-person-name {
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.usuarios-info-cell {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+}
+
+.usuarios-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.usuarios-badge--rol {
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.usuarios-badge--badge-admin {
+  background: rgba(168, 85, 247, 0.12);
+  color: #a855f7;
+}
+
+.usuarios-badge--badge-doctor {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.usuarios-badge--badge-recep {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.usuarios-badge--badge-paciente {
+  background: rgba(191, 219, 254, 0.5);
+  color: #2563eb;
+}
+
+.usuarios-badge--badge-dev {
+  color: #1f2937;
+}
+
+.usuarios-badge--estado {
+  font-weight: 600;
+}
+
+.usuarios-badge--activo {
+  background: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+}
+
+.usuarios-badge--inactivo {
+  background: rgba(249, 115, 22, 0.12);
+  color: #f97316;
+}
+
+.usuarios-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.usuarios-action-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--surface-border);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  color: var(--text-color-secondary);
+}
+
+.usuarios-action-btn:hover {
+  background: var(--surface-hover);
+}
+
+.usuarios-action-btn--view {
+  color: #6366f1;
+}
+
+.usuarios-action-btn--view:hover {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.usuarios-action-btn--edit {
+  color: #3b82f6;
+}
+
+.usuarios-action-btn--edit:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.usuarios-action-btn--success {
+  color: #22c55e;
+}
+
+.usuarios-action-btn--success:hover {
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.usuarios-action-btn--danger {
+  color: #ef4444;
+}
+
+.usuarios-action-btn--danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.usuarios-empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-color-secondary);
+}
+
+.usuarios-empty i {
+  font-size: 3rem;
+  color: var(--text-color-muted);
+  margin-bottom: 16px;
+}
+
+.usuarios-empty p {
+  font-size: 1rem;
+  margin: 0 0 4px;
+}
+
+.usuarios-empty span {
+  font-size: 0.85rem;
+  color: var(--text-color-muted);
+}
+
+.usuarios-dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.usuarios-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.usuarios-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.usuarios-field label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+:host ::ng-deep .usuarios-password .p-password {
+  width: 100%;
+}
+
+:host ::ng-deep .usuarios-password .p-password-input {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .usuarios-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .usuarios-form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .usuarios-filters {
+    flex-direction: column;
+  }
+  
+  .usuarios-search {
+    max-width: 100%;
+  }
+}
+
+/* Estilos para el diálogo de detalle */
+.detalle-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: var(--text-color-secondary);
+}
+
+.detalle-loading i {
+  color: var(--primary-color);
+}
+
+.detalle-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.detalle-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.detalle-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.detalle-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detalle-info h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.detalle-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+.detalle-badge--badge-admin {
+  background: rgba(168, 85, 247, 0.12);
+  color: #a855f7;
+}
+
+.detalle-badge--badge-doctor {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.detalle-badge--badge-recep {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.detalle-badge--badge-paciente {
+  background: rgba(191, 219, 254, 0.5);
+  color: #2563eb;
+}
+
+.detalle-badge--badge-dev {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.detalle-estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.detalle-estado i {
+  font-size: 0.9rem;
+}
+
+.detalle-estado--activo {
+  color: #22c55e;
+}
+
+.detalle-estado--inactivo {
+  color: #f97316;
+}
+
+.detalle-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detalle-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--surface-ground);
+  border-radius: 8px;
+}
+
+.detalle-field label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-color-secondary);
+  min-width: 140px;
+}
+
+.detalle-field label i {
+  font-size: 1rem;
+  color: var(--text-color-muted);
+}
+
+.detalle-field span {
+  font-size: 0.9rem;
+  color: var(--text-color);
+  font-weight: 500;
+}
