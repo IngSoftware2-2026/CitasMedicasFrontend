@@ -1,20 +1,20 @@
 {
-  "/Pacientes/*": {
+  "/Pacientes/**": {
     "target": "http://localhost:5096",
     "secure": false,
     "changeOrigin": true
   },
-  "/Accesos/*": {
+  "/Accesos/**": {
     "target": "http://localhost:5096",
     "secure": false,
     "changeOrigin": true
   },
-  "/Catalogos/*": {
+  "/Catalogos/**": {
     "target": "http://localhost:5096",
     "secure": false,
     "changeOrigin": true
   },
-  "/Clinica/*": {
+  "/Clinica/**": {
     "target": "http://localhost:5096",
     "secure": false,
     "changeOrigin": true
