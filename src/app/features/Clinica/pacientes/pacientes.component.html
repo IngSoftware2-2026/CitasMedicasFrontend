@@ -68,7 +68,7 @@
         <td>
           <div class="mod-actions">
             <button class="mod-action-btn --edit" pTooltip="Editar" tooltipPosition="top" (click)="openPacienteDialog(p)"><i class="pi pi-pencil"></i></button>
-            <button class="mod-action-btn --warn" [pTooltip]="p.activo ? 'Desactivar' : 'Activar'" tooltipPosition="top" (click)="togglePacienteActivo(p)"><i [class]="p.activo ? 'pi pi-eye-slash' : 'pi pi-eye'"></i></button>
+            <button class="mod-action-btn --warn" [disabled]="!p.usuarioId || p.usuarioId <= 0" [pTooltip]="p.activo ? 'Desactivar' : 'Activar'" tooltipPosition="top" (click)="togglePacienteActivo(p)"><i [class]="p.activo ? 'pi pi-eye-slash' : 'pi pi-eye'"></i></button>
             <button class="mod-action-btn --danger" pTooltip="Eliminar" tooltipPosition="top" (click)="deletePaciente(p)"><i class="pi pi-trash"></i></button>
           </div>
         </td>
@@ -86,16 +86,19 @@
 <p-dialog header="{{ pacienteForm['pacienteId'] ? 'Editar' : 'Nuevo' }} Paciente" [(visible)]="pacienteDialog" [modal]="true" [style]="{width: '550px'}">
   <div class="dialog-form">
     <div class="form-row">
-      <div class="field"><label>Nombres *</label><input pInputText [(ngModel)]="pacienteForm['nombres']" /></div>
-      <div class="field"><label>Apellidos</label><input pInputText [(ngModel)]="pacienteForm['apellidos']" /></div>
+      <div class="field"><label>Usuario ID *</label><input pInputText type="number" [(ngModel)]="pacienteForm['usuarioId']" /></div>
+      <div class="field"><label>No. Identidad *</label><input pInputText [(ngModel)]="pacienteForm['numeroIdentidad']" /></div>
     </div>
     <div class="form-row">
-      <div class="field"><label>Telefono *</label><input pInputText [(ngModel)]="pacienteForm['telefono']" /></div>
+      <div class="field"><label>Nombres *</label><input pInputText [(ngModel)]="pacienteForm['nombres']" /></div>
+      <div class="field"><label>Apellidos *</label><input pInputText [(ngModel)]="pacienteForm['apellidos']" /></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Teléfono *</label><input pInputText [(ngModel)]="pacienteForm['telefono']" /></div>
       <div class="field"><label>Correo</label><input pInputText [(ngModel)]="pacienteForm['correo']" /></div>
     </div>
     <div class="form-row">
       <div class="field"><label>Nacimiento</label><input pInputText type="date" [(ngModel)]="pacienteForm['fechaNacimiento']" /></div>
-      <div class="field"><label>No. Identidad</label><input pInputText [(ngModel)]="pacienteForm['numeroIdentidad']" /></div>
     </div>
   </div>
   <ng-template #footer>

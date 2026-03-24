@@ -81,24 +81,28 @@ export class PacientesComponent implements OnInit {
   }
 
   savePaciente(): void {
-    if (!this.pacienteForm['nombres'] || !this.pacienteForm['telefono']) {
-      this.messageService.add({ severity: 'warn', summary: 'Campos requeridos', detail: 'Nombres y telefono son obligatorios' });
+    if (!this.pacienteForm['nombres'] || !this.pacienteForm['apellidos'] || !this.pacienteForm['telefono'] || !this.pacienteForm['numeroIdentidad']) {
+      this.messageService.add({ severity: 'warn', summary: 'Campos requeridos', detail: 'Nombres, apellidos, teléfono y número de identidad son obligatorios' });
+      return;
+    }
+    if (!this.pacienteForm['usuarioId'] || this.pacienteForm['usuarioId'] <= 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Campos requeridos', detail: 'El Usuario ID es obligatorio y debe ser mayor que cero' });
       return;
     }
 
     const payload: any = {
+      usuarioId: this.pacienteForm['usuarioId'],
       nombres: this.pacienteForm['nombres'],
-      apellidos: this.pacienteForm['apellidos'] || null,
+      apellidos: this.pacienteForm['apellidos'],
       telefono: this.pacienteForm['telefono'],
       correo: this.pacienteForm['correo'] || null,
       fechaNacimiento: this.pacienteForm['fechaNacimiento'] || null,
-      numeroIdentidad: this.pacienteForm['numeroIdentidad'] || null,
+      numeroIdentidad: this.pacienteForm['numeroIdentidad'],
       activo: this.pacienteForm['activo'] ?? true
     };
 
     if (this.pacienteForm['pacienteId']) {
       payload.pacienteId = this.pacienteForm['pacienteId'];
-      if (this.pacienteForm['usuarioId']) payload.usuarioId = this.pacienteForm['usuarioId'];
       console.log('Editando paciente:', payload);
       this.pacienteService.editar(payload).subscribe({
         next: () => {
@@ -128,13 +132,28 @@ export class PacientesComponent implements OnInit {
   }
 
   togglePacienteActivo(p: Paciente): void {
-    const updated = { ...p, activo: !p.activo };
-    this.pacienteService.editar(updated).subscribe({
+    const payload: any = {
+      pacienteId: p.pacienteId,
+      usuarioId: p.usuarioId,
+      nombres: p.nombres,
+      apellidos: p.apellidos,
+      telefono: p.telefono,
+      correo: p.correo || null,
+      fechaNacimiento: p.fechaNacimiento || null,
+      numeroIdentidad: p.numeroIdentidad,
+      activo: !p.activo
+    };
+    console.log('togglePacienteActivo payload:', JSON.stringify(payload));
+    this.pacienteService.editar(payload).subscribe({
       next: () => {
-        this.messageService.add({ severity: 'info', summary: 'Estado', detail: `Paciente ${updated.activo ? 'activado' : 'desactivado'}` });
+        this.messageService.add({ severity: 'info', summary: 'Estado', detail: `Paciente ${payload.activo ? 'activado' : 'desactivado'}` });
         this.cargarPacientes();
       },
-      error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cambiar el estado' })
+      error: (err) => {
+        console.error('Error togglePacienteActivo - Status:', err.status);
+        console.error('Error togglePacienteActivo - Body:', JSON.stringify(err.error));
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.message || 'No se pudo cambiar el estado' });
+      }
     });
   }
 
