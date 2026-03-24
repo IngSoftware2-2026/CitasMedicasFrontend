@@ -25,12 +25,13 @@ import {
   imports: [CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, TagModule, ToolbarModule, TooltipModule, IconFieldModule, InputIconModule],
   providers: [MessageService, ConfirmationService, AdminPermisoOperations, AdminPermisoRolOperations, AdminUtils],
   templateUrl: './permisos.component.html',
-  styleUrls: ['./css/permisos.component.css']
+  styleUrls: ['./permisos.component.css']
 })
 export class PermisosComponent {
   permisoDialog = false;
   permisoForm: Partial<Permiso> = {};
   searchPermiso = '';
+  filtroActual: 'todos' | 'asignados' | 'sin-asignar' = 'todos';
 
   constructor(
     public permisoOps: AdminPermisoOperations,
@@ -47,6 +48,20 @@ export class PermisosComponent {
 
   get permisos() { return this.permisoOps.permisos; }
   get roles(): Rol[] { return this.utils.getRoles(); }
+
+  get permisosAsignados() {
+    return this.permisos.filter(p => this.countRolesDelPermiso(p.permisoId) > 0);
+  }
+
+  get permisosSinAsignar() {
+    return this.permisos.filter(p => this.countRolesDelPermiso(p.permisoId) === 0);
+  }
+
+  get permisosFiltrados() {
+    if (this.filtroActual === 'asignados') return this.permisosAsignados;
+    if (this.filtroActual === 'sin-asignar') return this.permisosSinAsignar;
+    return this.filteredPermisos;
+  }
 
   countPermisosAsignados() { return this.utils.countPermisosAsignados(); }
   countPermisosSinRol() { return this.utils.countPermisosSinRol(); }

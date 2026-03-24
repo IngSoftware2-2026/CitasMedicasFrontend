@@ -12,30 +12,33 @@
     <p-button label="Nuevo Permiso" icon="pi pi-plus" styleClass="p-button-rounded p-button-white" (onClick)="openPermisoDialog()" />
   </div>
 
-  <div class="permisos-stats">
-    <div class="permisos-stat-item">
-      <div class="permisos-stat-icon permisos-stat-icon--primary"><i class="pi pi-lock"></i></div>
-      <div class="permisos-stat-info"><span class="permisos-stat-number">{{ filteredPermisos.length }}</span><span class="permisos-stat-label">Total Permisos</span></div>
-    </div>
-    <div class="permisos-stat-item">
-      <div class="permisos-stat-icon permisos-stat-icon--green"><i class="pi pi-link"></i></div>
-      <div class="permisos-stat-info"><span class="permisos-stat-number">{{ countPermisosAsignados() }}</span><span class="permisos-stat-label">Con Roles Asignados</span></div>
-    </div>
-    <div class="permisos-stat-item">
-      <div class="permisos-stat-icon permisos-stat-icon--amber"><i class="pi pi-exclamation-circle"></i></div>
-      <div class="permisos-stat-info"><span class="permisos-stat-number">{{ countPermisosSinRol() }}</span><span class="permisos-stat-label">Sin Asignar</span></div>
-    </div>
+  <div class="permisos-filters">
+    <p-button 
+      [label]="'Todos (' + filteredPermisos.length + ')'" 
+      [styleClass]="filtroActual === 'todos' ? '' : 'p-button-outlined'"
+      (onClick)="filtroActual = 'todos'" 
+    />
+    <p-button 
+      [label]="'Con Roles (' + permisosAsignados.length + ')'" 
+      [styleClass]="filtroActual === 'asignados' ? '' : 'p-button-outlined'"
+      (onClick)="filtroActual = 'asignados'" 
+    />
+    <p-button 
+      [label]="'Sin Asignar (' + permisosSinAsignar.length + ')'" 
+      [styleClass]="filtroActual === 'sin-asignar' ? '' : 'p-button-outlined'"
+      (onClick)="filtroActual = 'sin-asignar'" 
+    />
   </div>
 
   <div class="permisos-table-card">
-    <p-table [value]="filteredPermisos" [paginator]="true" [rows]="10" dataKey="permisoId" [rowHover]="true" styleClass="p-datatable-sm">
+    <p-table [value]="permisosFiltrados" [paginator]="true" [rows]="10" dataKey="permisoId" [rowHover]="true" styleClass="p-datatable-sm">
       <ng-template #caption>
         <div class="permisos-table-caption">
           <p-iconfield class="permisos-search">
             <p-inputicon styleClass="pi pi-search" />
             <input pInputText [(ngModel)]="searchPermiso" placeholder="Buscar por código, nombre o descripción..." />
           </p-iconfield>
-          <span class="permisos-table-count">{{ filteredPermisos.length }} permisos</span>
+          <span class="permisos-table-count">{{ permisosFiltrados.length }} permisos</span>
         </div>
       </ng-template>
       <ng-template #header>
@@ -81,7 +84,7 @@
       </ng-template>
       <ng-template #emptymessage>
         <tr><td colspan="6">
-          <div class="permisos-empty"><i class="pi pi-lock"></i><p>No se encontraron permisos</p><span>Intenta con otros términos de búsqueda</span></div>
+          <div class="permisos-empty"><i class="pi pi-lock"></i><p>No se encontraron permisos</p></div>
         </td></tr>
       </ng-template>
     </p-table>
