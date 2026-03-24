@@ -105,7 +105,7 @@
       </div>
       <div class="field"><label>Doctor *</label>
         <select class="p-inputtext" [(ngModel)]="citaForm['medicoId']">
-          @for (d of doctoresData; track d.medicoId) { <option [ngValue]="d.medicoId">{{ d.medico }}</option> }
+          @for (d of doctoresData; track d.medicoId) { <option [ngValue]="d.medicoId">{{ d.medico || d.nombrePublico }}</option> }
         </select>
       </div>
     </div>

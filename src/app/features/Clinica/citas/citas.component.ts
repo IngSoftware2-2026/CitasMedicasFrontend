@@ -149,7 +149,7 @@ export class CitasComponent implements OnInit {
   cargarDoctores(): void {
     this.citasService.listarDoctores().subscribe({
       next: (response) => {
-        this.doctoresData = response.data ?? [];
+        this.doctoresData = response ?? [];
       },
       error: () => {
         this.doctoresData = [];
