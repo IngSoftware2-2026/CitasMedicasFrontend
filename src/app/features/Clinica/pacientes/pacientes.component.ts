@@ -152,11 +152,12 @@ export class PacientesComponent implements OnInit {
           this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Paciente actualizado' });
           this.pacienteDialog = false;
           this.cargarPacientes();
+          this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('Error al editar:', err);
           console.error('Error al editar - Body:', JSON.stringify(err.error));
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.message || 'No se pudo actualizar el paciente' });
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.mensaje || err?.error?.message || 'No se pudo actualizar el paciente' });
         }
       });
     } else {
@@ -166,11 +167,12 @@ export class PacientesComponent implements OnInit {
           this.messageService.add({ severity: 'success', summary: 'Creado', detail: 'Paciente creado' });
           this.pacienteDialog = false;
           this.cargarPacientes();
+          this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('Error al crear:', err);
           console.error('Error al crear - Body:', JSON.stringify(err.error));
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.message || 'No se pudo crear el paciente' });
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.mensaje || err?.error?.message || 'No se pudo crear el paciente' });
         }
       });
     }
@@ -193,11 +195,12 @@ export class PacientesComponent implements OnInit {
       next: () => {
         this.messageService.add({ severity: 'info', summary: 'Estado', detail: `Paciente ${payload.activo ? 'activado' : 'desactivado'}` });
         this.cargarPacientes();
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error togglePacienteActivo - Status:', err.status);
         console.error('Error togglePacienteActivo - Body:', JSON.stringify(err.error));
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.message || 'No se pudo cambiar el estado' });
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.mensaje || err?.error?.message || 'No se pudo cambiar el estado' });
       }
     });
   }
@@ -212,8 +215,12 @@ export class PacientesComponent implements OnInit {
           next: () => {
             this.messageService.add({ severity: 'success', summary: 'Eliminado', detail: 'Paciente eliminado' });
             this.cargarPacientes();
+            this.cdr.markForCheck();
           },
-          error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el paciente' })
+          error: (err) => {
+            console.error('Error al eliminar:', err);
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.mensaje || 'No se pudo eliminar el paciente' });
+          }
         });
       }
     });
