@@ -10,7 +10,7 @@ import { CitaDetalleResponse, CitaListadoResponse } from '../../../core/models/C
 import { DoctorListado } from '../../../core/models/Clinica/Doctores/doctor-listado.model';
 import { PacienteListado } from '../../../core/models/Clinica/Pacientes/paciente-listado.model';
 import { Sala } from '../../../core/models/Catalogos/sala.model';
-import { MessageService, ConfirmationService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -41,10 +41,7 @@ export class CitasComponent implements OnInit {
   salasData: Sala[] = [];
 
   get citas() { return this.citasData; }
-  get pacientes() { return this.data.pacientes; }
-  get doctores() { return this.data.doctores; }
-  get salas() { return this.salasData.length ? this.salasData : this.data.salas; }
-  get estadosCita() { return this.data.estadosCita; }
+  get salas() { return this.salasData; }
   get consultas() { return this.data.consultas; }
   get canManageCitas() {
     const rolId = this.auth.rolIdActual();
@@ -53,26 +50,6 @@ export class CitasComponent implements OnInit {
   get currentUser() {
     const usuarioId = this.auth.usuarioIdActual();
     return usuarioId ? { usuarioId } : null;
-  }
-
-  get pacientesFormOptions() {
-    const pacientes = new Map<number, string>();
-
-    for (const cita of this.citasData) {
-      pacientes.set(cita.pacienteId, cita.paciente ?? this.data.getPacienteNombre(cita.pacienteId));
-    }
-
-    return Array.from(pacientes.entries()).map(([pacienteId, nombre]) => ({ pacienteId, nombre }));
-  }
-
-  get doctoresFormOptions() {
-    const doctores = new Map<number, string>();
-
-    for (const cita of this.citasData) {
-      doctores.set(cita.medicoId, cita.medico ?? this.data.getDoctorNombre(cita.medicoId));
-    }
-
-    return Array.from(doctores.entries()).map(([medicoId, nombre]) => ({ medicoId, nombre }));
   }
 
   get citasView() {
@@ -114,11 +91,11 @@ export class CitasComponent implements OnInit {
         this.citasData = response.data ?? [];
         this.cdr.detectChanges();
       },
-      error: () => {
+      error: (error) => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'No se pudieron cargar las citas'
+          detail: this.getErrorMessage(error, 'No se pudieron cargar las citas')
         });
       }
     });
@@ -129,8 +106,13 @@ export class CitasComponent implements OnInit {
       next: (response) => {
         this.salasData = (response.data ?? []).filter((sala) => sala.activo);
       },
-      error: () => {
+      error: (error) => {
         this.salasData = [];
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: this.getErrorMessage(error, 'No se pudieron cargar las salas')
+        });
       }
     });
   }
@@ -140,8 +122,13 @@ export class CitasComponent implements OnInit {
       next: (response) => {
         this.pacientesData = response.data ?? [];
       },
-      error: () => {
+      error: (error) => {
         this.pacientesData = [];
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: this.getErrorMessage(error, 'No se pudieron cargar los pacientes')
+        });
       }
     });
   }
@@ -151,14 +138,19 @@ export class CitasComponent implements OnInit {
       next: (response) => {
         this.doctoresData = response ?? [];
       },
-      error: () => {
+      error: (error) => {
         this.doctoresData = [];
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: this.getErrorMessage(error, 'No se pudieron cargar los doctores')
+        });
       }
     });
   }
 
-  countByEstado(estadoId: number): number {
-    return this.citas.filter(c => c.estadoId === estadoId).length;
+  countByCodigoEstado(codigoEstado: string): number {
+    return this.citas.filter(c => c.codigoEstado === codigoEstado).length;
   }
 
   getInitials(name: string): string {
@@ -169,6 +161,13 @@ export class CitasComponent implements OnInit {
     const pad = (value: number) => value.toString().padStart(2, '0');
 
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  }
+
+  private getErrorMessage(error: any, fallback: string): string {
+    return error?.error?.message
+      ?? error?.error?.Message
+      ?? error?.message
+      ?? fallback;
   }
 
   private getCodigoEstadoCambio(nuevoEstado: number): string {
@@ -186,81 +185,118 @@ export class CitasComponent implements OnInit {
     }
   }
 
-  openCitaDialog(c?: any): void {
-    if (c) {
-      this.citaForm = { ...c, inicio: this.data.toDateTimeString(c.inicio) };
-    } else {
-      this.citaForm = { duracionMinutos: 30, estadoId: 1 };
-    }
+  openCitaDialog(): void {
+    this.citaForm = { duracionMinutos: 30 };
     this.citaDialog = true;
   }
 
   saveCita(): void {
-    if (!this.citaForm['pacienteId'] || !this.citaForm['medicoId'] || !this.citaForm['salaId']) {
-      this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Paciente, doctor y sala son obligatorios' });
+    const pacienteId = Number(this.citaForm['pacienteId']);
+    const medicoId = Number(this.citaForm['medicoId']);
+    const salaId = Number(this.citaForm['salaId']);
+    const inicioValor = this.citaForm['inicio'];
+    const duracion = Number(this.citaForm['duracionMinutos'] || 30);
+
+    if (!Number.isInteger(pacienteId) || pacienteId <= 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Debe seleccionar un paciente válido' });
       return;
     }
-    const inicio = new Date(this.citaForm['inicio']);
-    const duracion = this.citaForm['duracionMinutos'] || 30;
+
+    if (!Number.isInteger(medicoId) || medicoId <= 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Debe seleccionar un doctor válido' });
+      return;
+    }
+
+    if (!Number.isInteger(salaId) || salaId <= 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Debe seleccionar una sala válida' });
+      return;
+    }
+
+    if (!inicioValor) {
+      this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Debe seleccionar fecha y hora de inicio' });
+      return;
+    }
+
+    const inicio = new Date(inicioValor);
+
+    if (Number.isNaN(inicio.getTime())) {
+      this.messageService.add({ severity: 'warn', summary: 'Inválido', detail: 'La fecha y hora de inicio no es válida' });
+      return;
+    }
+
+    if (!Number.isFinite(duracion) || duracion <= 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Inválido', detail: 'La duración debe ser mayor a 0 minutos' });
+      return;
+    }
+
     const fin = new Date(inicio.getTime() + duracion * 60000);
 
     if (this.citaForm['citaId']) {
-      const idx = this.citas.findIndex(c => c.citaId === this.citaForm['citaId']);
-      if (idx >= 0) {
-        this.citas[idx] = {
-          ...this.citas[idx],
-          ...this.citaForm,
-          inicio: this.toLocalDateTimeValue(inicio),
-          fin: this.toLocalDateTimeValue(fin),
-          duracionMinutos: duracion
-        };
-        this.messageService.add({ severity: 'success', summary: 'Actualizada', detail: 'Cita actualizada' });
-      }
-    } else {
-      const request: CitasInsertarRequest = {
-        solicitudId: this.citaForm['solicitudId'] ?? null,
-        pacienteId: this.citaForm['pacienteId'],
-        medicoId: this.citaForm['medicoId'],
-        salaId: this.citaForm['salaId'],
-        inicio: this.toLocalDateTimeValue(inicio),
-        fin: this.toLocalDateTimeValue(fin),
-        duracionMinutos: duracion,
-        creadaPorUsuarioId: this.currentUser?.usuarioId ?? 1
-      };
-
-      this.citasService.insertar(request).subscribe({
-        next: (response) => {
-          if (response.success) {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Creada',
-              detail: response.message || 'Cita creada'
-            });
-            this.citaDialog = false;
-            this.cargarCitas();
-            return;
-          }
-
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: response.message || 'No se pudo crear la cita'
-          });
-        },
-        error: () => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo crear la cita'
-          });
-        }
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'No disponible',
+        detail: 'La edición completa de citas no está disponible en esta versión'
       });
       return;
     }
-    this.citaDialog = false;
+
+    const request: CitasInsertarRequest = {
+      solicitudId: this.citaForm['solicitudId'] ?? null,
+      pacienteId,
+      medicoId,
+      salaId,
+      inicio: this.toLocalDateTimeValue(inicio),
+      fin: this.toLocalDateTimeValue(fin),
+      duracionMinutos: duracion,
+      creadaPorUsuarioId: this.currentUser?.usuarioId ?? 1
+    };
+
+    this.citasService.insertar(request).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Creada',
+            detail: response.message || 'Cita creada'
+          });
+          this.citaDialog = false;
+          this.cargarCitas();
+          return;
+        }
+
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: response.message || 'No se pudo crear la cita'
+        });
+      },
+      error: (error) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: this.getErrorMessage(error, 'No se pudo crear la cita')
+        });
+      }
+    });
   }
 
   cambiarEstadoCita(c: any, nuevoEstado: number): void {
+    if (nuevoEstado === 4) {
+      this.confirmationService.confirm({
+        message: `¿Deseas cancelar la cita de ${c.pacienteNombre ?? c.paciente ?? 'este paciente'}?`,
+        header: 'Confirmar cancelación',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Sí, cancelar',
+        rejectLabel: 'No',
+        accept: () => this.ejecutarCambioEstado(c, nuevoEstado)
+      });
+      return;
+    }
+
+    this.ejecutarCambioEstado(c, nuevoEstado);
+  }
+
+  private ejecutarCambioEstado(c: any, nuevoEstado: number): void {
     const citaId = c.citaId ?? c;
     const codigoEstado = this.getCodigoEstadoCambio(nuevoEstado);
 
@@ -296,11 +332,11 @@ export class CitasComponent implements OnInit {
           detail: response.message || 'No se pudo actualizar el estado'
         });
       },
-      error: () => {
+      error: (error) => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'No se pudo actualizar el estado'
+          detail: this.getErrorMessage(error, 'No se pudo actualizar el estado')
         });
       }
     });
@@ -312,11 +348,11 @@ export class CitasComponent implements OnInit {
         this.detailCita = response.data ?? null;
         this.citaDetailDialog = true;
       },
-      error: () => {
+      error: (error) => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'No se pudo cargar el detalle de la cita'
+          detail: this.getErrorMessage(error, 'No se pudo cargar el detalle de la cita')
         });
       }
     });

@@ -14,15 +14,15 @@
   </div>
   <div class="mod-stat-item">
     <div class="mod-stat-icon --blue"><i class="pi pi-check-circle"></i></div>
-    <div class="mod-stat-info"><span class="mod-stat-num">{{ countByEstado(1) }}</span><span class="mod-stat-label">Confirmadas</span></div>
-  </div>
-  <div class="mod-stat-item">
-    <div class="mod-stat-icon --amber"><i class="pi pi-spinner"></i></div>
-    <div class="mod-stat-info"><span class="mod-stat-num">{{ countByEstado(2) }}</span><span class="mod-stat-label">En Curso</span></div>
+    <div class="mod-stat-info"><span class="mod-stat-num">{{ countByCodigoEstado('CONF') }}</span><span class="mod-stat-label">Confirmadas</span></div>
   </div>
   <div class="mod-stat-item">
     <div class="mod-stat-icon --green"><i class="pi pi-verified"></i></div>
-    <div class="mod-stat-info"><span class="mod-stat-num">{{ countByEstado(3) }}</span><span class="mod-stat-label">Finalizadas</span></div>
+    <div class="mod-stat-info"><span class="mod-stat-num">{{ countByCodigoEstado('ATEN') }}</span><span class="mod-stat-label">Atendidas</span></div>
+  </div>
+  <div class="mod-stat-item">
+    <div class="mod-stat-icon --danger"><i class="pi pi-times-circle"></i></div>
+    <div class="mod-stat-info"><span class="mod-stat-num">{{ countByCodigoEstado('CANC') }}</span><span class="mod-stat-label">Canceladas</span></div>
   </div>
 </div>
 
@@ -78,7 +78,7 @@
             <button class="mod-action-btn --view" pTooltip="Ver detalle" tooltipPosition="top" (click)="openCitaDetail(c)"><i class="pi pi-eye"></i></button>
             @if (canManageCitas) {
               @if (c.estadoCodigo === 'CONF') {
-                <button class="mod-action-btn --start" pTooltip="Iniciar" tooltipPosition="top" (click)="cambiarEstadoCita(c, 2)"><i class="pi pi-play"></i></button>
+                <button class="mod-action-btn --start" pTooltip="Marcar como atendida" tooltipPosition="top" (click)="cambiarEstadoCita(c, 2)"><i class="pi pi-check"></i></button>
                 <button class="mod-action-btn --danger" pTooltip="Cancelar" tooltipPosition="top" (click)="cambiarEstadoCita(c, 4)"><i class="pi pi-times"></i></button>
               }
             }
@@ -95,7 +95,7 @@
 </div>
 
 <!-- CITA DIALOG -->
-<p-dialog header="{{ citaForm['citaId'] ? 'Editar' : 'Nueva' }} Cita" [(visible)]="citaDialog" [modal]="true" [style]="{width: '580px'}">
+<p-dialog header="Nueva Cita" [(visible)]="citaDialog" [modal]="true" [style]="{width: '580px'}">
   <div class="dialog-form">
     <div class="form-row">
       <div class="field"><label>Paciente *</label>
