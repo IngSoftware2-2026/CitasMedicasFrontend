@@ -35,21 +35,26 @@ export class PacienteService extends ConexionService {
   insertar(paciente: Partial<Paciente>): Observable<Paciente> {
     return this.crear<Paciente>('/Pacientes/Insertar', paciente).pipe(
       map((respuesta: any) => {
+        if (!respuesta) return paciente as Paciente;
         const exitoso = respuesta.exitoso ?? respuesta.success;
         const datos = respuesta.datos ?? respuesta.data;
         if (exitoso) return datos as Paciente;
-        throw new Error(respuesta.mensaje || 'Error al insertar paciente');
+        if (respuesta.mensaje) throw new Error(respuesta.mensaje);
+        return paciente as Paciente;
       })
     );
   }
 
   editar(paciente: Partial<Paciente>): Observable<Paciente> {
-    return this.actualizar<Paciente>('/Pacientes/Editar', paciente).pipe(
+    const pacienteId = paciente.pacienteId;
+    return this.crear<Paciente>(`/Pacientes/Editar/${pacienteId}`, paciente).pipe(
       map((respuesta: any) => {
+        if (!respuesta) return paciente as Paciente;
         const exitoso = respuesta.exitoso ?? respuesta.success;
         const datos = respuesta.datos ?? respuesta.data;
         if (exitoso) return datos as Paciente;
-        throw new Error(respuesta.mensaje || 'Error al editar paciente');
+        if (respuesta.mensaje) throw new Error(respuesta.mensaje);
+        return paciente as Paciente;
       })
     );
   }
