@@ -43,7 +43,7 @@ export class PacienteService extends ConexionService {
   }
 
   editar(paciente: Partial<Paciente>): Observable<Paciente> {
-    return this.crear<Paciente>('/Pacientes/Editar', paciente).pipe(
+    return this.actualizar<Paciente>('/Pacientes/Editar', paciente).pipe(
       map((respuesta: any) => {
         const exitoso = respuesta.exitoso ?? respuesta.success;
         const datos = respuesta.datos ?? respuesta.data;
