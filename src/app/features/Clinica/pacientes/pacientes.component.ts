@@ -1,6 +1,7 @@
-import { Component, OnInit, signal, computed, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, signal, computed, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { PacienteService } from '../../../core/services/Clinica/paciente.service';
 import { Paciente } from '../../../core/models/Clinica/Pacientes/paciente.model';
 import { MessageService, ConfirmationService } from 'primeng/api';
@@ -13,11 +14,12 @@ import { ToolbarModule } from 'primeng/toolbar';
 import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { SelectModule } from 'primeng/select';
 
 @Component({
   selector: 'app-pacientes',
   standalone: true,
-  imports: [FormsModule, DatePipe, TableModule, ButtonModule, DialogModule, InputTextModule, TagModule, ToolbarModule, TooltipModule, IconFieldModule, InputIconModule],
+  imports: [FormsModule, DatePipe, TableModule, ButtonModule, DialogModule, InputTextModule, TagModule, ToolbarModule, TooltipModule, IconFieldModule, InputIconModule, SelectModule],
   templateUrl: './pacientes.component.html',
   styleUrl: './pacientes.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -27,6 +29,9 @@ export class PacientesComponent implements OnInit {
   pacienteDialog = false;
   pacienteForm: Record<string, any> = {};
   pacientes = signal<Paciente[]>([]);
+  todosUsuarios = signal<any[]>([]);
+  usuariosDisponibles = signal<{ label: string; value: number }[]>([]);
+  private http = inject(HttpClient);
 
   filteredPacientes = computed(() => {
     const term = this.searchPaciente().toLowerCase();
@@ -55,6 +60,24 @@ export class PacientesComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarPacientes();
+    this.cargarTodosUsuarios();
+  }
+
+  private cargarTodosUsuarios(): void {
+    this.http.get<any>('/Accesos/Usuarios/Listar').subscribe({
+      next: (resp) => {
+        console.log('Respuesta cruda usuarios:', resp);
+        const datos = resp?.data ?? resp?.datos ?? resp;
+        const lista = Array.isArray(datos) ? datos : [];
+        console.log('Usuarios cargados:', lista.length);
+        this.todosUsuarios.set(lista);
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error('Error al cargar usuarios:', err);
+        this.todosUsuarios.set([]);
+      }
+    });
   }
 
   cargarPacientes(): void {
@@ -77,28 +100,52 @@ export class PacientesComponent implements OnInit {
     this.pacienteForm = p
       ? { ...p, fechaNacimiento: p.fechaNacimiento ? new Date(p.fechaNacimiento).toISOString().split('T')[0] : '' }
       : {};
+    this.buildUsuariosDropdown(p?.usuarioId);
     this.pacienteDialog = true;
   }
 
+  private buildUsuariosDropdown(usuarioIdActual?: number): void {
+    const usuarios = this.todosUsuarios();
+    const idsOcupados = new Set(this.pacientes().map(p => p.usuarioId));
+
+    const opciones = usuarios
+      .filter(u => u.activo)
+      .map(u => {
+        const ocupado = idsOcupados.has(u.usuarioId) && u.usuarioId !== usuarioIdActual;
+        const esActual = u.usuarioId === usuarioIdActual;
+        let label = `#${u.usuarioId} — ${u.nombreUsuario} (${u.correo})`;
+        if (esActual) label = `#${u.usuarioId} — ${u.nombreUsuario} (actual)`;
+        else if (ocupado) label = `#${u.usuarioId} — ${u.nombreUsuario} [ya asignado]`;
+        return { label, value: u.usuarioId, disabled: ocupado };
+      });
+
+    console.log('Opciones dropdown:', opciones);
+    this.usuariosDisponibles.set(opciones);
+  }
+
   savePaciente(): void {
-    if (!this.pacienteForm['nombres'] || !this.pacienteForm['telefono']) {
-      this.messageService.add({ severity: 'warn', summary: 'Campos requeridos', detail: 'Nombres y telefono son obligatorios' });
+    if (!this.pacienteForm['nombres'] || !this.pacienteForm['apellidos'] || !this.pacienteForm['telefono'] || !this.pacienteForm['numeroIdentidad']) {
+      this.messageService.add({ severity: 'warn', summary: 'Campos requeridos', detail: 'Nombres, apellidos, teléfono y número de identidad son obligatorios' });
+      return;
+    }
+    if (!this.pacienteForm['usuarioId'] || this.pacienteForm['usuarioId'] <= 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Campos requeridos', detail: 'El Usuario ID es obligatorio y debe ser mayor que cero' });
       return;
     }
 
     const payload: any = {
+      usuarioId: this.pacienteForm['usuarioId'],
       nombres: this.pacienteForm['nombres'],
-      apellidos: this.pacienteForm['apellidos'] || null,
+      apellidos: this.pacienteForm['apellidos'],
       telefono: this.pacienteForm['telefono'],
       correo: this.pacienteForm['correo'] || null,
       fechaNacimiento: this.pacienteForm['fechaNacimiento'] || null,
-      numeroIdentidad: this.pacienteForm['numeroIdentidad'] || null,
+      numeroIdentidad: this.pacienteForm['numeroIdentidad'],
       activo: this.pacienteForm['activo'] ?? true
     };
 
     if (this.pacienteForm['pacienteId']) {
       payload.pacienteId = this.pacienteForm['pacienteId'];
-      if (this.pacienteForm['usuarioId']) payload.usuarioId = this.pacienteForm['usuarioId'];
       console.log('Editando paciente:', payload);
       this.pacienteService.editar(payload).subscribe({
         next: () => {
@@ -108,7 +155,8 @@ export class PacientesComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error al editar:', err);
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.mensaje || 'No se pudo actualizar el paciente' });
+          console.error('Error al editar - Body:', JSON.stringify(err.error));
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.message || 'No se pudo actualizar el paciente' });
         }
       });
     } else {
@@ -121,20 +169,36 @@ export class PacientesComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error al crear:', err);
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.mensaje || 'No se pudo crear el paciente' });
+          console.error('Error al crear - Body:', JSON.stringify(err.error));
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.message || 'No se pudo crear el paciente' });
         }
       });
     }
   }
 
   togglePacienteActivo(p: Paciente): void {
-    const updated = { ...p, activo: !p.activo };
-    this.pacienteService.editar(updated).subscribe({
+    const payload: any = {
+      pacienteId: p.pacienteId,
+      usuarioId: p.usuarioId,
+      nombres: p.nombres,
+      apellidos: p.apellidos,
+      telefono: p.telefono,
+      correo: p.correo || null,
+      fechaNacimiento: p.fechaNacimiento || null,
+      numeroIdentidad: p.numeroIdentidad,
+      activo: !p.activo
+    };
+    console.log('togglePacienteActivo payload:', JSON.stringify(payload));
+    this.pacienteService.editar(payload).subscribe({
       next: () => {
-        this.messageService.add({ severity: 'info', summary: 'Estado', detail: `Paciente ${updated.activo ? 'activado' : 'desactivado'}` });
+        this.messageService.add({ severity: 'info', summary: 'Estado', detail: `Paciente ${payload.activo ? 'activado' : 'desactivado'}` });
         this.cargarPacientes();
       },
-      error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cambiar el estado' })
+      error: (err) => {
+        console.error('Error togglePacienteActivo - Status:', err.status);
+        console.error('Error togglePacienteActivo - Body:', JSON.stringify(err.error));
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.message || 'No se pudo cambiar el estado' });
+      }
     });
   }
 
