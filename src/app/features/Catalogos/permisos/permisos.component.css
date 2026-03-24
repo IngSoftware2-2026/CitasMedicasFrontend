@@ -24,6 +24,18 @@
   gap: 1rem;
 }
 
+.permisos-header-title-text {
+  color: white;
+}
+
+.permisos-header-title-text h2 {
+  color: white;
+}
+
+.permisos-header-title-text p {
+  color: rgba(255, 255, 255, 0.85);
+}
+
 .permisos-header-icon {
   width: 48px;
   height: 48px;
