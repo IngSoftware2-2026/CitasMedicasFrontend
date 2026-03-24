@@ -48,43 +48,29 @@ export class UsuarioService extends ConexionService {
   listar(): Observable<Usuario[]> {
     return this.obtener<Usuario[]>('/Accesos/Usuarios/Listar').pipe(
       map((respuesta: any) => {
-        console.log('Respuesta listar usuarios:', respuesta);
+        if (!respuesta) return [];
         const exitoso = respuesta.exitoso ?? respuesta.success;
         const datos = respuesta.datos ?? respuesta.data;
-        
-        if (exitoso && datos) {
-          return datos as Usuario[];
-        }
-        throw new Error(respuesta.mensaje || respuesta.message || 'Error al listar usuarios');
+        if (exitoso && datos) return datos as Usuario[];
+        if (respuesta.mensaje) throw new Error(respuesta.mensaje);
+        return [];
       })
     );
   }
 
-  /**
-   * Obtiene un usuario específico por su ID desde el endpoint del API.
-   * @param id - ID del usuario a buscar
-   * @returns Observable con el usuario encontrado
-   */
   obtenerPorId(id: number): Observable<Usuario | null> {
     return this.obtener<Usuario>(`/Accesos/Usuarios/${id}`).pipe(
       map((respuesta: any) => {
-        const exitoso = respuesta.success !== undefined ? respuesta.success : respuesta.exitoso;
-        const datos = respuesta.data !== undefined ? respuesta.data : respuesta.datos;
-        
-        if (exitoso && datos) {
-          return datos as Usuario;
-        }
+        if (!respuesta) return null;
+        const exitoso = respuesta.success ?? respuesta.exitoso;
+        const datos = respuesta.data ?? respuesta.datos;
+        if (exitoso && datos) return datos as Usuario;
         return null;
       }),
       catchError(() => [])
     );
   }
 
-  /**
-   * Inserta un nuevo usuario en el sistema.
-   * @param datos - Datos parciales del usuario a crear
-   * @returns Observable con el usuario creado
-   */
   insertar(datos: Partial<Usuario>): Observable<Usuario> {
     const payload = {
       nombreUsuario: datos.nombreUsuario || '',
