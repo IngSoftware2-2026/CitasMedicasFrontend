@@ -12,23 +12,7 @@
     <p-button label="Nuevo Permiso" icon="pi pi-plus" styleClass="p-button-rounded p-button-white" (onClick)="openPermisoDialog()" />
   </div>
 
-  <div class="permisos-filters">
-    <p-button 
-      [label]="'Todos (' + filteredPermisos.length + ')'" 
-      [styleClass]="filtroActual === 'todos' ? '' : 'p-button-outlined'"
-      (onClick)="filtroActual = 'todos'" 
-    />
-    <p-button 
-      [label]="'Con Roles (' + permisosAsignados.length + ')'" 
-      [styleClass]="filtroActual === 'asignados' ? '' : 'p-button-outlined'"
-      (onClick)="filtroActual = 'asignados'" 
-    />
-    <p-button 
-      [label]="'Sin Asignar (' + permisosSinAsignar.length + ')'" 
-      [styleClass]="filtroActual === 'sin-asignar' ? '' : 'p-button-outlined'"
-      (onClick)="filtroActual = 'sin-asignar'" 
-    />
-  </div>
+
 
   <div class="permisos-table-card">
     <p-table [value]="permisosFiltrados" [paginator]="true" [rows]="10" dataKey="permisoId" [rowHover]="true" styleClass="p-datatable-sm">
@@ -38,6 +22,16 @@
             <p-inputicon styleClass="pi pi-search" />
             <input pInputText [(ngModel)]="searchPermiso" placeholder="Buscar por código, nombre o descripción..." />
           </p-iconfield>
+          <p-select 
+            [options]="opcionesFiltroRol" 
+            [(ngModel)]="filtroRolId" 
+            (ngModelChange)="onRoleFilterChange($event)" 
+            optionLabel="label" 
+            optionValue="value" 
+            placeholder="Todos los roles" 
+            [style]="{'minWidth': '180px'}" 
+            appendTo="body" 
+            [showClear]="true" />
           <span class="permisos-table-count">{{ permisosFiltrados.length }} permisos</span>
         </div>
       </ng-template>

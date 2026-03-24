@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -11,6 +11,7 @@ import { ToolbarModule } from 'primeng/toolbar';
 import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { SelectModule } from 'primeng/select';
 import { Permiso } from '../../../core/models/Accesos/permiso.model';
 import { Rol } from '../../../core/models/Accesos/rol.model';
 import {
@@ -22,7 +23,7 @@ import {
 @Component({
   selector: 'app-permisos',
   standalone: true,
-  imports: [CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, TagModule, ToolbarModule, TooltipModule, IconFieldModule, InputIconModule],
+  imports: [CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, TagModule, ToolbarModule, TooltipModule, IconFieldModule, InputIconModule, SelectModule],
   providers: [MessageService, ConfirmationService, AdminPermisoOperations, AdminPermisoRolOperations, AdminUtils],
   templateUrl: './permisos.component.html',
   styleUrls: ['./permisos.component.css']
@@ -32,6 +33,15 @@ export class PermisosComponent {
   permisoForm: Partial<Permiso> = {};
   searchPermiso = '';
   filtroActual: 'todos' | 'asignados' | 'sin-asignar' = 'todos';
+  filtroRolId = signal<number | null>(null);
+
+  opcionesFiltroRol = [
+    { label: 'Todos', value: null },
+    { label: 'Administrador', value: 1 },
+    { label: 'Doctor', value: 2 },
+    { label: 'Recepcionista', value: 3 },
+    { label: 'Paciente', value: 4 },
+  ];
 
   constructor(
     public permisoOps: AdminPermisoOperations,
@@ -58,9 +68,20 @@ export class PermisosComponent {
   }
 
   get permisosFiltrados() {
-    if (this.filtroActual === 'asignados') return this.permisosAsignados;
-    if (this.filtroActual === 'sin-asignar') return this.permisosSinAsignar;
-    return this.filteredPermisos;
+    let resultado = this.filteredPermisos;
+    
+    if (this.filtroActual === 'asignados') resultado = this.permisosAsignados;
+    if (this.filtroActual === 'sin-asignar') resultado = this.permisosSinAsignar;
+    
+    if (this.filtroRolId() !== null) {
+      resultado = resultado.filter(p => this.rolTienePermiso(this.filtroRolId()!, p.permisoId));
+    }
+    
+    return resultado;
+  }
+
+  onRoleFilterChange(valor: number | null): void {
+    this.filtroRolId.set(valor);
   }
 
   countPermisosAsignados() { return this.utils.countPermisosAsignados(); }

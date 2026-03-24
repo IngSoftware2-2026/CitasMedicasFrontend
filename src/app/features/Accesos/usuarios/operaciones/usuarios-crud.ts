@@ -3,12 +3,14 @@ import { ChangeDetectorRef } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { Subject, takeUntil } from 'rxjs';
 import { UsuarioService } from '../../../../core/services/Accesos/usuario.service';
+import { RefreshManager } from '../../../../core/shared/data-refresh.service';
 import { Usuario } from '../../../../core/models/Accesos/usuario.model';
 
 @Injectable()
 export class UsuariosCrud {
   private usuarioService = inject(UsuarioService);
   private messageService = inject(MessageService);
+  private refreshManager = inject(RefreshManager);
   private cdr: ChangeDetectorRef | null = null;
   private destroy$ = new Subject<void>();
   private usuariosSubject = new Subject<Usuario[]>();
@@ -68,7 +70,7 @@ export class UsuariosCrud {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.cargarUsuarios();
+          this.refreshManager.refresh('usuarios');
           this.mostrarMensaje('success', 'Éxito', `Usuario ${accion} correctamente`);
         },
         error: (error) => {
@@ -100,7 +102,7 @@ export class UsuariosCrud {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.cargarUsuarios();
+          this.refreshManager.refresh('usuarios');
           this.mostrarMensaje('success', 'Eliminado', 'Usuario eliminado correctamente');
         },
         error: (error) => {
@@ -115,7 +117,7 @@ export class UsuariosCrud {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.cargarUsuarios();
+          this.refreshManager.refresh('usuarios');
           this.mostrarMensaje('success', 'Creado', 'Usuario creado exitosamente');
         },
         error: (error) => {
@@ -132,7 +134,7 @@ export class UsuariosCrud {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.cargarUsuarios();
+          this.refreshManager.refresh('usuarios');
           this.mostrarMensaje('success', 'Actualizado', 'Usuario actualizado exitosamente');
         },
         error: (error) => {

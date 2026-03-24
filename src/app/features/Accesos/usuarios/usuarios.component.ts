@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, signal, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
@@ -16,6 +16,7 @@ import { AvatarModule } from 'primeng/avatar';
 import { Usuario } from '../../../core/models/Accesos/usuario.model';
 import { MessageService } from 'primeng/api';
 import { UsuarioService } from '../../../core/services/Accesos/usuario.service';
+import { RefreshManager } from '../../../core/shared/data-refresh.service';
 import { UsuariosCrud, UsuariosUtils } from './operaciones';
 
 @Component({
@@ -58,6 +59,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
   ];
 
   private destroy$ = new Subject<void>();
+  private refreshManager = inject(RefreshManager);
 
   constructor(
     public crud: UsuariosCrud,
@@ -70,9 +72,11 @@ export class UsuariosComponent implements OnInit, OnDestroy {
   
   ngOnInit(): void {
     this.cargarDatos();
+    this.refreshManager.register('usuarios', () => this.cargarDatos());
   }
 
   ngOnDestroy(): void {
+    this.refreshManager.unregister('usuarios');
     this.destroy$.next();
     this.destroy$.complete();
   }
