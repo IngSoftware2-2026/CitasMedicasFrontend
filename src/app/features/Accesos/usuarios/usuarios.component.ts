@@ -6,7 +6,7 @@
  * Permite buscar, filtrar, crear, editar, ver detalles y cambiar estado.
  */
 
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
@@ -56,7 +56,8 @@ import { UsuariosCrud, UsuariosUtils } from './operaciones';
   ],
   providers: [MessageService, UsuariosCrud, UsuariosUtils],
   templateUrl: './usuarios.component.html',
-  styleUrl: './usuarios.component.css'
+  styleUrl: './usuarios.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UsuariosComponent implements OnInit, OnDestroy {
 
@@ -65,58 +66,58 @@ export class UsuariosComponent implements OnInit, OnDestroy {
   // ============================================================
   
   /** Texto de búsqueda */
-  busqueda: string = '';
+  busqueda = signal('');
   
   /** ID del rol seleccionado para filtrar */
-  filtroRolId: number | null = null;
+  filtroRolId = signal<number | null>(null);
 
   // ============================================================
   // VARIABLES DEL FORMULARIO
   // ============================================================
   
   /** Controla la visibilidad del modal de usuario */
-  usuarioDialog: boolean = false;
+  usuarioDialog = signal(false);
   
   /** Datos del formulario de usuario */
-  usuarioForm: Partial<Usuario> = {};
+  usuarioForm = signal<Partial<Usuario>>({});
   
   /** Indica si estamos editando (true) o creando (false) */
-  esEdicion: boolean = false;
+  esEdicion = signal(false);
 
   // ============================================================
   // VARIABLES DE DETALLE
   // ============================================================
   
   /** Controla la visibilidad del modal de detalle */
-  detalleDialog: boolean = false;
+  detalleDialog = signal(false);
   
   /** Usuario seleccionado para ver detalles */
-  usuarioDetalle: Usuario | null = null;
+  usuarioDetalle = signal<Usuario | null>(null);
   
   /** Indica si está cargando los detalles */
-  detalleLoading: boolean = false;
+  detalleLoading = signal(false);
 
   // ============================================================
   // VARIABLES DE DATOS
   // ============================================================
   
   /** Lista completa de usuarios */
-  listaUsuarios: Usuario[] = [];
+  listaUsuarios = signal<Usuario[]>([]);
   
   /** Lista filtrada según búsqueda */
-  listaFiltrada: Usuario[] = [];
+  listaFiltrada = signal<Usuario[]>([]);
   
   /** Lista de roles */
-  listaRoles: any[] = [];
+  listaRoles = signal<any[]>([]);
 
   // ============================================================
   // ESTADÍSTICAS
   // ============================================================
   
-  totalUsuarios: number = 0;
-  usuariosActivos: number = 0;
-  usuariosInactivos: number = 0;
-  administradoresCount: number = 0;
+  totalUsuarios = signal(0);
+  usuariosActivos = signal(0);
+  usuariosInactivos = signal(0);
+  administradoresCount = signal(0);
 
   // ============================================================
   // OPCIONES DE FILTRO
@@ -182,12 +183,14 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     this.usuarioService.listar()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (usuarios) => {
-          this.listaUsuarios = usuarios;
+        next: (usuarios: Usuario[]) => {
+          this.listaUsuarios.set(usuarios);
           this.aplicarFiltros();
+          this.cdr.markForCheck();
         },
-        error: (error) => {
+        error: (error: any) => {
           console.error('Error al cargar usuarios:', error);
+          this.cdr.markForCheck();
         }
       });
 
@@ -195,8 +198,8 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     this.utils.roles$
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (roles) => {
-          this.listaRoles = roles;
+        next: (roles: any[]) => {
+          this.listaRoles.set(roles);
         }
       });
   }
@@ -209,40 +212,41 @@ export class UsuariosComponent implements OnInit, OnDestroy {
    * Aplica los filtros de búsqueda y rol.
    */
   private aplicarFiltros(): void {
-    let resultado = [...this.listaUsuarios];
+    const usuarios = this.listaUsuarios();
+    let resultado = [...usuarios];
 
-    if (this.busqueda.trim()) {
-      const termino = this.busqueda.toLowerCase();
+    if (this.busqueda().trim()) {
+      const termino = this.busqueda().toLowerCase();
       resultado = resultado.filter(usuario => 
         usuario.nombreUsuario?.toLowerCase().includes(termino) ||
         usuario.correo?.toLowerCase().includes(termino)
       );
     }
 
-    if (this.filtroRolId !== null) {
-      resultado = resultado.filter(usuario => usuario.rolId === this.filtroRolId);
+    if (this.filtroRolId() !== null) {
+      resultado = resultado.filter(usuario => usuario.rolId === this.filtroRolId());
     }
 
-    this.listaFiltrada = resultado;
+    this.listaFiltrada.set(resultado);
     this.calcularEstadisticas();
-    this.cdr.detectChanges();
   }
 
   /**
    * Calcula las estadísticas de usuarios.
    */
   private calcularEstadisticas(): void {
-    this.totalUsuarios = this.listaUsuarios.length;
-    this.usuariosActivos = this.listaUsuarios.filter(u => u.activo).length;
-    this.usuariosInactivos = this.listaUsuarios.filter(u => !u.activo).length;
-    this.administradoresCount = this.listaUsuarios.filter(u => u.rolId === 1).length;
+    const usuarios = this.listaUsuarios();
+    this.totalUsuarios.set(usuarios.length);
+    this.usuariosActivos.set(usuarios.filter((u: Usuario) => u.activo).length);
+    this.usuariosInactivos.set(usuarios.filter((u: Usuario) => !u.activo).length);
+    this.administradoresCount.set(usuarios.filter((u: Usuario) => u.rolId === 1).length);
   }
 
   /**
    * Manejador del evento de búsqueda.
    */
   onSearchChange(valor: string): void {
-    this.busqueda = valor;
+    this.busqueda.set(valor);
     this.aplicarFiltros();
   }
 
@@ -250,7 +254,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
    * Manejador del evento de filtro por rol.
    */
   onRoleFilterChange(valor: number | null): void {
-    this.filtroRolId = valor;
+    this.filtroRolId.set(valor);
     this.aplicarFiltros();
   }
 
@@ -263,30 +267,30 @@ export class UsuariosComponent implements OnInit, OnDestroy {
    * @param usuario - Usuario a editar (null = crear nuevo)
    */
   abrirModalUsuario(usuario?: Usuario): void {
-    this.esEdicion = !!usuario;
+    this.esEdicion.set(!!usuario);
     
     if (usuario) {
-      this.usuarioForm = { ...usuario, clave: '' };
+      this.usuarioForm.set({ ...usuario, clave: '' });
     } else {
-      this.usuarioForm = { activo: true };
+      this.usuarioForm.set({ activo: true });
     }
     
-    this.usuarioDialog = true;
+    this.usuarioDialog.set(true);
   }
 
   /**
    * Cierra el modal de usuario sin guardar.
    */
   cerrarModalUsuario(): void {
-    this.usuarioDialog = false;
+    this.usuarioDialog.set(false);
   }
 
   /**
    * Guarda el usuario (crea o actualiza).
    */
   guardarUsuario(): void {
-    this.crud.guardar(this.usuarioForm, this.esEdicion);
-    this.usuarioDialog = false;
+    this.crud.guardar(this.usuarioForm(), this.esEdicion());
+    this.usuarioDialog.set(false);
   }
 
   // ============================================================
@@ -308,21 +312,22 @@ export class UsuariosComponent implements OnInit, OnDestroy {
    * Abre el modal de detalles del usuario.
    */
   async verDetalle(usuario: Usuario): Promise<void> {
-    this.detalleLoading = true;
-    this.detalleDialog = true;
-    this.usuarioDetalle = null;
+    this.detalleLoading.set(true);
+    this.detalleDialog.set(true);
+    this.usuarioDetalle.set(null);
 
     const detalle = await this.crud.obtenerDetalle(usuario.usuarioId!);
     
-    this.usuarioDetalle = detalle;
-    this.detalleLoading = false;
+    this.usuarioDetalle.set(detalle);
+    this.detalleLoading.set(false);
+    this.cdr.markForCheck();
   }
 
   /**
    * Cierra el modal de detalles.
    */
   cerrarDetalle(): void {
-    this.detalleDialog = false;
-    this.usuarioDetalle = null;
+    this.detalleDialog.set(false);
+    this.usuarioDetalle.set(null);
   }
 }

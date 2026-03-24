@@ -9,6 +9,8 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
   const token = localStorage.getItem('token');
+  console.log('JWT Interceptor - Token presente:', !!token);
+  console.log('JWT Interceptor - Token:', token ? token.substring(0, 30) + '...' : 'NULL');
   
   if (token) {
     req = req.clone({

@@ -14,7 +14,7 @@
 <div class="mod-stats mod-stats-3">
   <div class="mod-stat-item">
     <div class="mod-stat-icon --accent"><i class="pi pi-users"></i></div>
-    <div class="mod-stat-info"><span class="mod-stat-num">{{ filteredPacientes.length }}</span><span class="mod-stat-label">Total</span></div>
+    <div class="mod-stat-info"><span class="mod-stat-num">{{ filteredPacientes().length }}</span><span class="mod-stat-label">Total</span></div>
   </div>
   <div class="mod-stat-item">
     <div class="mod-stat-icon --green"><i class="pi pi-check-circle"></i></div>
@@ -27,14 +27,14 @@
 </div>
 
 <div class="mod-table-card">
-  <p-table [value]="filteredPacientes" [paginator]="true" [rows]="8" [tableStyle]="{'min-width': '60rem'}" dataKey="pacienteId" [rowHover]="true">
+  <p-table [value]="filteredPacientes()" [paginator]="true" [rows]="8" [tableStyle]="{'min-width': '60rem'}" dataKey="pacienteId" [rowHover]="true">
     <ng-template #caption>
       <div class="mod-caption">
         <p-iconfield class="mod-search">
           <p-inputicon styleClass="pi pi-search" />
-          <input pInputText [(ngModel)]="searchPaciente" placeholder="Buscar por nombre, teléfono o correo..." />
+          <input pInputText [ngModel]="searchPaciente()" (ngModelChange)="searchPaciente.set($event)" placeholder="Buscar por nombre, teléfono o correo..." />
         </p-iconfield>
-        <span class="mod-caption-count">{{ filteredPacientes.length }} pacientes</span>
+        <span class="mod-caption-count">{{ filteredPacientes().length }} pacientes</span>
       </div>
     </ng-template>
     <ng-template #header>
