@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal, computed, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { PacienteService } from '../../../core/services/Clinica/paciente.service';
@@ -19,26 +19,28 @@ import { InputIconModule } from 'primeng/inputicon';
   standalone: true,
   imports: [FormsModule, DatePipe, TableModule, ButtonModule, DialogModule, InputTextModule, TagModule, ToolbarModule, TooltipModule, IconFieldModule, InputIconModule],
   templateUrl: './pacientes.component.html',
-  styleUrl: './pacientes.component.css'
+  styleUrl: './pacientes.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PacientesComponent implements OnInit {
-  searchPaciente = '';
+  searchPaciente = signal('');
   pacienteDialog = false;
   pacienteForm: Record<string, any> = {};
-  pacientes: Paciente[] = [];
+  pacientes = signal<Paciente[]>([]);
 
-  get filteredPacientes() {
-    const term = this.searchPaciente.toLowerCase();
-    if (!term) return this.pacientes;
-    return this.pacientes.filter(p =>
+  filteredPacientes = computed(() => {
+    const term = this.searchPaciente().toLowerCase();
+    const list = this.pacientes();
+    if (!term) return list;
+    return list.filter(p =>
       `${p.nombres} ${p.apellidos ?? ''}`.toLowerCase().includes(term) ||
       (p.telefono ?? '').toLowerCase().includes(term) ||
       (p.correo ?? '').toLowerCase().includes(term)
     );
-  }
+  });
 
-  countActivos(): number { return this.pacientes.filter(p => p.activo).length; }
-  countInactivos(): number { return this.pacientes.filter(p => !p.activo).length; }
+  countActivos = computed(() => this.pacientes().filter(p => p.activo).length);
+  countInactivos = computed(() => this.pacientes().filter(p => !p.activo).length);
 
   getInitials(name: string): string {
     return name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('');
@@ -47,7 +49,8 @@ export class PacientesComponent implements OnInit {
   constructor(
     private pacienteService: PacienteService,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -56,12 +59,16 @@ export class PacientesComponent implements OnInit {
 
   cargarPacientes(): void {
     this.pacienteService.listar().subscribe({
-      next: (data) => this.pacientes = data,
+      next: (data) => {
+        this.pacientes.set(data);
+        this.cdr.markForCheck();
+      },
       error: (err) => {
         console.error('Error al listar pacientes - Status:', err.status);
         console.error('Error al listar pacientes - Body:', err.error);
         console.error('Error al listar pacientes - Headers:', err.headers);
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los pacientes' });
+        this.cdr.markForCheck();
       }
     });
   }

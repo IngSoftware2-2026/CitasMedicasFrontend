@@ -51,7 +51,7 @@
       <i class="pi pi-users"></i>
     </div>
     <div class="usuarios-stat-info">
-      <span class="usuarios-stat-number">{{ totalUsuarios }}</span>
+      <span class="usuarios-stat-number">{{ totalUsuarios() }}</span>
       <span class="usuarios-stat-label">Total</span>
     </div>
   </div>
@@ -61,7 +61,7 @@
       <i class="pi pi-check-circle"></i>
     </div>
     <div class="usuarios-stat-info">
-      <span class="usuarios-stat-number">{{ usuariosActivos }}</span>
+      <span class="usuarios-stat-number">{{ usuariosActivos() }}</span>
       <span class="usuarios-stat-label">Activos</span>
     </div>
   </div>
@@ -71,7 +71,7 @@
       <i class="pi pi-times-circle"></i>
     </div>
     <div class="usuarios-stat-info">
-      <span class="usuarios-stat-number">{{ usuariosInactivos }}</span>
+      <span class="usuarios-stat-number">{{ usuariosInactivos() }}</span>
       <span class="usuarios-stat-label">Inactivos</span>
     </div>
   </div>
@@ -81,7 +81,7 @@
       <i class="pi pi-shield"></i>
     </div>
     <div class="usuarios-stat-info">
-      <span class="usuarios-stat-number">{{ administradoresCount }}</span>
+      <span class="usuarios-stat-number">{{ administradoresCount() }}</span>
       <span class="usuarios-stat-label">Administradores</span>
     </div>
   </div>
@@ -92,7 +92,7 @@
      ============================================================ -->
 <div class="usuarios-table-card">
   <p-table 
-    [value]="listaFiltrada" 
+    [value]="listaFiltrada()" 
     [paginator]="true" 
     [rows]="5" 
     dataKey="usuarioId" 
@@ -179,27 +179,27 @@
   [style]="{width: '500px'}" 
   [draggable]="false">
 
-  @if (detalleLoading) {
+  @if (detalleLoading()) {
     <div class="detalle-loading">
       <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
       <p>Cargando detalles...</p>
     </div>
   }
 
-  @if (usuarioDetalle && !detalleLoading) {
+  @if (usuarioDetalle() && !detalleLoading()) {
     <div class="detalle-content">
       <div class="detalle-header">
-        <div [class]="'detalle-avatar detalle-avatar--' + utils.obtenerColorAvatar(usuarioDetalle.rolId)">
-          {{ utils.obtenerIniciales(usuarioDetalle.nombreUsuario) }}
+        <div [class]="'detalle-avatar detalle-avatar--' + utils.obtenerColorAvatar(usuarioDetalle()!.rolId)">
+          {{ utils.obtenerIniciales(usuarioDetalle()!.nombreUsuario) }}
         </div>
         <div class="detalle-info">
-          <h3>{{ usuarioDetalle.nombreUsuario }}</h3>
-          <span [class]="'usuarios-badge usuarios-badge--rol ' + utils.obtenerClaseBadgeRol(usuarioDetalle.rolId)">
-            {{ utils.obtenerNombreRol(usuarioDetalle.rolId) }}
+          <h3>{{ usuarioDetalle()!.nombreUsuario }}</h3>
+          <span [class]="'usuarios-badge usuarios-badge--rol ' + utils.obtenerClaseBadgeRol(usuarioDetalle()!.rolId)">
+            {{ utils.obtenerNombreRol(usuarioDetalle()!.rolId) }}
           </span>
-          <span class="detalle-estado" [class]="usuarioDetalle.activo ? 'detalle-estado--activo' : 'detalle-estado--inactivo'">
-            <i [class]="usuarioDetalle.activo ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>
-            {{ usuarioDetalle.activo ? 'Activo' : 'Inactivo' }}
+          <span class="detalle-estado" [class]="usuarioDetalle()!.activo ? 'detalle-estado--activo' : 'detalle-estado--inactivo'">
+            <i [class]="usuarioDetalle()!.activo ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>
+            {{ usuarioDetalle()!.activo ? 'Activo' : 'Inactivo' }}
           </span>
         </div>
       </div>
@@ -209,19 +209,19 @@
       <div class="detalle-fields">
         <div class="detalle-field">
           <label><i class="pi pi-user"></i> ID</label>
-          <span>{{ usuarioDetalle.usuarioId }}</span>
+          <span>{{ usuarioDetalle()!.usuarioId }}</span>
         </div>
         <div class="detalle-field">
           <label><i class="pi pi-envelope"></i> Correo</label>
-          <span>{{ usuarioDetalle.correo || '—' }}</span>
+          <span>{{ usuarioDetalle()!.correo || '—' }}</span>
         </div>
         <div class="detalle-field">
           <label><i class="pi pi-phone"></i> Teléfono</label>
-          <span>{{ usuarioDetalle.telefono || '—' }}</span>
+          <span>{{ usuarioDetalle()!.telefono || '—' }}</span>
         </div>
         <div class="detalle-field">
           <label><i class="pi pi-calendar"></i> Fecha Creación</label>
-          <span>{{ usuarioDetalle.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</span>
+          <span>{{ usuarioDetalle()!.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</span>
         </div>
       </div>
     </div>
@@ -237,7 +237,7 @@
      MODAL: CREAR / EDITAR USUARIO
      ============================================================ -->
 <p-dialog 
-  [header]="esEdicion ? 'Editar Usuario' : 'Nuevo Usuario'" 
+  [header]="esEdicion() ? 'Editar Usuario' : 'Nuevo Usuario'" 
   [(visible)]="usuarioDialog" 
   [modal]="true" 
   [style]="{width: '550px'}" 
@@ -247,23 +247,24 @@
     <div class="usuarios-form-row">
       <div class="usuarios-field">
         <label>Nombre de Usuario *</label>
-        <input pInputText [(ngModel)]="usuarioForm.nombreUsuario" />
+        <input pInputText [ngModel]="usuarioForm().nombreUsuario" (ngModelChange)="usuarioForm.set({...usuarioForm(), nombreUsuario: $event})" />
       </div>
       <div class="usuarios-field">
         <label>Correo *</label>
-        <input pInputText [(ngModel)]="usuarioForm.correo" type="email" />
+        <input pInputText [ngModel]="usuarioForm().correo" (ngModelChange)="usuarioForm.set({...usuarioForm(), correo: $event})" type="email" />
       </div>
     </div>
     <div class="usuarios-form-row">
       <div class="usuarios-field">
         <label>Teléfono</label>
-        <input pInputText [(ngModel)]="usuarioForm.telefono" />
+        <input pInputText [ngModel]="usuarioForm().telefono" (ngModelChange)="usuarioForm.set({...usuarioForm(), telefono: $event})" />
       </div>
       <div class="usuarios-field">
         <label>Rol *</label>
         <p-select 
-          [(ngModel)]="usuarioForm.rolId" 
-          [options]="listaRoles" 
+          [ngModel]="usuarioForm().rolId" 
+          (ngModelChange)="usuarioForm.set({...usuarioForm(), rolId: $event})"
+          [options]="listaRoles()" 
           optionLabel="nombreRol" 
           optionValue="rolId" 
           placeholder="Seleccionar rol" 
@@ -272,12 +273,13 @@
       </div>
     </div>
     <div class="usuarios-field">
-      <label>{{ esEdicion ? 'Nueva Contraseña' : 'Contraseña *' }}</label>
+      <label>{{ esEdicion() ? 'Nueva Contraseña' : 'Contraseña *' }}</label>
       <p-password 
-        [(ngModel)]="usuarioForm.clave" 
+        [ngModel]="usuarioForm().clave" 
+        (ngModelChange)="usuarioForm.set({...usuarioForm(), clave: $event})"
         [toggleMask]="true" 
-        [feedback]="!esEdicion" 
-        [placeholder]="esEdicion ? 'Dejar vacío para no cambiar' : 'Ingrese contraseña'" 
+        [feedback]="!esEdicion()" 
+        [placeholder]="esEdicion() ? 'Dejar vacío para no cambiar' : 'Ingrese contraseña'" 
         [style]="{width: '100%'}" 
         [inputStyle]="{width: '100%'}" />
     </div>
