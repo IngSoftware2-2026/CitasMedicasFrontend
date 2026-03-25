@@ -1,17 +1,11 @@
-<div class="page-header-container">
-  <div class="page-header-left">
-    <div class="page-header-icon">
-      <i class="pi pi-calendar"></i>
-    </div>
-    <div class="page-header-text">
-      <h2>Citas</h2>
-      <p>Gestión de citas médicas</p>
-    </div>
-  </div>
-  @if (puedeGestionarCitas) {
-    <p-button label="Nueva Cita" icon="pi pi-plus" (onClick)="openCitaDialog()" />
-  }
-</div>
+<p-toolbar>
+  <ng-template #start><h2 class="m-0"><i class="pi pi-calendar"></i> Citas</h2></ng-template>
+  <ng-template #end>
+    @if (canManageCitas) {
+      <p-button label="Nueva Cita" icon="pi pi-plus" (onClick)="openCitaDialog()" />
+    }
+  </ng-template>
+</p-toolbar>
 
 <div class="mod-stats mod-stats-4">
   <div class="mod-stat-item">
@@ -20,15 +14,15 @@
   </div>
   <div class="mod-stat-item">
     <div class="mod-stat-icon --blue"><i class="pi pi-check-circle"></i></div>
-    <div class="mod-stat-info"><span class="mod-stat-num">{{ countByEstado(1) }}</span><span class="mod-stat-label">Confirmadas</span></div>
-  </div>
-  <div class="mod-stat-item">
-    <div class="mod-stat-icon --amber"><i class="pi pi-spinner"></i></div>
-    <div class="mod-stat-info"><span class="mod-stat-num">{{ countByEstado(2) }}</span><span class="mod-stat-label">En Curso</span></div>
+    <div class="mod-stat-info"><span class="mod-stat-num">{{ countByCodigoEstado('CONF') }}</span><span class="mod-stat-label">Confirmadas</span></div>
   </div>
   <div class="mod-stat-item">
     <div class="mod-stat-icon --green"><i class="pi pi-verified"></i></div>
-    <div class="mod-stat-info"><span class="mod-stat-num">{{ countByEstado(3) }}</span><span class="mod-stat-label">Finalizadas</span></div>
+    <div class="mod-stat-info"><span class="mod-stat-num">{{ countByCodigoEstado('ATEN') }}</span><span class="mod-stat-label">Atendidas</span></div>
+  </div>
+  <div class="mod-stat-item">
+    <div class="mod-stat-icon --danger"><i class="pi pi-times-circle"></i></div>
+    <div class="mod-stat-info"><span class="mod-stat-num">{{ countByCodigoEstado('CANC') }}</span><span class="mod-stat-label">Canceladas</span></div>
   </div>
 </div>
 
@@ -40,8 +34,69 @@
           <p-inputicon styleClass="pi pi-search" />
           <input pInputText [(ngModel)]="searchCita" placeholder="Buscar por paciente, doctor, sala o estado..." />
         </p-iconfield>
+        <p-button
+          [label]="showAdvancedFilters ? 'Ocultar filtros' : 'Búsqueda avanzada'"
+          icon="pi pi-sliders-h"
+          [text]="true"
+          (onClick)="toggleAdvancedFilters()" />
         <span class="mod-caption-count">{{ citasView.length }} citas</span>
       </div>
+      @if (showAdvancedFilters) {
+        <div class="advanced-filters">
+          <div class="form-row">
+            <div class="field">
+              <label>Paciente</label>
+              <select class="p-inputtext" [(ngModel)]="filtros.pacienteId">
+                <option [ngValue]="null">Todos</option>
+                @for (p of pacientesData; track p.pacienteId) {
+                  <option [ngValue]="p.pacienteId">{{ p.paciente || ((p.nombres || '') + ' ' + (p.apellidos || '')).trim() }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label>Doctor</label>
+              <select class="p-inputtext" [(ngModel)]="filtros.medicoId">
+                <option [ngValue]="null">Todos</option>
+                @for (d of doctoresData; track d.medicoId) {
+                  <option [ngValue]="d.medicoId">{{ d.medico || d.nombrePublico }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label>Estado</label>
+              <select class="p-inputtext" [(ngModel)]="filtros.estadoId">
+                <option [ngValue]="null">Todos</option>
+                @for (e of estadosFiltro; track e.estadoId) {
+                  <option [ngValue]="e.estadoId">{{ e.nombreEstado }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label>Sala</label>
+              <select class="p-inputtext" [(ngModel)]="filtros.salaId">
+                <option [ngValue]="null">Todas</option>
+                @for (s of salas; track s.salaId) {
+                  <option [ngValue]="s.salaId">{{ s.nombreSala }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label>Fecha desde</label>
+              <input pInputText type="date" [(ngModel)]="filtros.desde" />
+            </div>
+            <div class="field">
+              <label>Fecha hasta</label>
+              <input pInputText type="date" [(ngModel)]="filtros.hasta" />
+            </div>
+          </div>
+          <div class="filter-actions">
+            <p-button label="Aplicar" icon="pi pi-filter" (onClick)="aplicarFiltros()" />
+            <p-button label="Limpiar" icon="pi pi-eraser" [text]="true" (onClick)="limpiarFiltros()" />
+          </div>
+        </div>
+      }
     </ng-template>
     <ng-template #header>
       <tr>
@@ -82,15 +137,9 @@
         <td>
           <div class="mod-actions">
             <button class="mod-action-btn --view" pTooltip="Ver detalle" tooltipPosition="top" (click)="openCitaDetail(c)"><i class="pi pi-eye"></i></button>
-            @if (puedeGestionarCitas) {
-              <button class="mod-action-btn --edit" pTooltip="Editar" tooltipPosition="top" (click)="openCitaDialog(c)"><i class="pi pi-pencil"></i></button>
-              @if (c.estadoId === 1) {
-                <button class="mod-action-btn --start" pTooltip="Iniciar" tooltipPosition="top" (click)="cambiarEstadoCita(c, 2)"><i class="pi pi-play"></i></button>
-              }
-              @if (c.estadoId === 2) {
-                <button class="mod-action-btn --confirm" pTooltip="Finalizar" tooltipPosition="top" (click)="cambiarEstadoCita(c, 3)"><i class="pi pi-check"></i></button>
-              }
-              @if (c.estadoId === 1 || c.estadoId === 2) {
+            @if (canManageCitas) {
+              @if (c.estadoCodigo === 'CONF') {
+                <button class="mod-action-btn --start" pTooltip="Marcar como atendida" tooltipPosition="top" (click)="cambiarEstadoCita(c, 2)"><i class="pi pi-check"></i></button>
                 <button class="mod-action-btn --danger" pTooltip="Cancelar" tooltipPosition="top" (click)="cambiarEstadoCita(c, 4)"><i class="pi pi-times"></i></button>
               }
             }
@@ -107,17 +156,17 @@
 </div>
 
 <!-- CITA DIALOG -->
-<p-dialog header="{{ citaForm['citaId'] ? 'Editar' : 'Nueva' }} Cita" [(visible)]="citaDialog" [modal]="true" [style]="{width: '580px'}">
+<p-dialog header="Nueva Cita" [(visible)]="citaDialog" [modal]="true" [style]="{width: '580px'}">
   <div class="dialog-form">
     <div class="form-row">
       <div class="field"><label>Paciente *</label>
         <select class="p-inputtext" [(ngModel)]="citaForm['pacienteId']">
-          @for (p of pacientes; track p.pacienteId) { <option [ngValue]="p.pacienteId">{{ p.nombres }} {{ p.apellidos }}</option> }
+          @for (p of pacientesData; track p.pacienteId) { <option [ngValue]="p.pacienteId">{{ p.paciente || ((p.nombres || '') + ' ' + (p.apellidos || '')).trim() }}</option> }
         </select>
       </div>
       <div class="field"><label>Doctor *</label>
         <select class="p-inputtext" [(ngModel)]="citaForm['medicoId']">
-          @for (d of doctores; track d.medicoId) { <option [ngValue]="d.medicoId">{{ d.nombrePublico }}</option> }
+          @for (d of doctoresData; track d.medicoId) { <option [ngValue]="d.medicoId">{{ d.medico || d.nombrePublico }}</option> }
         </select>
       </div>
     </div>
@@ -131,11 +180,6 @@
     </div>
     <div class="form-row">
       <div class="field"><label>Inicio</label><input pInputText type="datetime-local" [(ngModel)]="citaForm['inicio']" /></div>
-      <div class="field"><label>Estado</label>
-        <select class="p-inputtext" [(ngModel)]="citaForm['estadoId']">
-          @for (e of estadosCita; track e.estadoCitaId) { <option [ngValue]="e.estadoCitaId">{{ e.nombreEstado }}</option> }
-        </select>
-      </div>
     </div>
   </div>
   <ng-template #footer>
@@ -148,10 +192,10 @@
 <p-dialog header="Detalle de Cita" [(visible)]="citaDetailDialog" [modal]="true" [style]="{width: '650px'}">
   @if (detailCita) {
   <div class="detail-grid">
-    <div class="detail-item"><label>Paciente</label><p>{{ data.getPacienteNombre(detailCita.pacienteId) }}</p></div>
-    <div class="detail-item"><label>Doctor</label><p>{{ data.getDoctorNombre(detailCita.medicoId) }}</p></div>
-    <div class="detail-item"><label>Sala</label><p>{{ data.getSalaNombre(detailCita.salaId) }}</p></div>
-    <div class="detail-item"><label>Estado</label><p><p-tag [value]="data.getEstadoCitaNombre(detailCita.estadoId)" [severity]="data.getEstadoCitaSeverity(data.getEstadoCitaCodigo(detailCita.estadoId))" /></p></div>
+    <div class="detail-item"><label>Paciente</label><p>{{ detailCita.paciente || data.getPacienteNombre(detailCita.pacienteId) }}</p></div>
+    <div class="detail-item"><label>Doctor</label><p>{{ detailCita.medico || data.getDoctorNombre(detailCita.medicoId) }}</p></div>
+    <div class="detail-item"><label>Sala</label><p>{{ detailCita.sala || data.getSalaNombre(detailCita.salaId) }}</p></div>
+    <div class="detail-item"><label>Estado</label><p><p-tag [value]="detailCita.estado || data.getEstadoCitaNombre(detailCita.estadoId)" [severity]="data.getEstadoCitaSeverity(detailCita.codigoEstado || data.getEstadoCitaCodigo(detailCita.estadoId))" /></p></div>
     <div class="detail-item"><label>Inicio</label><p>{{ detailCita.inicio | date:'dd/MM/yyyy HH:mm' }}</p></div>
     <div class="detail-item"><label>Fin</label><p>{{ detailCita.fin | date:'dd/MM/yyyy HH:mm' }}</p></div>
     <div class="detail-item"><label>Duracion</label><p>{{ detailCita.duracionMinutos }} minutos</p></div>
