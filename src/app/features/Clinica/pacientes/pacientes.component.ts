@@ -1,10 +1,12 @@
 import { Component, OnInit, signal, computed, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { switchMap } from 'rxjs';
 import { PacienteService } from '../../../core/services/Clinica/paciente.service';
+import { UsuarioService } from '../../../core/services/Accesos/usuario.service';
+import { ErrorHandlerService } from '../../../core/services/Http/error-handler.service';
 import { Paciente } from '../../../core/models/Clinica/Pacientes/paciente.model';
-import { MessageService, ConfirmationService } from 'primeng/api';
+import { ConfirmationService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -14,12 +16,11 @@ import { ToolbarModule } from 'primeng/toolbar';
 import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
-import { SelectModule } from 'primeng/select';
 
 @Component({
   selector: 'app-pacientes',
   standalone: true,
-  imports: [FormsModule, DatePipe, TableModule, ButtonModule, DialogModule, InputTextModule, TagModule, ToolbarModule, TooltipModule, IconFieldModule, InputIconModule, SelectModule],
+  imports: [FormsModule, DatePipe, TableModule, ButtonModule, DialogModule, InputTextModule, TagModule, ToolbarModule, TooltipModule, IconFieldModule, InputIconModule],
   templateUrl: './pacientes.component.html',
   styleUrl: './pacientes.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -27,11 +28,12 @@ import { SelectModule } from 'primeng/select';
 export class PacientesComponent implements OnInit {
   searchPaciente = signal('');
   pacienteDialog = false;
+  deleteDialog = false;
+  pacienteToDelete: Paciente | null = null;
   pacienteForm: Record<string, any> = {};
   pacientes = signal<Paciente[]>([]);
-  todosUsuarios = signal<any[]>([]);
-  usuariosDisponibles = signal<{ label: string; value: number }[]>([]);
-  private http = inject(HttpClient);
+  private usuarioService = inject(UsuarioService);
+  private errorHandler = inject(ErrorHandlerService);
 
   filteredPacientes = computed(() => {
     const term = this.searchPaciente().toLowerCase();
@@ -53,31 +55,12 @@ export class PacientesComponent implements OnInit {
 
   constructor(
     private pacienteService: PacienteService,
-    private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.cargarPacientes();
-    this.cargarTodosUsuarios();
-  }
-
-  private cargarTodosUsuarios(): void {
-    this.http.get<any>('/Accesos/Usuarios/Listar').subscribe({
-      next: (resp) => {
-        console.log('Respuesta cruda usuarios:', resp);
-        const datos = resp?.data ?? resp?.datos ?? resp;
-        const lista = Array.isArray(datos) ? datos : [];
-        console.log('Usuarios cargados:', lista.length);
-        this.todosUsuarios.set(lista);
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        console.error('Error al cargar usuarios:', err);
-        this.todosUsuarios.set([]);
-      }
-    });
   }
 
   cargarPacientes(): void {
@@ -87,10 +70,9 @@ export class PacientesComponent implements OnInit {
         this.cdr.markForCheck();
       },
       error: (err) => {
-        console.error('Error al listar pacientes - Status:', err.status);
-        console.error('Error al listar pacientes - Body:', err.error);
-        console.error('Error al listar pacientes - Headers:', err.headers);
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los pacientes' });
+        console.error('Error al listar pacientes:', err);
+        const url = err?.url || '/Pacientes/Listar';
+        this.errorHandler.showError(err?.status || 0, `Error al listar pacientes [${err?.status || '?'}] → ${url}`);
         this.cdr.markForCheck();
       }
     });
@@ -100,79 +82,94 @@ export class PacientesComponent implements OnInit {
     this.pacienteForm = p
       ? { ...p, fechaNacimiento: p.fechaNacimiento ? new Date(p.fechaNacimiento).toISOString().split('T')[0] : '' }
       : {};
-    this.buildUsuariosDropdown(p?.usuarioId);
     this.pacienteDialog = true;
-  }
-
-  private buildUsuariosDropdown(usuarioIdActual?: number): void {
-    const usuarios = this.todosUsuarios();
-    const idsOcupados = new Set(this.pacientes().map(p => p.usuarioId));
-
-    const opciones = usuarios
-      .filter(u => u.activo)
-      .map(u => {
-        const ocupado = idsOcupados.has(u.usuarioId) && u.usuarioId !== usuarioIdActual;
-        const esActual = u.usuarioId === usuarioIdActual;
-        let label = `#${u.usuarioId} — ${u.nombreUsuario} (${u.correo})`;
-        if (esActual) label = `#${u.usuarioId} — ${u.nombreUsuario} (actual)`;
-        else if (ocupado) label = `#${u.usuarioId} — ${u.nombreUsuario} [ya asignado]`;
-        return { label, value: u.usuarioId, disabled: ocupado };
-      });
-
-    console.log('Opciones dropdown:', opciones);
-    this.usuariosDisponibles.set(opciones);
   }
 
   savePaciente(): void {
     if (!this.pacienteForm['nombres'] || !this.pacienteForm['apellidos'] || !this.pacienteForm['telefono'] || !this.pacienteForm['numeroIdentidad']) {
-      this.messageService.add({ severity: 'warn', summary: 'Campos requeridos', detail: 'Nombres, apellidos, teléfono y número de identidad son obligatorios' });
+      this.errorHandler.showWarning('Nombres, apellidos, teléfono y número de identidad son obligatorios');
       return;
     }
-    if (!this.pacienteForm['usuarioId'] || this.pacienteForm['usuarioId'] <= 0) {
-      this.messageService.add({ severity: 'warn', summary: 'Campos requeridos', detail: 'El Usuario ID es obligatorio y debe ser mayor que cero' });
-      return;
-    }
-
-    const payload: any = {
-      usuarioId: this.pacienteForm['usuarioId'],
-      nombres: this.pacienteForm['nombres'],
-      apellidos: this.pacienteForm['apellidos'],
-      telefono: this.pacienteForm['telefono'],
-      correo: this.pacienteForm['correo'] || null,
-      fechaNacimiento: this.pacienteForm['fechaNacimiento'] || null,
-      numeroIdentidad: this.pacienteForm['numeroIdentidad'],
-      activo: this.pacienteForm['activo'] ?? true
-    };
 
     if (this.pacienteForm['pacienteId']) {
-      payload.pacienteId = this.pacienteForm['pacienteId'];
-      console.log('Editando paciente:', payload);
+      // Editar paciente existente
+      const payload: any = {
+        pacienteId: this.pacienteForm['pacienteId'],
+        usuarioId: this.pacienteForm['usuarioId'],
+        nombres: this.pacienteForm['nombres'],
+        apellidos: this.pacienteForm['apellidos'],
+        telefono: this.pacienteForm['telefono'],
+        correo: this.pacienteForm['correo'] || null,
+        fechaNacimiento: this.pacienteForm['fechaNacimiento'] || null,
+        numeroIdentidad: this.pacienteForm['numeroIdentidad'],
+        activo: this.pacienteForm['activo'] ?? true
+      };
       this.pacienteService.editar(payload).subscribe({
         next: () => {
-          this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Paciente actualizado' });
+          this.errorHandler.showSuccess('Paciente actualizado correctamente');
           this.pacienteDialog = false;
           this.cargarPacientes();
           this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('Error al editar:', err);
-          console.error('Error al editar - Body:', JSON.stringify(err.error));
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.mensaje || err?.error?.message || 'No se pudo actualizar el paciente' });
+          const url = err?.url || '/Pacientes/Editar';
+          const msg = err?.error?.message || err?.error?.mensaje || err?.message || 'Error desconocido';
+          this.errorHandler.showError(err?.status || 0, `${msg} [${err?.status || '?'}] → ${url}`);
         }
       });
     } else {
-      console.log('Insertando paciente:', payload);
-      this.pacienteService.insertar(payload).subscribe({
-        next: () => {
-          this.messageService.add({ severity: 'success', summary: 'Creado', detail: 'Paciente creado' });
-          this.pacienteDialog = false;
-          this.cargarPacientes();
-          this.cdr.markForCheck();
+      // Crear usuario automáticamente y luego crear paciente
+      const nombres = this.pacienteForm['nombres'].trim();
+      const apellidos = this.pacienteForm['apellidos'].trim();
+      const nombreUsuario = `${nombres.split(' ')[0]}.${apellidos.split(' ')[0]}`.toLowerCase();
+      const nuevoUsuario = {
+        nombreUsuario,
+        correo: this.pacienteForm['correo'] || `${nombreUsuario}@medicitas.com`,
+        telefono: this.pacienteForm['telefono'],
+        clave: this.pacienteForm['numeroIdentidad'],
+        rolId: 3
+      };
+
+      this.usuarioService.insertar(nuevoUsuario).pipe(
+        switchMap(() => this.usuarioService.listar())
+      ).subscribe({
+        next: (usuarios) => {
+          const usuarioCreado = usuarios.find((u: any) => u.nombreUsuario === nombreUsuario);
+          if (!usuarioCreado || !usuarioCreado.usuarioId) {
+            this.errorHandler.showError(0, 'Usuario creado pero no se pudo obtener su ID. Intente nuevamente.');
+            return;
+          }
+          const payload: any = {
+            usuarioId: usuarioCreado.usuarioId,
+            nombres,
+            apellidos,
+            telefono: this.pacienteForm['telefono'],
+            correo: this.pacienteForm['correo'] || null,
+            fechaNacimiento: this.pacienteForm['fechaNacimiento'] || null,
+            numeroIdentidad: this.pacienteForm['numeroIdentidad'],
+            activo: true
+          };
+          this.pacienteService.insertar(payload).subscribe({
+            next: () => {
+              this.errorHandler.showSuccess('Paciente y usuario creados exitosamente');
+              this.pacienteDialog = false;
+              this.cargarPacientes();
+              this.cdr.markForCheck();
+            },
+            error: (err) => {
+              console.error('Error al crear paciente:', err);
+              const url = err?.url || '/Pacientes/Insertar';
+              const msg = err?.error?.message || err?.error?.mensaje || err?.message || 'Error desconocido';
+              this.errorHandler.showError(err?.status || 0, `${msg} [${err?.status || '?'}] → ${url}`);
+            }
+          });
         },
         error: (err) => {
-          console.error('Error al crear:', err);
-          console.error('Error al crear - Body:', JSON.stringify(err.error));
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.mensaje || err?.error?.message || 'No se pudo crear el paciente' });
+          console.error('Error al crear usuario:', err);
+          const url = err?.url || '/Accesos/Usuarios/Insertar';
+          const msg = err?.error?.message || err?.error?.mensaje || err?.message || 'Error al crear usuario';
+          this.errorHandler.showError(err?.status || 0, `${msg} [${err?.status || '?'}] → ${url}`);
         }
       });
     }
@@ -190,38 +187,42 @@ export class PacientesComponent implements OnInit {
       numeroIdentidad: p.numeroIdentidad,
       activo: !p.activo
     };
-    console.log('togglePacienteActivo payload:', JSON.stringify(payload));
     this.pacienteService.editar(payload).subscribe({
       next: () => {
-        this.messageService.add({ severity: 'info', summary: 'Estado', detail: `Paciente ${payload.activo ? 'activado' : 'desactivado'}` });
+        this.errorHandler.showInfo(`Paciente ${payload.activo ? 'activado' : 'desactivado'}`);
         this.cargarPacientes();
         this.cdr.markForCheck();
       },
       error: (err) => {
-        console.error('Error togglePacienteActivo - Status:', err.status);
-        console.error('Error togglePacienteActivo - Body:', JSON.stringify(err.error));
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.mensaje || err?.error?.message || 'No se pudo cambiar el estado' });
+        console.error('Error togglePacienteActivo:', err);
+        const url = err?.url || '/Pacientes/Editar';
+        const msg = err?.error?.message || err?.error?.mensaje || err?.message || 'Error desconocido';
+        this.errorHandler.showError(err?.status || 0, `${msg} [${err?.status || '?'}] → ${url}`);
       }
     });
   }
 
   deletePaciente(p: Paciente): void {
-    this.confirmationService.confirm({
-      message: `Eliminar a ${p.nombres} ${p.apellidos ?? ''}?`,
-      header: 'Confirmar',
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => {
-        this.pacienteService.eliminarpaciente(p.pacienteId).subscribe({
-          next: () => {
-            this.messageService.add({ severity: 'success', summary: 'Eliminado', detail: 'Paciente eliminado' });
-            this.cargarPacientes();
-            this.cdr.markForCheck();
-          },
-          error: (err) => {
-            console.error('Error al eliminar:', err);
-            this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.mensaje || 'No se pudo eliminar el paciente' });
-          }
-        });
+    this.pacienteToDelete = p;
+    this.deleteDialog = true;
+  }
+
+  confirmDelete(): void {
+    if (!this.pacienteToDelete) return;
+    const p = this.pacienteToDelete;
+    this.pacienteService.eliminarpaciente(p.pacienteId).subscribe({
+      next: () => {
+        this.errorHandler.showSuccess('Paciente eliminado correctamente');
+        this.deleteDialog = false;
+        this.pacienteToDelete = null;
+        this.cargarPacientes();
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error('Error al eliminar:', err);
+        const url = err?.url || '/Pacientes/Eliminar';
+        const msg = err?.error?.message || err?.error?.mensaje || err?.message || 'Error desconocido';
+        this.errorHandler.showError(err?.status || 0, `${msg} [${err?.status || '?'}] → ${url}`);
       }
     });
   }

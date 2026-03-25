@@ -86,30 +86,12 @@
 <p-dialog header="{{ pacienteForm['pacienteId'] ? 'Editar' : 'Nuevo' }} Paciente" [(visible)]="pacienteDialog" [modal]="true" [style]="{width: '650px'}">
   <div class="dialog-form">
     <div class="form-row">
-      <div class="field" style="flex: 1">
-        <label>Usuario *</label>
-        <p-select
-          [options]="usuariosDisponibles()"
-          [(ngModel)]="pacienteForm['usuarioId']"
-          optionLabel="label"
-          optionValue="value"
-          optionDisabled="disabled"
-          placeholder="Seleccionar usuario..."
-          [filter]="true"
-          filterPlaceholder="Buscar por nombre o correo..."
-          [showClear]="true"
-          appendTo="body"
-          [disabled]="!!pacienteForm['pacienteId']"
-          [style]="{'width':'100%'}" />
-      </div>
+      <div class="field"><label>Nombres *</label><input pInputText [(ngModel)]="pacienteForm['nombres']" /></div>
+      <div class="field"><label>Apellidos *</label><input pInputText [(ngModel)]="pacienteForm['apellidos']" /></div>
     </div>
     <div class="form-row">
       <div class="field"><label>No. Identidad *</label><input pInputText [(ngModel)]="pacienteForm['numeroIdentidad']" /></div>
       <div class="field"><label>Teléfono *</label><input pInputText [(ngModel)]="pacienteForm['telefono']" /></div>
-    </div>
-    <div class="form-row">
-      <div class="field"><label>Nombres *</label><input pInputText [(ngModel)]="pacienteForm['nombres']" /></div>
-      <div class="field"><label>Apellidos *</label><input pInputText [(ngModel)]="pacienteForm['apellidos']" /></div>
     </div>
     <div class="form-row">
       <div class="field"><label>Correo</label><input pInputText [(ngModel)]="pacienteForm['correo']" /></div>
@@ -119,5 +101,17 @@
   <ng-template #footer>
     <p-button label="Cancelar" icon="pi pi-times" [text]="true" (onClick)="pacienteDialog = false" />
     <p-button label="Guardar" icon="pi pi-check" (onClick)="savePaciente()" />
+  </ng-template>
+</p-dialog>
+
+<!-- DELETE CONFIRM DIALOG -->
+<p-dialog header="Confirmar Eliminación" [(visible)]="deleteDialog" [modal]="true" [style]="{width: '400px'}">
+  <div style="display: flex; align-items: center; gap: 12px; padding: 8px 0;">
+    <i class="pi pi-exclamation-triangle" style="font-size: 2rem; color: var(--red-500);"></i>
+    <span>¿Eliminar a <strong>{{ pacienteToDelete?.nombres }} {{ pacienteToDelete?.apellidos }}</strong>?</span>
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" icon="pi pi-times" [text]="true" (onClick)="deleteDialog = false" />
+    <p-button label="Eliminar" icon="pi pi-trash" severity="danger" (onClick)="confirmDelete()" />
   </ng-template>
 </p-dialog>
