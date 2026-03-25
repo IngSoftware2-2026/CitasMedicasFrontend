@@ -8,6 +8,7 @@ export interface Doctor {
   minutosBuffer: number;
   activo: boolean;
   nombreEspecialidad?: string;
+  horarios?: any[];
 }
 
 export interface DoctorEspecialidad {

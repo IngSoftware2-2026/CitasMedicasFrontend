@@ -13,6 +13,7 @@ import { InputIconModule } from 'primeng/inputicon';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
+import { SelectModule } from 'primeng/select';
 import { Doctor, DoctorDetalle, DoctorEspecialidad } from '../../../core/models/Clinica/Doctores/doctor.model';
 import { DoctoresService } from '../../../core/services/Clinica/doctores.service';
 import { UsuarioService } from '../../../core/services/Accesos/usuario.service';
@@ -26,7 +27,7 @@ import { Usuario } from '../../../core/models/Accesos/usuario.model';
   imports: [
     FormsModule, ButtonModule, DialogModule, InputTextModule,
     TagModule, ToolbarModule, IconFieldModule, InputIconModule,
-    CheckboxModule, ConfirmDialogModule, TooltipModule
+    CheckboxModule, ConfirmDialogModule, TooltipModule, SelectModule
   ],
   templateUrl: './doctores.component.html',
   styleUrl: './doctores.component.css'
@@ -53,9 +54,13 @@ export class DoctoresComponent implements OnInit {
   newEspecialidadId: number | null = null;
   saving = false;
 
-  // --- Creation: multiple specialties ---
+  // --- Creation: multiple specialties & schedules ---
   creationEspecialidades: { especialidadId: number; nombre: string; principal: boolean }[] = [];
   newCreationEspId: number | null = null;
+  creationHorarios: any[] = [];
+  editHorarios: any[] = [];
+  newHorario: any = { diaSemana: 1, horaInicio: '08:00', horaFin: '17:00' };
+  isHorarioLoading = false;
 
   // --- Validation errors ---
   formErrors: Record<string, string> = {};
@@ -152,6 +157,15 @@ export class DoctoresComponent implements OnInit {
       next: (docs) => {
         this.doctoresList = docs;
         this.loadingList = false;
+        
+        // Cargar horarios de cada doctor pasivamente
+        this.doctoresList.forEach(doc => {
+          this.doctoresService.listarHorarios(doc.medicoId).subscribe(horarios => {
+            doc.horarios = horarios;
+            this.cdr.detectChanges();
+          });
+        });
+
         this.cdr.detectChanges();
       },
       error: () => {
@@ -206,6 +220,20 @@ export class DoctoresComponent implements OnInit {
     return this.usuarios.filter(u => u.activo && !usedUserIds.includes(u.usuarioId));
   }
 
+  /** Retorna opciones formateadas para el p-dropdown */
+  getUsuariosDropdownOptions(): any[] {
+    const usedUserIds = this.doctoresList.map((d: any) => d.usuarioId || d.UsuarioId);
+    
+    return this.getAllUsuarios().map(u => {
+      const isLinked = usedUserIds.includes(u.usuarioId);
+      const extraText = isLinked ? ' (Ya vinculado)' : '';
+      return {
+        label: `${u.nombreUsuario} — ${u.correo} (ID: ${u.usuarioId})${extraText}`,
+        value: u.usuarioId
+      };
+    });
+  }
+
   toggleManualEntry() {
     this.manualUsuarioEntry = !this.manualUsuarioEntry;
     if (!this.manualUsuarioEntry) {
@@ -240,6 +268,12 @@ export class DoctoresComponent implements OnInit {
               this.cdr.detectChanges();
             }
           });
+          
+          // Cargar los horarios específicos de este doctor
+          this.doctoresService.listarHorarios(det.medicoId).subscribe(horarios => {
+            if (this.detailDoctor) this.detailDoctor.horarios = horarios;
+            this.cdr.detectChanges();
+          });
         } else {
           this.messageService.add({ severity: 'info', summary: 'No encontrado', detail: `No existe un doctor con ID ${this.searchDoctorId}` });
         }
@@ -273,6 +307,13 @@ export class DoctoresComponent implements OnInit {
   }
 
   getHorarioResumen(medicoId: number): string {
+    const doc = this.doctoresList.find(d => d.medicoId === medicoId);
+    if (doc && doc.horarios && doc.horarios.length > 0) {
+      const first = doc.horarios[0];
+      const horaIni = first.horaInicio?.substring(0, 5) || first.horaInicio;
+      const horaFin = first.horaFin?.substring(0, 5) || first.horaFin;
+      return `${horaIni} - ${horaFin}`;
+    }
     const horarios = this.data.getHorariosDeDoctor(medicoId);
     if (!horarios || horarios.length === 0) return 'Sin horario';
     const first = horarios[0];
@@ -332,6 +373,11 @@ export class DoctoresComponent implements OnInit {
             this.cdr.detectChanges();
           }
         });
+        // Fetch horarios for detail
+        this.doctoresService.listarHorarios(d.medicoId).subscribe(horarios => {
+          if (this.detailDoctor) this.detailDoctor.horarios = horarios;
+          this.cdr.detectChanges();
+        });
       },
       error: () => {
         this.detailLoading = false;
@@ -350,6 +396,9 @@ export class DoctoresComponent implements OnInit {
     this.formErrors = {};
     this.creationEspecialidades = [];
     this.newCreationEspId = null;
+    this.creationHorarios = [];
+    this.editHorarios = [];
+    this.newHorario = { diaSemana: 1, horaInicio: '08:00', horaFin: '17:00' };
 
     this.doctorForm = d ? { ...d } : {
       duracionDefaultMinutos: 30,
@@ -370,6 +419,13 @@ export class DoctoresComponent implements OnInit {
         },
         error: () => {
           this.doctorForm['especialidades'] = [];
+          this.cdr.detectChanges();
+        }
+      });
+
+      this.doctoresService.listarHorarios(d.medicoId).subscribe({
+        next: (horarios) => {
+          this.editHorarios = horarios;
           this.cdr.detectChanges();
         }
       });
@@ -607,14 +663,14 @@ export class DoctoresComponent implements OnInit {
         const principal = specs.find(s => s.principal);
         if (principal) {
           this.doctoresService.setEspecialidadPrincipal(medicoId, principal.especialidadId).subscribe({
-            next: () => this.finishCreation(),
+            next: () => this.assignHorariosAfterCreation(medicoId),
             error: () => {
               this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'Especialidades asignadas pero no se pudo marcar la principal' });
-              this.finishCreation();
+              this.assignHorariosAfterCreation(medicoId);
             }
           });
         } else {
-          this.finishCreation();
+          this.assignHorariosAfterCreation(medicoId);
         }
         return;
       }
@@ -637,14 +693,49 @@ export class DoctoresComponent implements OnInit {
     assignNext();
   }
 
-  private finishCreation(): void {
+  private assignHorariosAfterCreation(medicoId: number): void {
+    const horarios = [...this.creationHorarios];
+
+    if (horarios.length === 0) {
+      this.finishCreation(false);
+      return;
+    }
+
+    let completed = 0;
+    let hasError = false;
+
+    const assignNextHorario = () => {
+      if (completed >= horarios.length) {
+        this.finishCreation(hasError);
+        return;
+      }
+
+      const h = horarios[completed];
+      h.medicoId = medicoId;
+      this.doctoresService.crearHorario(h).subscribe({
+        next: () => {
+          completed++;
+          assignNextHorario();
+        },
+        error: () => {
+          hasError = true;
+          completed++;
+          assignNextHorario();
+        }
+      });
+    };
+
+    assignNextHorario();
+  }
+
+  private finishCreation(hasHorarioError: boolean = false): void {
     this.saving = false;
     const count = this.creationEspecialidades.length;
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Doctor Creado',
-      detail: `Doctor creado exitosamente con ${count} especialidad${count > 1 ? 'es' : ''}`
-    });
+    if (hasHorarioError) {
+       this.messageService.add({ severity: 'warn', summary: 'Doctor Creado', detail: 'Doctor creado, pero ocurrió un error en el servidor al intentar guardar los horarios' });
+    } else {
+       this.messageService.add({ severity: 'success', summary: 'Doctor Creado', detail: `Doctor creado exitosamente con sus configuraciones` });
+    }
     this.cargarDoctores();
     this.doctorDialog = false;
   }
@@ -744,6 +835,103 @@ export class DoctoresComponent implements OnInit {
           },
           error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: `No se pudo ${accion} al doctor` })
         });
+      }
+    });
+  }
+
+  // ==================== HORARIOS MANAGEMENT (CREATE & EDIT MODES) ====================
+
+  addCreationHorario(): void {
+    if (!this.newHorario.horaInicio || !this.newHorario.horaFin) {
+      this.messageService.add({ severity: 'warn', summary: 'Faltan datos', detail: 'Complete hora de inicio y fin' });
+      return;
+    }
+    this.creationHorarios.push({ ...this.newHorario });
+    this.newHorario.horaInicio = '08:00';
+    this.newHorario.horaFin = '17:00';
+  }
+
+  removeCreationHorario(index: number): void {
+    this.creationHorarios.splice(index, 1);
+  }
+
+  addEditHorario(): void {
+    if (!this.newHorario.horaInicio || !this.newHorario.horaFin) {
+      this.messageService.add({ severity: 'warn', summary: 'Faltan datos', detail: 'Complete hora de inicio y fin' });
+      return;
+    }
+    this.isHorarioLoading = true;
+    const h = { ...this.newHorario, medicoId: this.doctorForm['medicoId'] };
+    this.doctoresService.crearHorario(h).subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'Guardado', detail: 'Horario agregado exitosamente' });
+        this.refreshHorarios();
+        this.newHorario.horaInicio = '08:00';
+        this.newHorario.horaFin = '17:00';
+      },
+      error: () => {
+        this.isHorarioLoading = false;
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo crear el horario' });
+      }
+    });
+  }
+
+  deleteEditHorario(h: any): void {
+    this.confirmationService.confirm({
+      header: 'Confirmar eliminación',
+      message: '¿Está seguro de eliminar este horario?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.isHorarioLoading = true;
+        this.doctoresService.eliminarHorario(h.horarioId).subscribe({
+          next: () => {
+            this.messageService.add({ severity: 'info', summary: 'Eliminado', detail: 'Horario eliminado' });
+            this.refreshHorarios();
+          },
+          error: () => {
+            this.isHorarioLoading = false;
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el horario' });
+          }
+        });
+      }
+    });
+  }
+
+  updateEditHorario(h: any): void {
+    h.isEditing = false;
+    this.isHorarioLoading = true;
+    this.doctoresService.actualizarHorario(h).subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Horario modificado' });
+        this.refreshHorarios();
+      },
+      error: () => {
+        this.isHorarioLoading = false;
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar el horario' });
+        this.refreshHorarios(); // Reset a la versión original
+      }
+    });
+  }
+
+  refreshHorarios() {
+    this.doctoresService.listarHorarios(this.doctorForm['medicoId']).subscribe({
+      next: (horarios) => {
+        this.editHorarios = horarios;
+        this.isHorarioLoading = false;
+        
+        // Update the card if present
+        const index = this.doctoresList.findIndex(d => d.medicoId === this.doctorForm['medicoId']);
+        if (index !== -1) {
+          this.doctoresList[index].horarios = horarios;
+        }
+
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.isHorarioLoading = false;
       }
     });
   }
