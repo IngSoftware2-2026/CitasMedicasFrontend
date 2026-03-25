@@ -3,7 +3,7 @@
  */
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ErrorHandlerService } from '../../../../services/error-handler.service';
+import { ErrorHandlerService } from '../../../../services/Http/error-handler.service';
 
 @Component({
   selector: 'app-notification',
