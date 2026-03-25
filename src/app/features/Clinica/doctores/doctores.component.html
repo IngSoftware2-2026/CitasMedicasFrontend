@@ -10,7 +10,9 @@
       <p>Gestión de doctores del sistema</p>
     </div>
   </div>
-  <p-button label="Nuevo Doctor" icon="pi pi-plus" (onClick)="openDoctorDialog()" />
+  @if (!esSoloLectura) {
+    <p-button label="Nuevo Doctor" icon="pi pi-plus" (onClick)="openDoctorDialog()" />
+  }
 </div>
 
 <!-- Search & Filter Bar -->
@@ -93,9 +95,11 @@
       <button class="doc-btn doc-btn--outline" (click)="openDoctorDetail(d)" pTooltip="Ver detalle completo">
         <i class="pi pi-eye"></i> Ver
       </button>
-      <button class="doc-btn doc-btn--filled" (click)="openDoctorDialog(d)" pTooltip="Editar información">
-        <i class="pi pi-pencil"></i> Editar
-      </button>
+      @if (!esSoloLectura) {
+        <button class="doc-btn doc-btn--filled" (click)="openDoctorDialog(d)" pTooltip="Editar información">
+          <i class="pi pi-pencil"></i> Editar
+        </button>
+      }
     </div>
   </div>
   }

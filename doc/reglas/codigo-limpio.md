@@ -19,3 +19,5 @@
 - Máximo 50 líneas por archivo
 - Separar si cresce mucho
 - Usar inglés para código, español para comentarios cuando sea necesario
+
+## Trabajar En modulos concrectos y segmentados

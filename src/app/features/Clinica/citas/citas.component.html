@@ -8,7 +8,9 @@
       <p>Gestión de citas médicas</p>
     </div>
   </div>
-  <p-button label="Nueva Cita" icon="pi pi-plus" (onClick)="openCitaDialog()" />
+  @if (puedeGestionarCitas) {
+    <p-button label="Nueva Cita" icon="pi pi-plus" (onClick)="openCitaDialog()" />
+  }
 </div>
 
 <div class="mod-stats mod-stats-4">
@@ -80,15 +82,17 @@
         <td>
           <div class="mod-actions">
             <button class="mod-action-btn --view" pTooltip="Ver detalle" tooltipPosition="top" (click)="openCitaDetail(c)"><i class="pi pi-eye"></i></button>
-            <button class="mod-action-btn --edit" pTooltip="Editar" tooltipPosition="top" (click)="openCitaDialog(c)"><i class="pi pi-pencil"></i></button>
-            @if (c.estadoId === 1) {
-              <button class="mod-action-btn --start" pTooltip="Iniciar" tooltipPosition="top" (click)="cambiarEstadoCita(c, 2)"><i class="pi pi-play"></i></button>
-            }
-            @if (c.estadoId === 2) {
-              <button class="mod-action-btn --confirm" pTooltip="Finalizar" tooltipPosition="top" (click)="cambiarEstadoCita(c, 3)"><i class="pi pi-check"></i></button>
-            }
-            @if (c.estadoId === 1 || c.estadoId === 2) {
-              <button class="mod-action-btn --danger" pTooltip="Cancelar" tooltipPosition="top" (click)="cambiarEstadoCita(c, 4)"><i class="pi pi-times"></i></button>
+            @if (puedeGestionarCitas) {
+              <button class="mod-action-btn --edit" pTooltip="Editar" tooltipPosition="top" (click)="openCitaDialog(c)"><i class="pi pi-pencil"></i></button>
+              @if (c.estadoId === 1) {
+                <button class="mod-action-btn --start" pTooltip="Iniciar" tooltipPosition="top" (click)="cambiarEstadoCita(c, 2)"><i class="pi pi-play"></i></button>
+              }
+              @if (c.estadoId === 2) {
+                <button class="mod-action-btn --confirm" pTooltip="Finalizar" tooltipPosition="top" (click)="cambiarEstadoCita(c, 3)"><i class="pi pi-check"></i></button>
+              }
+              @if (c.estadoId === 1 || c.estadoId === 2) {
+                <button class="mod-action-btn --danger" pTooltip="Cancelar" tooltipPosition="top" (click)="cambiarEstadoCita(c, 4)"><i class="pi pi-times"></i></button>
+              }
             }
           </div>
         </td>

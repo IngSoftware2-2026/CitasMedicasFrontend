@@ -17,6 +17,7 @@ import { Doctor, DoctorDetalle, DoctorEspecialidad } from '../../../core/models/
 import { DoctoresService } from '../../../core/services/Clinica/doctores.service';
 import { UsuarioService } from '../../../core/services/Accesos/usuario.service';
 import { EspecialidadesService } from '../../../core/services/Clinica/especialidades.service';
+import { AuthService } from '../../../core/services/Accesos/auth.service';
 import { Especialidad } from '../../../core/models/Catalogos/especialidad.model';
 import { Usuario } from '../../../core/models/Accesos/usuario.model';
 
@@ -112,6 +113,7 @@ export class DoctoresComponent implements OnInit {
   private doctoresService = inject(DoctoresService);
   private usuarioService = inject(UsuarioService);
   private especialidadesService = inject(EspecialidadesService);
+  private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
 
   constructor(
@@ -119,6 +121,10 @@ export class DoctoresComponent implements OnInit {
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) {}
+
+  get esSoloLectura(): boolean {
+    return this.authService.esPaciente;
+  }
 
   ngOnInit() {
     this.cargarEspecialidades();

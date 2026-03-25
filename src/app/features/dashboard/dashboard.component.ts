@@ -20,7 +20,7 @@ import { DashboardStats, DashboardUtils } from './operaciones';
 })
 export class DashboardComponent {
   private router = inject(Router);
-  private auth = inject(AuthService);
+  public auth = inject(AuthService);
   
   constructor(
     public data: MockDataService,
@@ -33,7 +33,8 @@ export class DashboardComponent {
   }
 
   get userInitials(): string {
-    return this.userName.charAt(0).toUpperCase();
+    const name = this.userName || '';
+    return name.charAt(0).toUpperCase() || 'U';
   }
 
   get userEmail(): string {

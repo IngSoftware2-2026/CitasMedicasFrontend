@@ -7,18 +7,43 @@ const NAVIGATION = {
   DASHBOARD: '/dashboard'
 } as const;
 
+const ROLES_PERMITIDOS: Record<string, string[]> = {
+  'PACIENTES': ['ADMIN', 'RECEP'],
+  'DOCTORES': ['ADMIN', 'RECEP', 'PACIENTE'],
+  'CITAS': ['ADMIN', 'RECEP', 'DOCTOR', 'PACIENTE'],
+  'SOLICITUDES': ['ADMIN', 'RECEP', 'PACIENTE'],
+  'SALAS': ['ADMIN', 'DOCTOR'],
+  'ESPECIALIDADES': ['ADMIN', 'DOCTOR'],
+  'PERMISOS': ['ADMIN'],
+  'CONSULTAS': ['ADMIN', 'DOCTOR'],
+  'HORARIOS': ['ADMIN', 'RECEP', 'DOCTOR', 'PACIENTE'],
+  'USUARIOS': ['ADMIN'],
+  'ADMIN': ['ADMIN'],
+  'CONFIGURACIONES': ['ADMIN', 'RECEP', 'DOCTOR', 'PACIENTE']
+};
+
 const permissionGuard: CanActivateFn = (route): boolean => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  const requiredPermission = route.data?.['permission'] as string | undefined;
+  const routeName = route.data?.['routeName'] as string | undefined;
 
   if (!auth.estaAutenticado()) {
     router.navigate([NAVIGATION.LOGIN]);
     return false;
   }
 
-  // Por ahora simplificado - solo verifica autenticación
-  // TODO: Implementar verificación de permisos específicos
+  if (routeName) {
+    const rolesPermitidos = ROLES_PERMITIDOS[routeName];
+    if (rolesPermitidos) {
+      const rolActual = auth.codigoRolActual;
+      if (!rolesPermitidos.includes(rolActual)) {
+        console.warn('Acceso denegado a:', routeName, 'para rol:', rolActual);
+        router.navigate([NAVIGATION.DASHBOARD]);
+        return false;
+      }
+    }
+  }
+
   return true;
 };
 

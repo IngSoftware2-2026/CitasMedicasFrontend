@@ -17,7 +17,7 @@ export class LayoutComponent {
   barraLateralColapsada = false;
   sidebarAbierta = false;
 
-  constructor(private auth: AuthService, public tema: ThemeService) {}
+  constructor(public auth: AuthService, public tema: ThemeService) {}
 
   toggleSidebar(): void {
     this.sidebarAbierta = !this.sidebarAbierta;
@@ -29,8 +29,24 @@ export class LayoutComponent {
     }
   }
 
-  tienePermiso(_permiso: string): boolean {
-    return true;
+  tienePermiso(permiso: string): boolean {
+    return this.auth.permisosService.tienePermiso(permiso);
+  }
+
+  get esAdmin(): boolean {
+    return this.auth.esAdmin;
+  }
+
+  get esRecepcion(): boolean {
+    return this.auth.esRecepcion;
+  }
+
+  get esDoctor(): boolean {
+    return this.auth.esDoctor;
+  }
+
+  get esPaciente(): boolean {
+    return this.auth.esPaciente;
   }
 
   get estaAutenticado(): boolean {

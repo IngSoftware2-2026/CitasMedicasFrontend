@@ -16,7 +16,6 @@ import { UsuariosComponent } from './features/Accesos/usuarios/usuarios.componen
 import { ConfiguracionesComponent } from './features/Accesos/configuraciones/configuraciones.component';
 import { authGuard } from './core/guards/auth.guard';
 import { permissionGuard } from './core/guards/permission.guard';
-import { PERMISSIONS } from './core/constants/permissions';
 
 const ROUTES = {
   LOGIN: 'login',
@@ -47,79 +46,79 @@ export const routes: Routes = [
         path: ROUTES.DASHBOARD,
         component: DashboardComponent,
         canActivate: [permissionGuard],
-        data: { permission: PERMISSIONS.VER_DASHBOARD }
+        data: { routeName: 'DASHBOARD' }
       },
       {
         path: ROUTES.PACIENTES,
         component: PacientesComponent,
         canActivate: [permissionGuard],
-        data: { permission: PERMISSIONS.GESTIONAR_PACIENTES }
+        data: { routeName: 'PACIENTES' }
       },
       {
         path: ROUTES.DOCTORES,
         component: DoctoresComponent,
         canActivate: [permissionGuard],
-        data: { permission: PERMISSIONS.GESTIONAR_DOCTORES }
+        data: { routeName: 'DOCTORES' }
       },
       {
         path: ROUTES.CITAS,
         component: CitasComponent,
         canActivate: [permissionGuard],
-        data: { permission: PERMISSIONS.VER_CITAS }
+        data: { routeName: 'CITAS' }
       },
       {
         path: ROUTES.SOLICITUDES,
         component: SolicitudesComponent,
         canActivate: [permissionGuard],
-        data: { permission: PERMISSIONS.GESTIONAR_SOLICITUDES }
+        data: { routeName: 'SOLICITUDES' }
       },
       {
         path: ROUTES.SALAS,
         component: SalasComponent,
         canActivate: [permissionGuard],
-        data: { permission: PERMISSIONS.GESTIONAR_CATALOGOS }
+        data: { routeName: 'SALAS' }
       },
       {
         path: ROUTES.ESPECIALIDADES,
         component: EspecialidadesComponent,
         canActivate: [permissionGuard],
-        data: { permission: PERMISSIONS.GESTIONAR_CATALOGOS }
+        data: { routeName: 'ESPECIALIDADES' }
       },
       {
         path: ROUTES.PERMISOS,
         component: PermisosComponent,
         canActivate: [permissionGuard],
-        data: { permission: PERMISSIONS.GESTIONAR_ROLES }
+        data: { routeName: 'PERMISOS' }
       },
       {
         path: ROUTES.CONSULTAS,
         component: ConsultasComponent,
         canActivate: [permissionGuard],
-        data: { permission: PERMISSIONS.VER_CONSULTAS }
+        data: { routeName: 'CONSULTAS' }
       },
       {
         path: ROUTES.HORARIOS,
         component: HorariosComponent,
         canActivate: [permissionGuard],
-        data: { permission: PERMISSIONS.GESTIONAR_CATALOGOS }
+        data: { routeName: 'HORARIOS' }
       },
       {
         path: ROUTES.USUARIOS,
         component: UsuariosComponent,
         canActivate: [permissionGuard],
-        data: { permission: PERMISSIONS.GESTIONAR_USUARIOS }
+        data: { routeName: 'USUARIOS' }
       },
       {
         path: ROUTES.ADMIN,
         component: AdminComponent,
         canActivate: [permissionGuard],
-        data: { permission: PERMISSIONS.GESTIONAR_ROLES }
+        data: { routeName: 'ADMIN' }
       },
       {
         path: ROUTES.CONFIGURACIONES,
         component: ConfiguracionesComponent,
         canActivate: [permissionGuard],
-        data: { permission: PERMISSIONS.VER_DASHBOARD }
+        data: { routeName: 'CONFIGURACIONES' }
       },
       { path: ROUTES.EMPTY, redirectTo: ROUTES.DASHBOARD, pathMatch: 'full' }
     ]

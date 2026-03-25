@@ -21,6 +21,8 @@ import {
   AdminPermisoRolOperations,
   AdminUtils
 } from './operaciones/index';
+import { AuthService } from '../../../core/services/Accesos/auth.service';
+import { RolPermisosService } from '../../../core/services/Accesos/rol-permisos.service';
 
 @Component({
   selector: 'app-admin-roles',
@@ -40,7 +42,9 @@ import {
             <p>Administrar roles del sistema</p>
           </div>
         </div>
-        <p-button label="Nuevo Rol" icon="pi pi-plus" styleClass="p-button-rounded p-button-white" (onClick)="openRolDialog()" />
+        @if (puedeEditar) {
+          <p-button label="Nuevo Rol" icon="pi pi-plus" styleClass="p-button-rounded p-button-white" (onClick)="openRolDialog()" />
+        }
       </div>
 
       <div class="roles-grid">
@@ -56,10 +60,14 @@ import {
                 <span class="role-code">{{ r.codigoRol || 'SIN CÓDIGO' }}</span>
               </div>
             </div>
-            <div class="role-actions">
-              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info" size="small" pTooltip="Editar rol" tooltipPosition="top" (onClick)="openRolDialog(r)" />
-              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small" pTooltip="Eliminar rol" tooltipPosition="top" (onClick)="deleteRol(r)" />
-            </div>
+            @if (puedeEditar) {
+              <div class="role-actions">
+                <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info" size="small" pTooltip="Editar rol" tooltipPosition="top" (onClick)="openRolDialog(r)" />
+                @if (puedeEliminar) {
+                  <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small" pTooltip="Eliminar rol" tooltipPosition="top" (onClick)="deleteRol(r)" />
+                }
+              </div>
+            }
           </div>
           <div class="role-card-footer">
             <span class="role-id">ID: {{ r.rolId }}</span>
@@ -80,7 +88,7 @@ import {
             <div class="role-permisos-list">
               @for (p of permisos; track p.permisoId) {
               <label class="permiso-item" [class.active]="rolTienePermiso(r.rolId, p.permisoId)">
-                <input type="checkbox" [checked]="rolTienePermiso(r.rolId, p.permisoId)" (change)="togglePermisoRol(r.rolId, p.permisoId)" />
+                <input type="checkbox" [checked]="rolTienePermiso(r.rolId, p.permisoId)" [disabled]="!puedeEditar" (change)="togglePermisoRol(r.rolId, p.permisoId)" />
                 <i class="pi pi-shield"></i>
                 <span>{{ p.nombrePermiso }}</span>
               </label>
@@ -108,17 +116,19 @@ import {
         <div class="dialog-form">
           <div class="dialog-field">
             <label>Código <span class="required">*</span></label>
-            <input pInputText [(ngModel)]="rolForm.codigoRol" placeholder="Ej: ROL_ADMIN" />
+            <input pInputText [(ngModel)]="rolForm.codigoRol" placeholder="Ej: ROL_ADMIN" [disabled]="!puedeEditar" />
           </div>
           <div class="dialog-field">
             <label>Nombre <span class="required">*</span></label>
-            <input pInputText [(ngModel)]="rolForm.nombreRol" placeholder="Ej: Administrador" />
+            <input pInputText [(ngModel)]="rolForm.nombreRol" placeholder="Ej: Administrador" [disabled]="!puedeEditar" />
           </div>
         </div>
         <ng-template #footer>
           <div class="dialog-actions">
             <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="rolDialog = false" />
-            <p-button label="Guardar" icon="pi pi-check" (onClick)="saveRol()" />
+            @if (puedeEditar) {
+              <p-button label="Guardar" icon="pi pi-check" (onClick)="saveRol()" />
+            }
           </div>
         </ng-template>
       </p-dialog>
@@ -135,11 +145,21 @@ export class AdminRolesComponent {
     public permisoOps: AdminPermisoOperations,
     public permisoRolOps: AdminPermisoRolOperations,
     public utils: AdminUtils,
+    private auth: AuthService,
+    private permisosService: RolPermisosService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private cdr: ChangeDetectorRef
   ) {
     this.rolOps.setCdr(cdr);
+  }
+
+  get puedeEditar(): boolean {
+    return this.auth.esAdmin;
+  }
+
+  get puedeEliminar(): boolean {
+    return this.auth.esAdmin;
   }
 
   get roles(): any[] { return this.rolOps.roles ? [...this.rolOps.roles] : []; }

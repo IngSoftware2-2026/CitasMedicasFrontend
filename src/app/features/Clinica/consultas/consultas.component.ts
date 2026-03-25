@@ -54,4 +54,34 @@ export class ConsultasComponent {
     }
     this.consultaDialog = false;
   }
+
+  imprimirConsulta(c: any): void {
+    const cita = this.citas.find(x => x.citaId === c.citaId);
+    const contenido = `
+RECETA MÉDICA
+========================
+Fecha: ${new Date(c.fecha).toLocaleDateString()}
+Hora: ${new Date(c.fecha).toLocaleTimeString()}
+
+Paciente: ${cita ? this.data.getPacienteNombre(cita.pacienteId) : 'N/A'}
+Doctor: ${cita ? this.data.getDoctorNombre(cita.medicoId) : 'N/A'}
+
+Motivo de Consulta:
+${c.motivo || 'No especificado'}
+
+Notas:
+${c.notas || 'No especificado'}
+
+Tratamiento:
+${c.tratamiento || 'No especificado'}
+
+Firma Doctor: _______________
+    `;
+    const ventana = window.open('', '_blank');
+    if (ventana) {
+      ventana.document.write(`<pre style="font-family: Arial; padding: 20px;">${contenido}</pre>`);
+      ventana.document.close();
+      ventana.print();
+    }
+  }
 }
