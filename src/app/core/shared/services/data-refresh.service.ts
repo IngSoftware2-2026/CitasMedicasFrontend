@@ -1,18 +1,21 @@
-import { Injectable, signal } from '@angular/core';
-
+/**
+ * Tipos de operaciones CRUD.
+ */
 export type OperacionCRUD = 'create' | 'update' | 'delete';
 
+import { Injectable, signal } from '@angular/core';
+
+/**
+ * Servicio para notificar refresh de datos a componentes.
+ */
 @Injectable({ providedIn: 'root' })
 export class DataRefreshService {
   private refreshTrigger = signal<number>(0);
-
   readonly pendientes = signal<number>(0);
 
-  trigger(refrescar: boolean = true): void {
+  trigger(refrescar = true): void {
     this.refreshTrigger.update(v => v + 1);
-    if (refrescar) {
-      this.pendientes.update(v => v + 1);
-    }
+    if (refrescar) this.pendientes.update(v => v + 1);
   }
 
   consume(): number {
@@ -23,18 +26,19 @@ export class DataRefreshService {
   subscribe(callback: () => void): () => void {
     const current = this.refreshTrigger();
     let previous = current;
-    
     const interval = setInterval(() => {
       if (this.refreshTrigger() !== previous) {
         previous = this.refreshTrigger();
         callback();
       }
     }, 100);
-
     return () => clearInterval(interval);
   }
 }
 
+/**
+ * Gestor de callbacks de refresh por clave.
+ */
 @Injectable({ providedIn: 'root' })
 export class RefreshManager {
   private refreshCallbacks = new Map<string, () => void>();
@@ -57,7 +61,7 @@ export class RefreshManager {
   }
 
   refreshAfterOperation(
-    operation: OperacionCRUD,
+    _operation: OperacionCRUD,
     key: string,
     callback: () => void
   ): () => void {

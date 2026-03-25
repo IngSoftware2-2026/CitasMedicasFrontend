@@ -1,14 +1,14 @@
 import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../core/services/Accesos/auth.service';
-import { ThemeService } from '../core/shared/theme.service';
-import { ToastModule } from 'primeng/toast';
+import { ThemeService } from '../core/shared/services/theme.service';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { NotificationComponent } from '../core/shared/components/notification/notification/notification.component';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, ToastModule, ConfirmDialogModule],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, ConfirmDialogModule, NotificationComponent],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css'
 })

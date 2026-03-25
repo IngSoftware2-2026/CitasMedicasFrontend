@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { ERROR_CODES } from '../../shared/error-codes';
+import { ERROR_CODES } from '../../shared/models/error-codes';
 
 export interface ErrorDisplay {
   codigo: number;

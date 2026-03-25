@@ -1,3 +1,12 @@
+/**
+ * Códigos de error del sistema.
+ * 
+ * 1xxx - Autenticación
+ * 2xxx - Validación
+ * 3xxx - Negocio
+ * 4xxx - Conexión
+ * 5xxx - Sistema
+ */
 export const ERROR_CODES = {
   AUTH_REQUIRED: 1001,
   AUTH_INVALID: 1002,

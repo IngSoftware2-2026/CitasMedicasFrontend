@@ -7,7 +7,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map, catchError, tap } from 'rxjs';
 import { ConexionService, Respuesta } from '../Http/conexion.service';
 import { ErrorHandlerService } from '../Http/error-handler.service';
-import { ERROR_CODES } from '../../shared/error-codes';
+import { ERROR_CODES } from '../../shared/models/error-codes';
 import { Usuario, LoginRequest, LoginResponse } from '../../models/Accesos/usuario.model';
 
 /**

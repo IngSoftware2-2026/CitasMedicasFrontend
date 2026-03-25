@@ -1,23 +1,21 @@
-# Reglas de Código Limpio
+# Código Limpio
 
-## Nombres Significativos
-Los nombres deben transmitir claramente el propósito del código.
-- ✅ `calcularAreaTriangulo` 
-- ❌ `x`, `y`, `f()`
+## Nombres
+- Usar nombres que explican qué hace la variable/función
+- Evitar: `x`, `y`, `temp`, `data`
+- Preferir: `usuarioActivo`, `calcularTotal`, `validarCorreo`
 
-## Consistencia en la Nomenclatura
-Mantener la misma convención en todo el proyecto. Evitar abreviaturas poco claras.
+## Funciones
+- Una función = una responsabilidad
+- Máximo 20-30 líneas
+- Parámetros: menos es mejor (ideal 0-2)
 
-## Funciones Pequeñas y Cohesivas
-- Máximo 20-30 líneas por función
-- Una función debe hacer una sola cosa
+## Comentarios
+- Código limpio no necesita comentarios
+- Si explicas "qué hace", el nombre debería ser suficiente
+- Comentar solo "por qué" (decisiones no obvias)
 
-## Evitar Comentarios Innecesarios
-El código debe ser auto-explicativo. Los nombres descriptivos reducen necesidad de comentarios.
-
-## Documentación Concisa
-Documentar solo lo que el código no expresa claramente.
-
-## Límite de Líneas por Archivo
-- Máximo 50 líneas por archivo de código
-- Si excede, separar en módulos/clases adicionales
+## Reglas
+- Máximo 50 líneas por archivo
+- Separar si cresce mucho
+- Usar inglés para código, español para comentarios cuando sea necesario

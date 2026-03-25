@@ -16,7 +16,7 @@ import { AvatarModule } from 'primeng/avatar';
 import { Usuario } from '../../../core/models/Accesos/usuario.model';
 import { MessageService } from 'primeng/api';
 import { UsuarioService } from '../../../core/services/Accesos/usuario.service';
-import { RefreshManager } from '../../../core/shared/data-refresh.service';
+import { RefreshManager } from '../../../core/shared/services/data-refresh.service';
 import { UsuariosCrud, UsuariosUtils } from './operaciones';
 
 @Component({
