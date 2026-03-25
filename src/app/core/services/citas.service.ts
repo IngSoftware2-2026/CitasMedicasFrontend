@@ -40,8 +40,8 @@ export class CitasService {
     return this.http.get<ApiResponse<PacienteListado[]>>(`${environment.apiUrl}/Pacientes/Listar`);
   }
 
-  listarDoctores(): Observable<DoctorListado[]> {
-    return this.http.get<DoctorListado[]>(`${environment.apiUrl}/api/doctores`);
+  listarDoctores(): Observable<ApiResponse<DoctorListado[]>> {
+    return this.http.get<ApiResponse<DoctorListado[]>>(`${environment.apiUrl}/Doctores/Listar`);
   }
 
   listarSalas(): Observable<ApiResponse<Sala[]>> {

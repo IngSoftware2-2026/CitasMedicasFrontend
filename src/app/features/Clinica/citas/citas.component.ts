@@ -4,7 +4,9 @@ import { DatePipe } from '@angular/common';
 import { MockDataService } from '../../../core/services/Clinica/mock-data.service';
 import { AuthService } from '../../../core/services/Accesos/auth.service';
 import { CitasService } from '../../../core/services/citas.service';
+import { ErrorHandlerService } from '../../../core/services/Http/error-handler.service';
 import { CitasCambiarEstadoRequest } from '../../../core/models/Clinica/Citas/citas-cambiar-estado.model';
+import { CitasFiltroRequest } from '../../../core/models/Clinica/Citas/citas-filtro.model';
 import { CitasInsertarRequest } from '../../../core/models/Clinica/Citas/citas-insertar.model';
 import { CitaDetalleResponse, CitaListadoResponse } from '../../../core/models/Clinica/Citas/citas-read.model';
 import { DoctorListado } from '../../../core/models/Clinica/Doctores/doctor-listado.model';
@@ -31,9 +33,32 @@ import { InputIconModule } from 'primeng/inputicon';
 })
 export class CitasComponent implements OnInit {
   searchCita = '';
+  showAdvancedFilters = false;
   citaDialog = false;
   citaDetailDialog = false;
   citaForm: Record<string, any> = {};
+  filtros: {
+    pacienteId: number | null;
+    medicoId: number | null;
+    estadoId: number | null;
+    salaId: number | null;
+    desde: string | null;
+    hasta: string | null;
+  } = {
+    pacienteId: null,
+    medicoId: null,
+    estadoId: null,
+    salaId: null,
+    desde: null,
+    hasta: null
+  };
+  readonly estadosFiltro = [
+    { estadoId: 1, nombreEstado: 'Pendiente' },
+    { estadoId: 2, nombreEstado: 'Confirmada' },
+    { estadoId: 3, nombreEstado: 'Atendida' },
+    { estadoId: 4, nombreEstado: 'Cancelada' },
+    { estadoId: 5, nombreEstado: 'No asistió' }
+  ];
   detailCita: CitaDetalleResponse | null = null;
   citasData: CitaListadoResponse[] = [];
   doctoresData: DoctorListado[] = [];
@@ -73,6 +98,7 @@ export class CitasComponent implements OnInit {
     public data: MockDataService,
     private auth: AuthService,
     private citasService: CitasService,
+    private errorHandler: ErrorHandlerService,
     private cdr: ChangeDetectorRef,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
@@ -86,7 +112,7 @@ export class CitasComponent implements OnInit {
   }
 
   cargarCitas(): void {
-    this.citasService.obtenerPorFiltro({}).subscribe({
+    this.citasService.obtenerPorFiltro(this.buildFiltroRequest()).subscribe({
       next: (response) => {
         this.citasData = response.data ?? [];
         this.cdr.detectChanges();
@@ -136,7 +162,7 @@ export class CitasComponent implements OnInit {
   cargarDoctores(): void {
     this.citasService.listarDoctores().subscribe({
       next: (response) => {
-        this.doctoresData = response ?? [];
+        this.doctoresData = response.data ?? [];
       },
       error: (error) => {
         this.doctoresData = [];
@@ -157,17 +183,71 @@ export class CitasComponent implements OnInit {
     return name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('');
   }
 
+  toggleAdvancedFilters(): void {
+    this.showAdvancedFilters = !this.showAdvancedFilters;
+  }
+
+  aplicarFiltros(): void {
+    this.cargarCitas();
+  }
+
+  limpiarFiltros(): void {
+    this.filtros = {
+      pacienteId: null,
+      medicoId: null,
+      estadoId: null,
+      salaId: null,
+      desde: null,
+      hasta: null
+    };
+
+    this.cargarCitas();
+  }
+
   private toLocalDateTimeValue(date: Date): string {
     const pad = (value: number) => value.toString().padStart(2, '0');
 
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
   }
 
+  private buildFiltroRequest(): CitasFiltroRequest {
+    return {
+      pacienteId: this.normalizeId(this.filtros.pacienteId),
+      medicoId: this.normalizeId(this.filtros.medicoId),
+      estadoId: this.normalizeId(this.filtros.estadoId),
+      salaId: this.normalizeId(this.filtros.salaId),
+      desde: this.filtros.desde ? `${this.filtros.desde}T00:00:00` : null,
+      hasta: this.filtros.hasta ? `${this.filtros.hasta}T23:59:59` : null
+    };
+  }
+
+  private normalizeId(value: number | null): number | null {
+    const numericValue = Number(value);
+    return Number.isInteger(numericValue) && numericValue > 0 ? numericValue : null;
+  }
+
   private getErrorMessage(error: any, fallback: string): string {
-    return error?.error?.message
+    const message = error?.error?.message
       ?? error?.error?.Message
+      ?? error?.error?.data?.message
+      ?? error?.error?.data?.Message
+      ?? error?.error?.data?.messageStatus
+      ?? error?.error?.data?.MessageStatus
+      ?? error?.error?.mensaje
       ?? error?.message
       ?? fallback;
+
+    const normalized = String(message).toLowerCase();
+
+    if (normalized.includes('doctor') && (normalized.includes('ocup') || normalized.includes('franja') || normalized.includes('horario'))) {
+      return 'El doctor ya tiene una cita en ese horario';
+    }
+
+    if (normalized.includes('sala') && (normalized.includes('ocup') || normalized.includes('franja') || normalized.includes('horario'))) {
+      return 'La sala ya está ocupada en ese horario';
+    }
+
+    return message;
   }
 
   private getCodigoEstadoCambio(nuevoEstado: number): string {
@@ -198,45 +278,41 @@ export class CitasComponent implements OnInit {
     const duracion = Number(this.citaForm['duracionMinutos'] || 30);
 
     if (!Number.isInteger(pacienteId) || pacienteId <= 0) {
-      this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Debe seleccionar un paciente válido' });
+      this.errorHandler.showWarning('Debe seleccionar un paciente válido');
       return;
     }
 
     if (!Number.isInteger(medicoId) || medicoId <= 0) {
-      this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Debe seleccionar un doctor válido' });
+      this.errorHandler.showWarning('Debe seleccionar un doctor válido');
       return;
     }
 
     if (!Number.isInteger(salaId) || salaId <= 0) {
-      this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Debe seleccionar una sala válida' });
+      this.errorHandler.showWarning('Debe seleccionar una sala válida');
       return;
     }
 
     if (!inicioValor) {
-      this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Debe seleccionar fecha y hora de inicio' });
+      this.errorHandler.showWarning('Debe seleccionar fecha y hora de inicio');
       return;
     }
 
     const inicio = new Date(inicioValor);
 
     if (Number.isNaN(inicio.getTime())) {
-      this.messageService.add({ severity: 'warn', summary: 'Inválido', detail: 'La fecha y hora de inicio no es válida' });
+      this.errorHandler.showWarning('La fecha y hora de inicio no es válida');
       return;
     }
 
     if (!Number.isFinite(duracion) || duracion <= 0) {
-      this.messageService.add({ severity: 'warn', summary: 'Inválido', detail: 'La duración debe ser mayor a 0 minutos' });
+      this.errorHandler.showWarning('La duración debe ser mayor a 0 minutos');
       return;
     }
 
     const fin = new Date(inicio.getTime() + duracion * 60000);
 
     if (this.citaForm['citaId']) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'No disponible',
-        detail: 'La edición completa de citas no está disponible en esta versión'
-      });
+      this.errorHandler.showWarning('La edición completa de citas no está disponible en esta versión');
       return;
     }
 
@@ -254,28 +330,16 @@ export class CitasComponent implements OnInit {
     this.citasService.insertar(request).subscribe({
       next: (response) => {
         if (response.success) {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Creada',
-            detail: response.message || 'Cita creada'
-          });
+          this.errorHandler.showSuccess('Cita creada correctamente');
           this.citaDialog = false;
           this.cargarCitas();
           return;
         }
 
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: response.message || 'No se pudo crear la cita'
-        });
+        this.errorHandler.showError(400, response.message || 'No se pudo crear la cita');
       },
       error: (error) => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: this.getErrorMessage(error, 'No se pudo crear la cita')
-        });
+        this.errorHandler.showError(error?.status || 500, this.getErrorMessage(error, 'No se pudo crear la cita'));
       }
     });
   }

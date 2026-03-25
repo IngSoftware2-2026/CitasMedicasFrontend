@@ -34,8 +34,69 @@
           <p-inputicon styleClass="pi pi-search" />
           <input pInputText [(ngModel)]="searchCita" placeholder="Buscar por paciente, doctor, sala o estado..." />
         </p-iconfield>
+        <p-button
+          [label]="showAdvancedFilters ? 'Ocultar filtros' : 'Búsqueda avanzada'"
+          icon="pi pi-sliders-h"
+          [text]="true"
+          (onClick)="toggleAdvancedFilters()" />
         <span class="mod-caption-count">{{ citasView.length }} citas</span>
       </div>
+      @if (showAdvancedFilters) {
+        <div class="advanced-filters">
+          <div class="form-row">
+            <div class="field">
+              <label>Paciente</label>
+              <select class="p-inputtext" [(ngModel)]="filtros.pacienteId">
+                <option [ngValue]="null">Todos</option>
+                @for (p of pacientesData; track p.pacienteId) {
+                  <option [ngValue]="p.pacienteId">{{ p.paciente || ((p.nombres || '') + ' ' + (p.apellidos || '')).trim() }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label>Doctor</label>
+              <select class="p-inputtext" [(ngModel)]="filtros.medicoId">
+                <option [ngValue]="null">Todos</option>
+                @for (d of doctoresData; track d.medicoId) {
+                  <option [ngValue]="d.medicoId">{{ d.medico || d.nombrePublico }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label>Estado</label>
+              <select class="p-inputtext" [(ngModel)]="filtros.estadoId">
+                <option [ngValue]="null">Todos</option>
+                @for (e of estadosFiltro; track e.estadoId) {
+                  <option [ngValue]="e.estadoId">{{ e.nombreEstado }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label>Sala</label>
+              <select class="p-inputtext" [(ngModel)]="filtros.salaId">
+                <option [ngValue]="null">Todas</option>
+                @for (s of salas; track s.salaId) {
+                  <option [ngValue]="s.salaId">{{ s.nombreSala }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label>Fecha desde</label>
+              <input pInputText type="date" [(ngModel)]="filtros.desde" />
+            </div>
+            <div class="field">
+              <label>Fecha hasta</label>
+              <input pInputText type="date" [(ngModel)]="filtros.hasta" />
+            </div>
+          </div>
+          <div class="filter-actions">
+            <p-button label="Aplicar" icon="pi pi-filter" (onClick)="aplicarFiltros()" />
+            <p-button label="Limpiar" icon="pi pi-eraser" [text]="true" (onClick)="limpiarFiltros()" />
+          </div>
+        </div>
+      }
     </ng-template>
     <ng-template #header>
       <tr>
