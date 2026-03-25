@@ -186,13 +186,13 @@
     <div class="detail-section">
       <h4 class="detail-section-title"><i class="pi pi-calendar"></i> Horarios</h4>
       <div class="doc-detail-horarios">
-        @for (h of data.getHorariosDeDoctor(detailDoctor.medicoId); track h.horarioId) {
+        @for (h of detailDoctor.horarios; track h.horarioId) {
           <div class="doc-detail-horario-item">
             <span class="doc-detail-day">{{ getDiaSemana(h.diaSemana) }}</span>
-            <span class="doc-detail-time">{{ h.horaInicio }} - {{ h.horaFin }}</span>
+            <span class="doc-detail-time">{{ h.horaInicio.substring(0,5) }} - {{ h.horaFin.substring(0,5) }}</span>
           </div>
         }
-        @if (data.getHorariosDeDoctor(detailDoctor.medicoId).length === 0) {
+        @if (!detailDoctor.horarios || detailDoctor.horarios.length === 0) {
           <p class="text-muted">Sin horarios registrados</p>
         }
       </div>
@@ -215,6 +215,12 @@
           <span class="tab-badge">{{ doctorForm['especialidades'].length }}</span>
         }
       </div>
+      <div class="doc-tab" [class.active]="activeTab === 'horarios'" (click)="activeTab = 'horarios'">
+        <i class="pi pi-calendar"></i> Horarios
+        @if (editHorarios.length) {
+          <span class="tab-badge">{{ editHorarios.length }}</span>
+        }
+      </div>
     </div>
   }
 
@@ -235,20 +241,19 @@
           @if (!doctorForm['medicoId']) {
             @if (!manualUsuarioEntry && usuarios.length > 0) {
               <!-- DROPDOWN MODE -->
-              <select class="p-inputtext" [(ngModel)]="doctorForm['usuarioId']" style="width:100%">
-                <option [ngValue]="null">Seleccione un usuario...</option>
-                <!-- If there are unlinked users, show them first -->
-                @if (getAvailableUsuarios().length > 0) {
-                  @for (u of getAvailableUsuarios(); track u.usuarioId) {
-                    <option [ngValue]="u.usuarioId">{{ u.nombreUsuario }} — {{ u.correo }} (ID: {{ u.usuarioId }})</option>
-                  }
-                } @else {
-                  <!-- All active users are linked, show all anyway -->
-                  @for (u of getAllUsuarios(); track u.usuarioId) {
-                    <option [ngValue]="u.usuarioId">{{ u.nombreUsuario }} — {{ u.correo }} (ID: {{ u.usuarioId }})</option>
-                  }
-                }
-              </select>
+              <p-select
+                [options]="getUsuariosDropdownOptions()"
+                [(ngModel)]="doctorForm['usuarioId']"
+                optionLabel="label"
+                optionValue="value"
+                [filter]="true"
+                filterBy="label"
+                placeholder="Seleccione un usuario..."
+                [style]="{'width':'100%'}"
+                appendTo="body"
+                emptyMessage="No hay usuarios disponibles"
+                emptyFilterMessage="No se encontraron usuarios">
+              </p-select>
               @if (formErrors['usuarioId']) {
                 <small class="error-msg"><i class="pi pi-exclamation-circle"></i> {{ formErrors['usuarioId'] }}</small>
               } @else {
@@ -383,6 +388,53 @@
             Se guardan en la tabla <strong>tbDoctorEspecialidades</strong>.
           </small>
         </div>
+
+        <div class="creation-specialties-section" style="margin-top: 1rem">
+          <h4 class="creation-esp-title">
+            <i class="pi pi-calendar"></i> Horarios
+            <span class="creation-esp-count">{{ creationHorarios.length }} agregado{{ creationHorarios.length !== 1 ? 's' : '' }}</span>
+          </h4>
+
+          @if (creationHorarios.length > 0) {
+            <div class="specialty-list" style="margin-bottom:1rem">
+              @for (h of creationHorarios; track $index) {
+                <div class="specialty-item">
+                  <div class="sp-info">
+                    <i class="pi pi-clock sp-icon"></i>
+                    <span class="sp-name">{{ getDiaSemana(h.diaSemana) }}: {{ h.horaInicio }} - {{ h.horaFin }}</span>
+                  </div>
+                  <div class="sp-actions">
+                    <button pButton icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm"
+                            (click)="removeCreationHorario($index)" pTooltip="Quitar"
+                            style="padding: 0.25rem 0.5rem"></button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          <div class="add-specialty-box" style="flex-wrap: wrap; gap: 0.5rem">
+             <div class="field" style="flex:1; margin-bottom:0">
+                 <label style="font-size:0.85rem">Día</label>
+                 <select class="p-inputtext" [(ngModel)]="newHorario.diaSemana" style="width:100%">
+                   @for (d of diasSemana; track d.value) {
+                     <option [ngValue]="d.value">{{ d.label }}</option>
+                   }
+                 </select>
+             </div>
+             <div class="field" style="flex:1; margin-bottom:0">
+                 <label style="font-size:0.85rem">Inicio</label>
+                 <input type="time" class="p-inputtext" [(ngModel)]="newHorario.horaInicio" style="width:100%" />
+             </div>
+             <div class="field" style="flex:1; margin-bottom:0">
+                 <label style="font-size:0.85rem">Fin</label>
+                 <input type="time" class="p-inputtext" [(ngModel)]="newHorario.horaFin" style="width:100%" />
+             </div>
+             <div style="display:flex; align-items:flex-end">
+                <button pButton icon="pi pi-plus" (click)="addCreationHorario()" label="Agregar"></button>
+             </div>
+          </div>
+        </div>
       }
     </div>
   }
@@ -426,6 +478,81 @@
         </div>
         <button pButton icon="pi pi-plus" (click)="addSpecialty()" [disabled]="!newEspecialidadId" label="Agregar" style="margin-bottom:0; border-top-left-radius:0; border-bottom-left-radius:0"></button>
       </div>
+    </div>
+  }
+
+  <!-- TAB: HORARIOS (EDIT MODE) -->
+  @if (activeTab === 'horarios' && doctorForm['medicoId']) {
+    <div class="dialog-form">
+      @if (isHorarioLoading) {
+         <div class="doc-detail-loading" style="padding: 2rem 0">
+           <i class="pi pi-spin pi-spinner"></i> Actualizando horarios...
+         </div>
+      } @else {
+         <div class="specialty-list">
+           @for (h of editHorarios; track h.horarioId) {
+             <div class="specialty-item">
+                <div class="sp-info" style="flex-wrap: wrap; gap: 0.5rem; width: 100%">
+                    @if (!h.isEditing) {
+                        <i class="pi pi-clock sp-icon"></i>
+                        <span class="sp-name">{{ getDiaSemana(h.diaSemana) }}: {{ h.horaInicio.substring(0,5) }} - {{ h.horaFin.substring(0,5) }}</span>
+                    } @else {
+                        <select class="p-inputtext p-inputtext-sm" [(ngModel)]="h.diaSemana" style="width: auto">
+                          @for (d of diasSemana; track d.value) {
+                            <option [ngValue]="d.value">{{ d.label }}</option>
+                          }
+                        </select>
+                        <input type="time" class="p-inputtext p-inputtext-sm" [(ngModel)]="h.horaInicio" style="width: auto" />
+                        <input type="time" class="p-inputtext p-inputtext-sm" [(ngModel)]="h.horaFin" style="width: auto" />
+                        
+                        <div style="display: flex; gap: 0.5rem; align-items:center; margin-left: auto">
+                            <span style="font-size: 0.85rem">Activo:</span>
+                            <p-checkbox [(ngModel)]="h.activo" [binary]="true"></p-checkbox>
+                            <button pButton icon="pi pi-check" class="p-button-text p-button-success p-button-sm" (click)="updateEditHorario(h)" pTooltip="Guardar"></button>
+                            <button pButton icon="pi pi-times" class="p-button-text p-button-secondary p-button-sm" (click)="h.isEditing = false; refreshHorarios()" pTooltip="Cancelar"></button>
+                        </div>
+                    }
+                </div>
+                
+                @if (!h.isEditing) {
+                    <div class="sp-actions">
+                        @if (!h.activo) { <p-tag severity="danger" value="Inactivo" styleClass="mr-2"></p-tag> }
+                        <button pButton icon="pi pi-pencil" class="p-button-text p-button-info p-button-sm" (click)="h.isEditing = true" pTooltip="Editar" style="padding: 0.25rem 0.5rem"></button>
+                        <button pButton icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" (click)="deleteEditHorario(h)" pTooltip="Eliminar" style="padding: 0.25rem 0.5rem"></button>
+                    </div>
+                }
+             </div>
+           }
+           @if (!editHorarios || editHorarios.length === 0) {
+             <div class="specialty-empty">
+               <i class="pi pi-info-circle"></i>
+               Este doctor no tiene horarios de atención. Agregue uno a continuación.
+             </div>
+           }
+         </div>
+
+         <div class="add-specialty-box" style="flex-wrap: wrap; gap: 0.5rem">
+            <div class="field" style="flex:1; margin-bottom:0">
+                <label style="font-size:0.85rem">Día</label>
+                <select class="p-inputtext" [(ngModel)]="newHorario.diaSemana" style="width:100%">
+                  @for (d of diasSemana; track d.value) {
+                    <option [ngValue]="d.value">{{ d.label }}</option>
+                  }
+                </select>
+            </div>
+            <div class="field" style="flex:1; margin-bottom:0">
+                <label style="font-size:0.85rem">Inicio</label>
+                <input type="time" class="p-inputtext" [(ngModel)]="newHorario.horaInicio" style="width:100%" />
+            </div>
+            <div class="field" style="flex:1; margin-bottom:0">
+                <label style="font-size:0.85rem">Fin</label>
+                <input type="time" class="p-inputtext" [(ngModel)]="newHorario.horaFin" style="width:100%" />
+            </div>
+            <div style="display:flex; align-items:flex-end">
+               <button pButton icon="pi pi-plus" (click)="addEditHorario()" label="Agregar"></button>
+            </div>
+         </div>
+      }
     </div>
   }
 
