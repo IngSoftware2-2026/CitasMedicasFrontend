@@ -11,7 +11,7 @@
   <p-button label="Nueva Consulta" icon="pi pi-plus" (onClick)="openConsultaDialog()" />
 </div>
 <div class="card-grid consulta-grid">
-  @for (c of consultas; track c.consultaId) {
+  @for (c of consultas(); track c.consultaId) {
   <p-card styleClass="consulta-card">
     <div class="consulta-header">
       <p-tag value="Consulta #{{ c.consultaId }}" severity="info" />
