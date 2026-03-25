@@ -36,11 +36,28 @@ export class ConsultasComponent implements OnInit {
     private messageService: MessageService) {}
 
   ngOnInit(): void {
-    this.cargarPacientes();
+    this.cargarConsultas();
+    this.cargarCitas();
   }
 
-  cargarPacientes(): void {
-    this.consultaService.obtenerConsultasPorId(2).subscribe({
+  cargarConsultas(): void {
+    this.consultaService.obtenerConsultas().subscribe({
+      next: (data) => {
+        this.consultas.set(data);
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error('Error al listar pacientes - Status:', err.status);
+        console.error('Error al listar pacientes - Body:', err.error);
+        console.error('Error al listar pacientes - Headers:', err.headers);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los pacientes' });
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+    cargarCitas(): void {
+    this.consultaService.obtenerConsultas().subscribe({
       next: (data) => {
         this.consultas.set(data);
         this.cdr.markForCheck();
@@ -61,24 +78,54 @@ export class ConsultasComponent implements OnInit {
   }
 
   saveConsulta(): void {
-    // if (!this.consultaForm['citaId']) {
-    //   this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Cita es obligatoria' });
-    //   return;
-    // }
-    // if (this.consultaForm['consultaId']) {
-    //   const idx = this.consultas.findIndex(c => c.consultaId === this.consultaForm['consultaId']);
-    //   if (idx >= 0) {
-    //     this.consultas[idx] = { ...this.consultas[idx], ...this.consultaForm };
-    //     this.messageService.add({ severity: 'success', summary: 'Actualizada', detail: 'Consulta actualizada' });
-    //   }
-    // } else {
-    //   this.consultas.push({
-    //     ...this.consultaForm,
-    //     consultaId: this.data.nextId('consulta'),
-    //     fecha: new Date()
-    //   } as any);
-    //   this.messageService.add({ severity: 'success', summary: 'Creada', detail: 'Consulta creada' });
-    // }
-    // this.consultaDialog = false;
+    if (!this.consultaForm['citaId']) {
+      this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Cita es obligatoria' });
+      return;
+    }
+
+    if (this.consultaForm['consultaId']) {
+      const payload: any = {
+        consultaId: Number(this.consultaForm['consultaId']),
+        motivo: this.consultaForm['motivo'] || null,
+        notas: this.consultaForm['notas'],
+        tratamiento: this.consultaForm['tratamiento'] || null
+      };
+      console.log('Editando consulta:', payload);
+      this.consultaService.editar(payload).subscribe({
+        next: () => {
+          this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Consulta actualizada' });
+          this.consultaDialog = false;
+          this.cargarConsultas();
+        },
+        error: (err) => {
+          console.error('Error al editar:', err);
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.mensaje || 'No se pudo actualizar la consulta' });
+        }
+      });
+    } else {
+      const payload: any = {
+        consultaId: Number(this.consultaForm['consultaId']),
+        citaId: Number(this.consultaForm['citaId']),
+        motivo: this.consultaForm['motivo'] || null,
+        notas: this.consultaForm['notas'],
+        tratamiento: this.consultaForm['tratamiento'] || null
+      };
+      console.log('Insertando consulta:', payload);
+      this.consultaService.insertar(payload).subscribe({
+        next: () => {
+          this.messageService.add({ severity: 'success', summary: 'Creado', detail: 'Consulta creada' });
+          this.consultaDialog = false;
+          this.cargarConsultas();
+        },
+        error: (err) => {
+          console.error('Error al crear:', err);
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.mensaje || 'No se pudo crear la consulta' });
+        }
+      });
+    }
   }
+
+
+
+
 }
