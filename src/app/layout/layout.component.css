@@ -23,7 +23,7 @@ html, body {
 .sidebar {
   width: 220px;
   flex-shrink: 0;
-  background: #ffffff;
+  background: var(--sidebar-bg);
   color: var(--sidebar-text);
   padding: 20px 12px 14px;
   display: flex;
@@ -60,7 +60,7 @@ html, body {
 .sidebar-brand .brand-icon {
   width: 36px;
   height: 36px;
-  background: linear-gradient(135deg, #1a56db 0%, #3b82f6 100%);
+  background: var(--primary-color);
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -80,7 +80,7 @@ html, body {
 .sidebar-section-title {
   font-size: 0.55rem;
   font-weight: 600;
-  color: #9ca3af;
+  color: var(--text-color-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -152,7 +152,7 @@ html, body {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #1a56db 0%, #3b82f6 100%);
+  background: var(--primary-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -191,8 +191,8 @@ html, body {
   margin: 4px 8px;
   border: none;
   border-radius: 8px;
-  background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
+  background: var(--sidebar-logout-bg);
+  color: var(--sidebar-logout-text);
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
@@ -200,8 +200,8 @@ html, body {
 }
 
 .sidebar-logout:hover {
-  background: rgba(239, 68, 68, 0.2);
-  color: #b91c1c;
+  background: var(--sidebar-logout-bg);
+  filter: brightness(0.9);
 }
 
 .sidebar-logout i {

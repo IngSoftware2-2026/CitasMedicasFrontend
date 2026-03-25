@@ -1,0 +1,140 @@
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 400px;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease-out;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toast-code {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.toast-message {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.toast-close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.toast-close:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.toast-error {
+  background: #fef2f2;
+  border-left: 4px solid #ef4444;
+  color: #991b1b;
+}
+
+.toast-error .toast-icon {
+  color: #ef4444;
+}
+
+.toast-warning {
+  background: #fffbeb;
+  border-left: 4px solid #f59e0b;
+  color: #92400e;
+}
+
+.toast-warning .toast-icon {
+  color: #f59e0b;
+}
+
+.toast-success {
+  background: #f0fdf4;
+  border-left: 4px solid #22c55e;
+  color: #166534;
+}
+
+.toast-success .toast-icon {
+  color: #22c55e;
+}
+
+.toast-info {
+  background: #eff6ff;
+  border-left: 4px solid #3b82f6;
+  color: #1e40af;
+}
+
+.toast-info .toast-icon {
+  color: #3b82f6;
+}
+
+:host-context(.dark) .toast-error {
+  background: #450a0a;
+  color: #fca5a5;
+}
+
+:host-context(.dark) .toast-warning {
+  background: #451a03;
+  color: #fcd34d;
+}
+
+:host-context(.dark) .toast-success {
+  background: #052e16;
+  color: #86efac;
+}
+
+:host-context(.dark) .toast-info {
+  background: #172554;
+  color: #93c5fd;
+}
+
+:host-context(.dark) .toast-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+}

@@ -1,6 +1,10 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { catchError, throwError } from 'rxjs';
 
 export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
+  const router = inject(Router);
   const urlsExcluidas = ['/Accesos/Login', '/Accesos/Usuarios/Insertar'];
   const debeOmitir = urlsExcluidas.some(url => req.url.includes(url));
   
@@ -18,5 +22,15 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
     });
   }
   
-  return next(req);
+  return next(req).pipe(
+    catchError((error: HttpErrorResponse) => {
+      if (error.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('usuarioId');
+        localStorage.removeItem('rolId');
+        router.navigate(['/login']);
+      }
+      return throwError(() => error);
+    })
+  );
 };

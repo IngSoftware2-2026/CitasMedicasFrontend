@@ -7,7 +7,7 @@
 }
 
 .permisos-header {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-600) 100%);
+  background: blue;
   border-radius: 16px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
@@ -22,6 +22,18 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+.permisos-header-title-text {
+  color: white;
+}
+
+.permisos-header-title-text h2 {
+  color: white;
+}
+
+.permisos-header-title-text p {
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .permisos-header-icon {
@@ -45,6 +57,17 @@
   margin: 0.25rem 0 0;
   opacity: 0.9;
   font-size: 0.9rem;
+}
+
+.permisos-filters {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+
+.permisos-filters :host ::ng-deep .p-select {
+  min-width: 180px;
 }
 
 .permisos-stats {

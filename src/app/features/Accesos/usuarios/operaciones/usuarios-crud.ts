@@ -1,53 +1,25 @@
-/**
- * ============================================================
- * CRUD: Operaciones de Crear, Leer, Actualizar, Eliminar
- * ============================================================
- * Maneja todas las operaciones de base de datos para usuarios.
- */
-
 import { Injectable, inject } from '@angular/core';
 import { ChangeDetectorRef } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { Subject, takeUntil } from 'rxjs';
-
-// Servicios
 import { UsuarioService } from '../../../../core/services/Accesos/usuario.service';
-
-// Modelos
+import { RefreshManager } from '../../../../core/shared/services/data-refresh.service';
 import { Usuario } from '../../../../core/models/Accesos/usuario.model';
 
 @Injectable()
 export class UsuariosCrud {
-
-  // ============================================================
-  // DEPENDENCIAS
-  // ============================================================
-  
   private usuarioService = inject(UsuarioService);
   private messageService = inject(MessageService);
+  private refreshManager = inject(RefreshManager);
   private cdr: ChangeDetectorRef | null = null;
-
-  // ============================================================
-  // ESTADO
-  // ============================================================
-  
   private destroy$ = new Subject<void>();
+  private usuariosSubject = new Subject<Usuario[]>();
+  usuarios$ = this.usuariosSubject.asObservable();
 
-  // ============================================================
-  // CONFIGURACIÓN
-  // ============================================================
-  
   setCdr(cdr: ChangeDetectorRef): void {
     this.cdr = cdr;
   }
 
-  // ============================================================
-  // MÉTODOS PÚBLICOS
-  // ============================================================
-  
-  /**
-   * Carga la lista de usuarios desde el API.
-   */
   cargarUsuarios(): void {
     this.usuarioService.listar()
       .pipe(takeUntil(this.destroy$))
@@ -64,9 +36,6 @@ export class UsuariosCrud {
       });
   }
 
-  /**
-   * Guarda (crea o actualiza) un usuario.
-   */
   guardar(datos: Partial<Usuario>, esEdicion: boolean): void {
     if (!datos.nombreUsuario?.trim()) {
       this.mostrarMensaje('warn', 'Requerido', 'El nombre de usuario es obligatorio');
@@ -85,9 +54,6 @@ export class UsuariosCrud {
     }
   }
 
-  /**
-   * Activa o desactiva un usuario.
-   */
   toggleEstado(usuario: Usuario): void {
     const nuevoEstado = !usuario.activo;
     const accion = nuevoEstado ? 'activado' : 'desactivado';
@@ -104,7 +70,7 @@ export class UsuariosCrud {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.cargarUsuarios();
+          this.refreshManager.refresh('usuarios');
           this.mostrarMensaje('success', 'Éxito', `Usuario ${accion} correctamente`);
         },
         error: (error) => {
@@ -114,9 +80,6 @@ export class UsuariosCrud {
       });
   }
 
-  /**
-   * Obtiene los detalles de un usuario por ID.
-   */
   obtenerDetalle(usuarioId: number): Promise<Usuario | null> {
     return new Promise((resolve) => {
       this.usuarioService.obtenerPorId(usuarioId)
@@ -134,15 +97,12 @@ export class UsuariosCrud {
     });
   }
 
-  /**
-   * Elimina un usuario.
-   */
   eliminar(usuario: Usuario): void {
     this.usuarioService.eliminarUsuario(usuario.usuarioId!)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.cargarUsuarios();
+          this.refreshManager.refresh('usuarios');
           this.mostrarMensaje('success', 'Eliminado', 'Usuario eliminado correctamente');
         },
         error: (error) => {
@@ -152,23 +112,12 @@ export class UsuariosCrud {
       });
   }
 
-  // ============================================================
-  // PROPIEDADES (compatibilidad con código existente)
-  // ============================================================
-  
-  private usuariosSubject = new Subject<Usuario[]>();
-  usuarios$ = this.usuariosSubject.asObservable();
-
-  // ============================================================
-  // MÉTODOS PRIVADOS
-  // ============================================================
-  
   private crear(datos: Partial<Usuario>): void {
     this.usuarioService.insertar(datos)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.cargarUsuarios();
+          this.refreshManager.refresh('usuarios');
           this.mostrarMensaje('success', 'Creado', 'Usuario creado exitosamente');
         },
         error: (error) => {
@@ -185,7 +134,7 @@ export class UsuariosCrud {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.cargarUsuarios();
+          this.refreshManager.refresh('usuarios');
           this.mostrarMensaje('success', 'Actualizado', 'Usuario actualizado exitosamente');
         },
         error: (error) => {

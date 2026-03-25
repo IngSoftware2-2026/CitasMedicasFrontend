@@ -1,6 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MockDataService } from '../../../core/services/Clinica/mock-data.service';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -11,72 +10,189 @@ import { ToolbarModule } from 'primeng/toolbar';
 import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { CheckboxModule } from 'primeng/checkbox';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { EspecialidadesService } from '../../../core/services/Clinica/especialidades.service';
+import { Especialidad } from '../../../core/models/Catalogos/especialidad.model';
 
 @Component({
   selector: 'app-especialidades',
   standalone: true,
-  imports: [FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, TagModule, ToolbarModule, TooltipModule, IconFieldModule, InputIconModule],
+  imports: [
+    FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule,
+    TagModule, ToolbarModule, TooltipModule, IconFieldModule, InputIconModule,
+    CheckboxModule, ConfirmDialogModule
+  ],
   templateUrl: './especialidades.component.html',
   styleUrl: './especialidades.component.css'
 })
-export class EspecialidadesComponent {
+export class EspecialidadesComponent implements OnInit {
+  // --- State ---
   searchEspecialidad = '';
   especialidadDialog = false;
   especialidadForm: Record<string, any> = {};
+  formErrors: Record<string, string> = {};
+  saving = false;
+  loadingList = false;
 
-  get especialidades() { return this.data.especialidades; }
+  // --- Data ---
+  especialidadesList: Especialidad[] = [];
 
-  get filteredEspecialidades() {
-    const term = this.searchEspecialidad.toLowerCase();
-    if (!term) return this.especialidades;
-    return this.especialidades.filter(e => e.nombre.toLowerCase().includes(term));
-  }
-
-  countActivas(): number { return this.especialidades.filter(e => e.activo).length; }
-  countInactivas(): number { return this.especialidades.filter(e => !e.activo).length; }
+  private especialidadesService = inject(EspecialidadesService);
+  private cdr = inject(ChangeDetectorRef);
 
   constructor(
-    private data: MockDataService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) {}
 
+  ngOnInit() {
+    this.cargarEspecialidades();
+  }
+
+  // ==================== COMPUTED ====================
+
+  get filteredEspecialidades(): Especialidad[] {
+    const term = this.searchEspecialidad.toLowerCase();
+    if (!term) return this.especialidadesList;
+    return this.especialidadesList.filter(e => e.nombre.toLowerCase().includes(term));
+  }
+
+  countActivas(): number {
+    return this.especialidadesList.filter(e => e.activo).length;
+  }
+
+  countInactivas(): number {
+    return this.especialidadesList.filter(e => !e.activo).length;
+  }
+
+  // ==================== DATA LOADING ====================
+
+  cargarEspecialidades(): void {
+    this.loadingList = true;
+    this.especialidadesService.listar().subscribe({
+      next: (esps) => {
+        this.especialidadesList = esps;
+        this.loadingList = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.loadingList = false;
+        console.error('[EspecialidadesComponent] Error cargando especialidades:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar las especialidades'
+        });
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  // ==================== DIALOG ====================
+
   openEspecialidadDialog(e?: any): void {
-    this.especialidadForm = e ? { ...e } : {};
+    this.formErrors = {};
+    this.especialidadForm = e
+      ? { ...e }
+      : { nombre: '', activo: true };
     this.especialidadDialog = true;
   }
 
+  // ==================== VALIDATION ====================
+
+  private validateForm(): boolean {
+    this.formErrors = {};
+    let valid = true;
+
+    if (!this.especialidadForm['nombre']?.trim()) {
+      this.formErrors['nombre'] = 'El nombre de la especialidad es obligatorio';
+      valid = false;
+    }
+
+    return valid;
+  }
+
+  // ==================== SAVE (CREATE / EDIT) ====================
+
   saveEspecialidad(): void {
-    if (!this.especialidadForm['nombre']) {
-      this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Nombre es obligatorio' });
+    if (!this.validateForm()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Validación',
+        detail: 'Corrija los campos marcados en rojo'
+      });
       return;
     }
+
+    this.saving = true;
+
     if (this.especialidadForm['especialidadId']) {
-      const idx = this.especialidades.findIndex(e => e.especialidadId === this.especialidadForm['especialidadId']);
-      if (idx >= 0) {
-        this.especialidades[idx] = { ...this.especialidades[idx], ...this.especialidadForm };
-        this.messageService.add({ severity: 'success', summary: 'Actualizada', detail: 'Especialidad actualizada' });
-      }
+      // —— EDITAR ——
+      this.especialidadesService.editar(this.especialidadForm as Especialidad).subscribe({
+        next: () => {
+          this.saving = false;
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Actualizada',
+            detail: `Especialidad "${this.especialidadForm['nombre']}" actualizada correctamente`
+          });
+          this.especialidadDialog = false;
+          this.cargarEspecialidades();
+        },
+        error: (err) => {
+          this.saving = false;
+          const msg = err?.message || 'No se pudo actualizar la especialidad';
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: msg });
+        }
+      });
     } else {
-      this.especialidades.push({
-        ...this.especialidadForm,
-        especialidadId: this.data.nextId('especialidad'),
-        activo: true
-      } as any);
-      this.messageService.add({ severity: 'success', summary: 'Creada', detail: 'Especialidad creada' });
+      // —— CREAR ——
+      this.especialidadesService.insertar(this.especialidadForm as Especialidad).subscribe({
+        next: () => {
+          this.saving = false;
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Creada',
+            detail: `Especialidad "${this.especialidadForm['nombre']}" creada exitosamente`
+          });
+          this.especialidadDialog = false;
+          this.cargarEspecialidades();
+        },
+        error: (err) => {
+          this.saving = false;
+          const msg = err?.message || 'No se pudo crear la especialidad';
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: msg });
+        }
+      });
     }
-    this.especialidadDialog = false;
   }
+
+  // ==================== DELETE (DESACTIVAR) ====================
 
   deleteEspecialidad(e: any): void {
     this.confirmationService.confirm({
-      message: `Eliminar ${e.nombre}?`,
-      header: 'Confirmar',
+      header: 'Confirmar eliminación',
+      message: `¿Está seguro de desactivar la especialidad "${e.nombre}"?`,
       icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, desactivar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
-        const idx = this.especialidades.indexOf(e);
-        if (idx >= 0) this.especialidades.splice(idx, 1);
-        this.messageService.add({ severity: 'success', summary: 'Eliminada', detail: 'Especialidad eliminada' });
+        this.especialidadesService.desactivar(e.especialidadId).subscribe({
+          next: () => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Desactivada',
+              detail: `Especialidad "${e.nombre}" desactivada correctamente`
+            });
+            this.cargarEspecialidades();
+          },
+          error: (err) => {
+            const msg = err?.message || 'No se pudo desactivar la especialidad';
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: msg });
+          }
+        });
       }
     });
   }

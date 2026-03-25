@@ -35,6 +35,9 @@ export class UsuariosUtils {
   
   /** BehaviorSubject con la lista de roles */
   private rolesSubject = new Subject<Rol[]>();
+  
+  /** Lista local de roles */
+  listaRoles: Rol[] = [];
 
   // ============================================================
   // PROPIEDADES PÚBLICAS
@@ -42,6 +45,11 @@ export class UsuariosUtils {
   
   /** Observable de roles para suscribirse */
   roles$ = this.rolesSubject.asObservable();
+  
+  /** Getter de roles para compatibilidad */
+  get roles(): Rol[] {
+    return this.listaRoles;
+  }
 
   // ============================================================
   // MAPAS DE DATOS (para no depender solo de la BD)
@@ -77,13 +85,6 @@ export class UsuariosUtils {
   // MÉTODOS PÚBLICOS - ROLES
   // ============================================================
   
-  /**
-   * Obtiene la lista de roles.
-   */
-  get roles(): Rol[] {
-    return [];
-  }
-
   /**
    * Obtiene el nombre del rol por su ID.
    */
@@ -210,11 +211,13 @@ export class UsuariosUtils {
     this.rolService.listar()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (roles) => {
+        next: (roles: Rol[]) => {
+          this.listaRoles = roles;
           this.rolesSubject.next(roles);
         },
-        error: (error) => {
+        error: (error: any) => {
           console.error('Error al cargar roles:', error);
+          this.listaRoles = [];
           this.rolesSubject.next([]);
         }
       });

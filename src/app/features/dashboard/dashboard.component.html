@@ -1,6 +1,6 @@
 <!-- BREADCRUMB -->
 <div class="dashboard-breadcrumb">
-  <span>🏠 Inicio / Dashboard</span>
+  <span> Inicio / Dashboard</span>
 </div>
 
 <!-- HEADER -->
@@ -34,69 +34,12 @@
   </div>
 </div>
 
-<!-- STATS ROW -->
-<div class="dashboard-stats">
-  <div class="dashboard-stat">
-    <div class="dashboard-stat-icon dashboard-stat-icon--blue">
-      <i class="pi pi-calendar"></i>
-    </div>
-    <div class="dashboard-stat-info">
-      <span class="dashboard-stat-number">{{ stats.totalCitas }}</span>
-      <span class="dashboard-stat-label">Total Citas</span>
-    </div>
-  </div>
-  <div class="dashboard-stat">
-    <div class="dashboard-stat-icon dashboard-stat-icon--green">
-      <i class="pi pi-check-circle"></i>
-    </div>
-    <div class="dashboard-stat-info">
-      <span class="dashboard-stat-number">{{ stats.citasConfirmadas }}</span>
-      <span class="dashboard-stat-label">Confirmadas</span>
-    </div>
-  </div>
-  <div class="dashboard-stat">
-    <div class="dashboard-stat-icon dashboard-stat-icon--purple">
-      <i class="pi pi-users"></i>
-    </div>
-    <div class="dashboard-stat-info">
-      <span class="dashboard-stat-number">{{ stats.totalPacientes }}</span>
-      <span class="dashboard-stat-label">Pacientes</span>
-    </div>
-  </div>
-  <div class="dashboard-stat">
-    <div class="dashboard-stat-icon dashboard-stat-icon--orange">
-      <i class="pi pi-user"></i>
-    </div>
-    <div class="dashboard-stat-info">
-      <span class="dashboard-stat-number">{{ stats.totalDoctores }}</span>
-      <span class="dashboard-stat-label">Doctores</span>
-    </div>
-  </div>
-  <div class="dashboard-stat">
-    <div class="dashboard-stat-icon dashboard-stat-icon--red">
-      <i class="pi pi-inbox"></i>
-    </div>
-    <div class="dashboard-stat-info">
-      <span class="dashboard-stat-number">{{ stats.solicitudesPendientes }}</span>
-      <span class="dashboard-stat-label">Solicitudes</span>
-    </div>
-  </div>
-  <div class="dashboard-stat">
-    <div class="dashboard-stat-icon dashboard-stat-icon--cyan">
-      <i class="pi pi-building"></i>
-    </div>
-    <div class="dashboard-stat-info">
-      <span class="dashboard-stat-number">{{ stats.totalSalasActivas }}</span>
-      <span class="dashboard-stat-label">Salas</span>
-    </div>
-  </div>
-</div>
 
 <!-- BENTO GRID -->
 <div class="bento-grid">
   <!-- ESTADOS - 6 columns -->
   <div class="bento-box bento-estados">
-    <h2 class="bento-title">📊 Estados de Citas</h2>
+    <h2 class="bento-title">Estados de Citas</h2>
     <div class="bento-estados-list">
       @for (stat of distributionStats; track stat.label) {
         <div class="bento-estado-item">
@@ -116,7 +59,7 @@
   <!-- SALAS DISPONIBLES - 6 columns -->
   <div class="bento-box bento-salas">
     <div class="bento-header">
-      <h2 class="bento-title">🏥 Disponibilidad</h2>
+      <h2 class="bento-title"> Disponibilidad</h2>
       <a class="bento-link" routerLink="/salas">Ver →</a>
     </div>
     <div class="bento-salas-grid">
@@ -131,7 +74,7 @@
   </div>
   <!-- ACCESOS RÁPIDOS - Full width -->
   <div class="bento-box bento-quick">
-    <h2 class="bento-title">⚡ Accesos Rápidos</h2>
+    <h2 class="bento-title"> Accesos Rápidos</h2>
     <div class="bento-quick-grid">
       <button class="bento-quick-btn" routerLink="/citas">
         <i class="pi pi-plus-circle"></i>
@@ -163,7 +106,7 @@
   <!-- PRÓXIMAS CITAS - Full width -->
   <div class="bento-box bento-citas">
     <div class="bento-header">
-      <h2 class="bento-title">🕐 Próximas Citas</h2>
+      <h2 class="bento-title"> Próximas Citas</h2>
       <a class="bento-link" routerLink="/citas">Ver todas →</a>
     </div>
     <div class="bento-citas-grid">

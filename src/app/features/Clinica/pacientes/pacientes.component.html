@@ -14,7 +14,7 @@
 <div class="mod-stats mod-stats-3">
   <div class="mod-stat-item">
     <div class="mod-stat-icon --accent"><i class="pi pi-users"></i></div>
-    <div class="mod-stat-info"><span class="mod-stat-num">{{ filteredPacientes.length }}</span><span class="mod-stat-label">Total</span></div>
+    <div class="mod-stat-info"><span class="mod-stat-num">{{ filteredPacientes().length }}</span><span class="mod-stat-label">Total</span></div>
   </div>
   <div class="mod-stat-item">
     <div class="mod-stat-icon --green"><i class="pi pi-check-circle"></i></div>
@@ -27,14 +27,14 @@
 </div>
 
 <div class="mod-table-card">
-  <p-table [value]="filteredPacientes" [paginator]="true" [rows]="8" [tableStyle]="{'min-width': '60rem'}" dataKey="pacienteId" [rowHover]="true">
+  <p-table [value]="filteredPacientes()" [paginator]="true" [rows]="8" [tableStyle]="{'min-width': '60rem'}" dataKey="pacienteId" [rowHover]="true">
     <ng-template #caption>
       <div class="mod-caption">
         <p-iconfield class="mod-search">
           <p-inputicon styleClass="pi pi-search" />
-          <input pInputText [(ngModel)]="searchPaciente" placeholder="Buscar por nombre, teléfono o correo..." />
+          <input pInputText [ngModel]="searchPaciente()" (ngModelChange)="searchPaciente.set($event)" placeholder="Buscar por nombre, teléfono o correo..." />
         </p-iconfield>
-        <span class="mod-caption-count">{{ filteredPacientes.length }} pacientes</span>
+        <span class="mod-caption-count">{{ filteredPacientes().length }} pacientes</span>
       </div>
     </ng-template>
     <ng-template #header>
@@ -49,11 +49,11 @@
       </tr>
     </ng-template>
     <ng-template #body let-p let-i="rowIndex">
-      <tr>
+      <tr [class.row-inactivo]="!p.activo">
         <td><span class="mod-row-num">{{ i + 1 }}</span></td>
         <td>
           <div class="mod-person">
-            <span class="mod-avatar --indigo">{{ getInitials(p.nombres + ' ' + (p.apellidos ?? '')) }}</span>
+            <span class="mod-avatar" [class.--indigo]="p.activo" [class.--gray]="!p.activo">{{ getInitials(p.nombres + ' ' + (p.apellidos ?? '')) }}</span>
             <span class="mod-person-name">{{ p.nombres }} {{ p.apellidos }}</span>
           </div>
         </td>
@@ -67,9 +67,9 @@
         <td><p-tag [value]="p.activo ? 'Activo' : 'Inactivo'" [severity]="p.activo ? 'success' : 'danger'" [rounded]="true" /></td>
         <td>
           <div class="mod-actions">
-            <button class="mod-action-btn --edit" pTooltip="Editar" tooltipPosition="top" (click)="openPacienteDialog(p)"><i class="pi pi-pencil"></i></button>
-            <button class="mod-action-btn --warn" [pTooltip]="p.activo ? 'Desactivar' : 'Activar'" tooltipPosition="top" (click)="togglePacienteActivo(p)"><i [class]="p.activo ? 'pi pi-eye-slash' : 'pi pi-eye'"></i></button>
-            <button class="mod-action-btn --danger" pTooltip="Eliminar" tooltipPosition="top" (click)="deletePaciente(p)"><i class="pi pi-trash"></i></button>
+            <button class="mod-action-btn --edit" pTooltip="Editar" tooltipPosition="top" (click)="openPacienteDialog(p)" [disabled]="!p.activo"><i class="pi pi-pencil"></i></button>
+            <button class="mod-action-btn" [class.--warn]="p.activo" [class.--success]="!p.activo" [pTooltip]="p.activo ? 'Desactivar' : 'Activar'" tooltipPosition="top" (click)="togglePacienteActivo(p)"><i [class]="p.activo ? 'pi pi-eye-slash' : 'pi pi-eye'"></i></button>
+            <button class="mod-action-btn --danger" pTooltip="Eliminar" tooltipPosition="top" (click)="deletePaciente(p)" [disabled]="!p.activo"><i class="pi pi-trash"></i></button>
           </div>
         </td>
       </tr>
@@ -83,19 +83,37 @@
 </div>
 
 <!-- PACIENTE DIALOG -->
-<p-dialog header="{{ pacienteForm['pacienteId'] ? 'Editar' : 'Nuevo' }} Paciente" [(visible)]="pacienteDialog" [modal]="true" [style]="{width: '550px'}">
+<p-dialog header="{{ pacienteForm['pacienteId'] ? 'Editar' : 'Nuevo' }} Paciente" [(visible)]="pacienteDialog" [modal]="true" [style]="{width: '650px'}">
   <div class="dialog-form">
     <div class="form-row">
+      <div class="field" style="flex: 1">
+        <label>Usuario *</label>
+        <p-select
+          [options]="usuariosDisponibles()"
+          [(ngModel)]="pacienteForm['usuarioId']"
+          optionLabel="label"
+          optionValue="value"
+          optionDisabled="disabled"
+          placeholder="Seleccionar usuario..."
+          [filter]="true"
+          filterPlaceholder="Buscar por nombre o correo..."
+          [showClear]="true"
+          appendTo="body"
+          [disabled]="!!pacienteForm['pacienteId']"
+          [style]="{'width':'100%'}" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>No. Identidad *</label><input pInputText [(ngModel)]="pacienteForm['numeroIdentidad']" /></div>
+      <div class="field"><label>Teléfono *</label><input pInputText [(ngModel)]="pacienteForm['telefono']" /></div>
+    </div>
+    <div class="form-row">
       <div class="field"><label>Nombres *</label><input pInputText [(ngModel)]="pacienteForm['nombres']" /></div>
-      <div class="field"><label>Apellidos</label><input pInputText [(ngModel)]="pacienteForm['apellidos']" /></div>
+      <div class="field"><label>Apellidos *</label><input pInputText [(ngModel)]="pacienteForm['apellidos']" /></div>
     </div>
     <div class="form-row">
-      <div class="field"><label>Telefono *</label><input pInputText [(ngModel)]="pacienteForm['telefono']" /></div>
       <div class="field"><label>Correo</label><input pInputText [(ngModel)]="pacienteForm['correo']" /></div>
-    </div>
-    <div class="form-row">
       <div class="field"><label>Nacimiento</label><input pInputText type="date" [(ngModel)]="pacienteForm['fechaNacimiento']" /></div>
-      <div class="field"><label>No. Identidad</label><input pInputText [(ngModel)]="pacienteForm['numeroIdentidad']" /></div>
     </div>
   </div>
   <ng-template #footer>

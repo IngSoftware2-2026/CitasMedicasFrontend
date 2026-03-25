@@ -175,16 +175,16 @@ export class MockDataService {
   ];
 
   pacientes: Paciente[] = [
-    { pacienteId: 1, nombres: 'Maria', apellidos: 'Rodriguez', telefono: '+502 4123-4567', correo: 'maria@email.com', fechaNacimiento: new Date('1990-05-15'), numeroIdentidad: '1234567890101', activo: true, fechaCreacion: new Date('2026-01-08') },
-    { pacienteId: 2, nombres: 'Juan', apellidos: 'Lopez', telefono: '+502 5234-5678', correo: 'juan@email.com', fechaNacimiento: new Date('1985-08-22'), numeroIdentidad: '2345678901012', activo: true, fechaCreacion: new Date('2026-01-09') },
-    { pacienteId: 3, nombres: 'Sofia', apellidos: 'Ramirez', telefono: '+502 5890-1234', correo: 'sofia@email.com', fechaNacimiento: new Date('2000-06-05'), numeroIdentidad: '8901234567018', activo: true, fechaCreacion: new Date('2026-01-10') },
-    { pacienteId: 4, nombres: 'Pedro', apellidos: 'Garcia', telefono: '+502 3345-6789', correo: 'pedro@email.com', fechaNacimiento: new Date('1978-12-03'), numeroIdentidad: '3456789012013', activo: true, fechaCreacion: new Date('2026-01-11') },
-    { pacienteId: 5, nombres: 'Lucia', apellidos: 'Fernandez', telefono: '+502 4456-7890', correo: 'lucia@email.com', fechaNacimiento: new Date('1995-03-28'), numeroIdentidad: '4567890123014', activo: true, fechaCreacion: new Date('2026-01-12') },
-    { pacienteId: 6, nombres: 'Andres', apellidos: 'Herrera', telefono: '+502 5567-8901', correo: 'andres@email.com', fechaNacimiento: new Date('1982-07-10'), numeroIdentidad: '5678901234015', activo: true, fechaCreacion: new Date('2026-01-13') },
-    { pacienteId: 7, nombres: 'Carmen', apellidos: 'Soto', telefono: '+502 3678-9012', correo: 'carmen@email.com', fechaNacimiento: new Date('1988-11-20'), numeroIdentidad: '6789012345016', activo: false, fechaCreacion: new Date('2026-01-14') },
-    { pacienteId: 8, nombres: 'Fernando', apellidos: 'Castillo', telefono: '+502 3901-2345', correo: 'fernando@email.com', fechaNacimiento: new Date('1992-09-30'), numeroIdentidad: '9012345678019', activo: true, fechaCreacion: new Date('2026-01-15') },
-    { pacienteId: 9, nombres: 'Diana', apellidos: 'Morales', telefono: '+502 4012-3456', correo: 'diana@email.com', fechaNacimiento: new Date('1987-04-18'), numeroIdentidad: '0123456789020', activo: true, fechaCreacion: new Date('2026-01-16') },
-    { pacienteId: 10, nombres: 'Roberto', apellidos: 'Vasquez', telefono: '+502 4789-0123', correo: 'roberto.v@email.com', fechaNacimiento: new Date('1970-01-14'), numeroIdentidad: '7890123456017', activo: false, fechaCreacion: new Date('2026-01-17') }
+    { pacienteId: 1, usuarioId: 1, nombres: 'Maria', apellidos: 'Rodriguez', telefono: '+502 4123-4567', correo: 'maria@email.com', fechaNacimiento: new Date('1990-05-15'), numeroIdentidad: '1234567890101', activo: true, fechaCreacion: new Date('2026-01-08') },
+    { pacienteId: 2, usuarioId: 2, nombres: 'Juan', apellidos: 'Lopez', telefono: '+502 5234-5678', correo: 'juan@email.com', fechaNacimiento: new Date('1985-08-22'), numeroIdentidad: '2345678901012', activo: true, fechaCreacion: new Date('2026-01-09') },
+    { pacienteId: 3, usuarioId: 3, nombres: 'Sofia', apellidos: 'Ramirez', telefono: '+502 5890-1234', correo: 'sofia@email.com', fechaNacimiento: new Date('2000-06-05'), numeroIdentidad: '8901234567018', activo: true, fechaCreacion: new Date('2026-01-10') },
+    { pacienteId: 4, usuarioId: 4, nombres: 'Pedro', apellidos: 'Garcia', telefono: '+502 3345-6789', correo: 'pedro@email.com', fechaNacimiento: new Date('1978-12-03'), numeroIdentidad: '3456789012013', activo: true, fechaCreacion: new Date('2026-01-11') },
+    { pacienteId: 5, usuarioId: 5, nombres: 'Lucia', apellidos: 'Fernandez', telefono: '+502 4456-7890', correo: 'lucia@email.com', fechaNacimiento: new Date('1995-03-28'), numeroIdentidad: '4567890123014', activo: true, fechaCreacion: new Date('2026-01-12') },
+    { pacienteId: 6, usuarioId: 6, nombres: 'Andres', apellidos: 'Herrera', telefono: '+502 5567-8901', correo: 'andres@email.com', fechaNacimiento: new Date('1982-07-10'), numeroIdentidad: '5678901234015', activo: true, fechaCreacion: new Date('2026-01-13') },
+    { pacienteId: 7, usuarioId: 7, nombres: 'Carmen', apellidos: 'Soto', telefono: '+502 3678-9012', correo: 'carmen@email.com', fechaNacimiento: new Date('1988-11-20'), numeroIdentidad: '6789012345016', activo: false, fechaCreacion: new Date('2026-01-14') },
+    { pacienteId: 8, usuarioId: 8, nombres: 'Fernando', apellidos: 'Castillo', telefono: '+502 3901-2345', correo: 'fernando@email.com', fechaNacimiento: new Date('1992-09-30'), numeroIdentidad: '9012345678019', activo: true, fechaCreacion: new Date('2026-01-15') },
+    { pacienteId: 9, usuarioId: 9, nombres: 'Diana', apellidos: 'Morales', telefono: '+502 4012-3456', correo: 'diana@email.com', fechaNacimiento: new Date('1987-04-18'), numeroIdentidad: '0123456789020', activo: true, fechaCreacion: new Date('2026-01-16') },
+    { pacienteId: 10, usuarioId: 10, nombres: 'Roberto', apellidos: 'Vasquez', telefono: '+502 4789-0123', correo: 'roberto.v@email.com', fechaNacimiento: new Date('1970-01-14'), numeroIdentidad: '7890123456017', activo: false, fechaCreacion: new Date('2026-01-17') }
   ];
 
   doctores: Doctor[] = [

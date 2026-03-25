@@ -1,3 +1,6 @@
+/**
+ * Servicio para gestionar tema claro/oscuro.
+ */
 import { Injectable, signal, effect } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
@@ -13,7 +16,7 @@ export class ThemeService {
   }
 
   toggle(): void {
-    this.isDark.update(valor => !valor);
+    this.isDark.update(v => !v);
   }
 
   private cargarPreferencia(): boolean {
