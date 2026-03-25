@@ -11,10 +11,10 @@ export class PacienteService extends ConexionService {
       map((respuesta: any) => {
         if (!respuesta) return [];
         if (Array.isArray(respuesta)) return respuesta as Paciente[];
-        const exitoso = respuesta.exitoso ?? respuesta.success;
-        const datos = respuesta.datos ?? respuesta.data;
-        if (exitoso && datos) return datos as Paciente[];
-        if (respuesta.mensaje) throw new Error(respuesta.mensaje);
+        const exitoso = respuesta.success ?? respuesta.exitoso;
+        const datos = respuesta.data ?? respuesta.datos;
+        if (exitoso && Array.isArray(datos)) return datos as Paciente[];
+        if (respuesta.message || respuesta.mensaje) throw new Error(respuesta.message || respuesta.mensaje);
         return [];
       })
     );
@@ -24,8 +24,8 @@ export class PacienteService extends ConexionService {
     return this.obtener<Paciente>(`/Pacientes/${pacienteId}`).pipe(
       map((respuesta: any) => {
         if (!respuesta) return null;
-        if (!respuesta.exitoso && !respuesta.success) return null;
-        const datos = respuesta.datos ?? respuesta.data;
+        if (!respuesta.success && !respuesta.exitoso) return null;
+        const datos = respuesta.data ?? respuesta.datos;
         if (datos) return datos as Paciente;
         return null;
       })
@@ -36,24 +36,23 @@ export class PacienteService extends ConexionService {
     return this.crear<Paciente>('/Pacientes/Insertar', paciente).pipe(
       map((respuesta: any) => {
         if (!respuesta) return paciente as Paciente;
-        const exitoso = respuesta.exitoso ?? respuesta.success;
-        const datos = respuesta.datos ?? respuesta.data;
-        if (exitoso) return datos as Paciente;
-        if (respuesta.mensaje) throw new Error(respuesta.mensaje);
+        const exitoso = respuesta.success ?? respuesta.exitoso;
+        if (exitoso) return paciente as Paciente;
+        const msg = respuesta.message || respuesta.mensaje;
+        if (msg) throw new Error(msg);
         return paciente as Paciente;
       })
     );
   }
 
   editar(paciente: Partial<Paciente>): Observable<Paciente> {
-    const pacienteId = paciente.pacienteId;
-    return this.crear<Paciente>(`/Pacientes/Editar/${pacienteId}`, paciente).pipe(
+    return this.crear<Paciente>('/Pacientes/Editar', paciente).pipe(
       map((respuesta: any) => {
         if (!respuesta) return paciente as Paciente;
-        const exitoso = respuesta.exitoso ?? respuesta.success;
-        const datos = respuesta.datos ?? respuesta.data;
-        if (exitoso) return datos as Paciente;
-        if (respuesta.mensaje) throw new Error(respuesta.mensaje);
+        const exitoso = respuesta.success ?? respuesta.exitoso;
+        if (exitoso) return paciente as Paciente;
+        const msg = respuesta.message || respuesta.mensaje;
+        if (msg) throw new Error(msg);
         return paciente as Paciente;
       })
     );
@@ -62,9 +61,9 @@ export class PacienteService extends ConexionService {
   eliminarpaciente(pacienteId: number): Observable<boolean> {
     return this.eliminar<any>('/Pacientes/Eliminar', { pacienteId }).pipe(
       map((respuesta: any) => {
-        const exitoso = respuesta.exitoso ?? respuesta.success;
+        const exitoso = respuesta.success ?? respuesta.exitoso;
         if (exitoso) return true;
-        throw new Error(respuesta.mensaje || 'Error al eliminar paciente');
+        throw new Error(respuesta.message || respuesta.mensaje || 'Error al eliminar paciente');
       })
     );
   }

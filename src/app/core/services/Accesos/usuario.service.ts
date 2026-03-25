@@ -91,18 +91,17 @@ export class UsuarioService extends ConexionService {
     };
     return this.crear<Usuario>('/Accesos/Usuarios/Insertar', payload).pipe(
       map((respuesta: any) => {
-        const exitoso = respuesta.exitoso ?? respuesta.success;
-        const datos = respuesta.datos ?? respuesta.data;
+        const exitoso = respuesta.success ?? respuesta.exitoso;
         
-        if (exitoso && datos) {
-          this.errorHandler.showSuccess('Usuario creado correctamente');
-          return datos as Usuario;
+        if (exitoso) {
+          return payload as Usuario;
         }
-        const mensaje = respuesta.mensaje || respuesta.message || 'Error al insertar usuario';
+        const mensaje = respuesta.message || respuesta.mensaje || 'Error al insertar usuario';
         this.errorHandler.showError(ERROR_CODES.BUSINESS_DUPLICATE, mensaje);
         throw new Error(mensaje);
       }),
       catchError(error => {
+        if (error instanceof Error && error.message) throw error;
         this.errorHandler.handle(error);
         throw error;
       })

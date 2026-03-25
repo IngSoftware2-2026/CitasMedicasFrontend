@@ -18,5 +18,15 @@
     "target": "http://localhost:5096",
     "secure": false,
     "changeOrigin": true
+  },
+  "/Especialidades/**": {
+    "target": "http://localhost:5096",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/**": {
+    "target": "http://localhost:5096",
+    "secure": false,
+    "changeOrigin": true
   }
 }
