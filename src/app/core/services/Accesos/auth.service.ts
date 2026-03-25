@@ -7,11 +7,14 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError } from 'rxjs';
 import { UsuarioService } from './usuario.service';
+import { RolPermisosService } from './rol-permisos.service';
 import { LoginRequest, LoginResponse } from '../../models/Accesos/usuario.model';
+import { CodigoRol, ROLES } from '../../constants/roles';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private usuarioServicio = inject(UsuarioService);
+  private rolPermisosService = inject(RolPermisosService);
   private router = inject(Router);
   
   private autenticado = signal(this.tieneToken());
@@ -36,20 +39,51 @@ export class AuthService {
     return id ? parseInt(id, 10) : null;
   }
 
-  establecerAuth(token: string, usuarioId: number, rolId: number): void {
+  establecerAuth(token: string, usuarioId: number, rolId: number, codigoRol?: string): void {
     localStorage.setItem('token', token);
     localStorage.setItem('usuarioId', usuarioId.toString());
     localStorage.setItem('rolId', rolId.toString());
+    if (codigoRol) {
+      const rolNormalizado = codigoRol.trim().toUpperCase();
+      localStorage.setItem('codigoRol', rolNormalizado);
+      this.rolPermisosService.establecerCodigoRol(rolNormalizado);
+      console.debug('AuthService: rol seteado', { rolId, codigoRol, rolNormalizado });
+    }
     this.autenticado.set(true);
     this.idUsuario.set(usuarioId);
     this.idRol.set(rolId);
+  }
+
+  get codigoRolActual(): CodigoRol {
+    return this.rolPermisosService.obtenerCodigoRolActual();
+  }
+
+  get esAdmin(): boolean {
+    return this.rolPermisosService.esAdmin();
+  }
+
+  get esRecepcion(): boolean {
+    return this.rolPermisosService.esRecepcion();
+  }
+
+  get esDoctor(): boolean {
+    return this.rolPermisosService.esDoctor();
+  }
+
+  get esPaciente(): boolean {
+    return this.rolPermisosService.esPaciente();
+  }
+
+  get permisosService(): RolPermisosService {
+    return this.rolPermisosService;
   }
 
   iniciarSesion(credenciales: LoginRequest): Observable<LoginResponse> {
     return this.usuarioServicio.iniciarSesion(credenciales).pipe(
       tap(respuesta => {
         const rolId = respuesta.rol?.rolId ?? 1;
-        this.establecerAuth(respuesta.token, respuesta.usuarioId, rolId);
+        const codigoRol = respuesta.rol?.codigoRol ?? ROLES.ADMIN;
+        this.establecerAuth(respuesta.token, respuesta.usuarioId, rolId, codigoRol);
       }),
       catchError(error => {
         console.error('Error de login:', error);
@@ -62,6 +96,8 @@ export class AuthService {
     localStorage.removeItem('token');
     localStorage.removeItem('usuarioId');
     localStorage.removeItem('rolId');
+    localStorage.removeItem('codigoRol');
+    this.rolPermisosService.limpiarSesion();
     this.autenticado.set(false);
     this.idUsuario.set(null);
     this.idRol.set(null);

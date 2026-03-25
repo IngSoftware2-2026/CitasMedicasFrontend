@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MockDataService } from '../../../core/services/Clinica/mock-data.service';
+import { AuthService } from '../../../core/services/Accesos/auth.service';
 import { MessageService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -11,18 +12,53 @@ import { TooltipModule } from 'primeng/tooltip';
 import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { DialogModule } from 'primeng/dialog';
 
 @Component({
   selector: 'app-solicitudes',
   standalone: true,
-  imports: [DatePipe, FormsModule, TableModule, ButtonModule, TagModule, ToolbarModule, TooltipModule, InputTextModule, IconFieldModule, InputIconModule],
+  imports: [DatePipe, FormsModule, TableModule, ButtonModule, TagModule, ToolbarModule, TooltipModule, InputTextModule, IconFieldModule, InputIconModule, DialogModule],
   templateUrl: './solicitudes.component.html',
   styleUrl: './solicitudes.component.css'
 })
 export class SolicitudesComponent {
+  private auth = inject(AuthService);
+  private messageService = inject(MessageService);
+  
   searchSolicitud = '';
+  solicitudDialog = false;
+  solicitudForm: any = { medicoId: null, motivo: '' };
 
-  constructor(public data: MockDataService, private messageService: MessageService) {}
+  constructor(public data: MockDataService) {}
+
+  get esPaciente(): boolean {
+    return this.auth.esPaciente;
+  }
+
+  openSolicitudDialog(): void {
+    this.solicitudForm = { medicoId: null, motivo: '' };
+    this.solicitudDialog = true;
+  }
+
+  saveSolicitud(): void {
+    if (!this.solicitudForm.medicoId) {
+      this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Seleccione un doctor' });
+      return;
+    }
+    const nuevaSolicitud = {
+      solicitudId: Date.now(),
+      pacienteId: 1,
+      medicoId: this.solicitudForm.medicoId,
+      fechaHoraInicio: new Date().toISOString(),
+      duracionMinutos: 30,
+      motivo: this.solicitudForm.motivo,
+      estadoId: 1,
+      fechaCreacion: new Date().toISOString()
+    };
+    this.data.solicitudes.push(nuevaSolicitud as any);
+    this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Solicitud enviada' });
+    this.solicitudDialog = false;
+  }
 
   countByEstado(estadoId: number): number {
     return this.data.solicitudes.filter(s => s.estadoId === estadoId).length;

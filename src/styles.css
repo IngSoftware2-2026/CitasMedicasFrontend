@@ -65,18 +65,18 @@
 
 /* ===== DARK MODE ===== */
 .dark-mode {
-  --surface-ground: #0f1117;
-  --surface-card: #1a1d27;
-  --surface-overlay: #1e2130;
-  --surface-section: #151821;
-  --surface-border: #2a2e3d;
-  --surface-hover: #252836;
+  --surface-ground: #000000;
+  --surface-card: #0a0a0a;
+  --surface-overlay: #111111;
+  --surface-section: #0a0a0a;
+  --surface-border: #1a1a1a;
+  --surface-hover: #141414;
 
   --text-color: #e2e8f0;
   --text-color-secondary: #94a3b8;
   --text-color-muted: #64748b;
 
-  --sidebar-bg: linear-gradient(180deg, #0a0c14 0%, #111420 100%);
+  --sidebar-bg: #0a0a0a;
   --sidebar-text: #94a3b8;
   --sidebar-text-active: #60a5fa;
   --sidebar-hover: rgba(255, 255, 255, 0.05);

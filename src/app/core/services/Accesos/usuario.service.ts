@@ -3,9 +3,11 @@
  * Extiende ConexionService para comunicarse con el API de usuarios.
  * Proporciona métodos para login, listar, obtener, insertar, actualizar y eliminar usuarios.
  */
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable, map, catchError, tap } from 'rxjs';
 import { ConexionService, Respuesta } from '../Http/conexion.service';
+import { ErrorHandlerService } from '../Http/error-handler.service';
+import { ERROR_CODES } from '../../shared/models/error-codes';
 import { Usuario, LoginRequest, LoginResponse } from '../../models/Accesos/usuario.model';
 
 /**
@@ -14,6 +16,7 @@ import { Usuario, LoginRequest, LoginResponse } from '../../models/Accesos/usuar
  */
 @Injectable({ providedIn: 'root' })
 export class UsuarioService extends ConexionService {
+  private errorHandler = inject(ErrorHandlerService);
 
   /**
    * Realiza el inicio de sesión de un usuario.
@@ -35,8 +38,8 @@ export class UsuarioService extends ConexionService {
         throw new Error(respuesta.mensaje || 'Usuario o contraseña incorrectos');
       }),
       catchError(error => {
-        console.error('Error de login:', error);
-        throw error;
+        const err = this.errorHandler.handle(error);
+        throw new Error(err.mensaje);
       })
     );
   }
@@ -48,43 +51,36 @@ export class UsuarioService extends ConexionService {
   listar(): Observable<Usuario[]> {
     return this.obtener<Usuario[]>('/Accesos/Usuarios/Listar').pipe(
       map((respuesta: any) => {
-        console.log('Respuesta listar usuarios:', respuesta);
+        if (!respuesta) return [];
         const exitoso = respuesta.exitoso ?? respuesta.success;
         const datos = respuesta.datos ?? respuesta.data;
-        
-        if (exitoso && datos) {
-          return datos as Usuario[];
+        if (exitoso && datos) return datos as Usuario[];
+        if (respuesta.mensaje) {
+          this.errorHandler.showError(ERROR_CODES.BUSINESS_NOT_FOUND, respuesta.mensaje);
+          throw new Error(respuesta.mensaje);
         }
-        throw new Error(respuesta.mensaje || respuesta.message || 'Error al listar usuarios');
+        return [];
+      }),
+      catchError(error => {
+        this.errorHandler.handle(error);
+        return [];
       })
     );
   }
 
-  /**
-   * Obtiene un usuario específico por su ID desde el endpoint del API.
-   * @param id - ID del usuario a buscar
-   * @returns Observable con el usuario encontrado
-   */
   obtenerPorId(id: number): Observable<Usuario | null> {
     return this.obtener<Usuario>(`/Accesos/Usuarios/${id}`).pipe(
       map((respuesta: any) => {
-        const exitoso = respuesta.success !== undefined ? respuesta.success : respuesta.exitoso;
-        const datos = respuesta.data !== undefined ? respuesta.data : respuesta.datos;
-        
-        if (exitoso && datos) {
-          return datos as Usuario;
-        }
+        if (!respuesta) return null;
+        const exitoso = respuesta.success ?? respuesta.exitoso;
+        const datos = respuesta.data ?? respuesta.datos;
+        if (exitoso && datos) return datos as Usuario;
         return null;
       }),
       catchError(() => [])
     );
   }
 
-  /**
-   * Inserta un nuevo usuario en el sistema.
-   * @param datos - Datos parciales del usuario a crear
-   * @returns Observable con el usuario creado
-   */
   insertar(datos: Partial<Usuario>): Observable<Usuario> {
     const payload = {
       nombreUsuario: datos.nombreUsuario || '',
@@ -93,16 +89,22 @@ export class UsuarioService extends ConexionService {
       clave: datos.clave || '',
       rolId: datos.rolId ?? 1
     };
-    console.log('Payload insertar:', JSON.stringify(payload));
     return this.crear<Usuario>('/Accesos/Usuarios/Insertar', payload).pipe(
       map((respuesta: any) => {
         const exitoso = respuesta.exitoso ?? respuesta.success;
         const datos = respuesta.datos ?? respuesta.data;
         
         if (exitoso && datos) {
+          this.errorHandler.showSuccess('Usuario creado correctamente');
           return datos as Usuario;
         }
-        throw new Error(respuesta.mensaje || respuesta.message || 'Error al insertar usuario');
+        const mensaje = respuesta.mensaje || respuesta.message || 'Error al insertar usuario';
+        this.errorHandler.showError(ERROR_CODES.BUSINESS_DUPLICATE, mensaje);
+        throw new Error(mensaje);
+      }),
+      catchError(error => {
+        this.errorHandler.handle(error);
+        throw error;
       })
     );
   }
@@ -122,30 +124,42 @@ export class UsuarioService extends ConexionService {
       rolId: datos.rolId ?? 1,
       activo: datos.activo ?? true
     };
-    console.log('Payload actualizar:', JSON.stringify(payload));
     return this.actualizar<Usuario>('/Accesos/Usuarios/Editar', payload).pipe(
       map((respuesta: any) => {
         const exitoso = respuesta.exitoso ?? respuesta.success;
         const datos = respuesta.datos ?? respuesta.data;
         
         if (exitoso && datos) {
+          this.errorHandler.showSuccess('Usuario actualizado correctamente');
           return datos as Usuario;
         }
-        throw new Error(respuesta.mensaje || respuesta.message || 'Error al actualizar usuario');
+        const mensaje = respuesta.mensaje || respuesta.message || 'Error al actualizar usuario';
+        this.errorHandler.showError(ERROR_CODES.BUSINESS_CONSTRAINT, mensaje);
+        throw new Error(mensaje);
+      }),
+      catchError(error => {
+        this.errorHandler.handle(error);
+        throw error;
       })
     );
   }
 
   eliminarUsuario(id: number): Observable<boolean> {
-    console.log('Eliminar usuario ID:', id);
     return this.eliminar<boolean>('/Accesos/Usuarios/Eliminar?usuarioId=' + id).pipe(
       map((respuesta: any) => {
         const exitoso = respuesta.exitoso ?? respuesta.success;
         
         if (exitoso) {
+          this.errorHandler.showSuccess('Usuario eliminado correctamente');
           return true;
         }
-        throw new Error(respuesta.mensaje || respuesta.message || 'Error al eliminar usuario');
+        const mensaje = respuesta.mensaje || respuesta.message || 'Error al eliminar usuario';
+        this.errorHandler.showError(ERROR_CODES.BUSINESS_IN_USE, mensaje);
+        throw new Error(mensaje);
+      }),
+      catchError(error => {
+        this.errorHandler.handle(error);
+        throw error;
       })
     );
   }

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ThemeService } from '../../../core/shared/theme.service';
+import { ThemeService } from '../../../core/shared/services/theme.service';
 import { environment } from '../../../../environments/environment';
 
 @Component({

@@ -4,43 +4,52 @@
       <i class="pi pi-clipboard"></i>
     </div>
     <div class="page-header-text">
-      <h2>Solicitudes de Cita</h2>
-      <p>Gestión de solicitudes</p>
+      @if (esPaciente) {
+        <h2>Solicitar Cita</h2>
+        <p>Seleccione un doctor para solicitar su cita</p>
+      } @else {
+        <h2>Solicitudes de Cita</h2>
+        <p>Gestión de solicitudes</p>
+      }
     </div>
   </div>
+  @if (esPaciente) {
+    <p-button label="Nueva Solicitud" icon="pi pi-plus" (onClick)="openSolicitudDialog()" />
+  }
 </div>
 
-<!-- Stats summary -->
-<div class="sol-stats">
-  <div class="sol-stat-item">
-    <div class="sol-stat-icon total"><i class="pi pi-list"></i></div>
-    <div class="sol-stat-info">
-      <span class="sol-stat-num">{{ solicitudesView.length }}</span>
-      <span class="sol-stat-label">Total</span>
+@if (!esPaciente) {
+  <div class="sol-stats">
+    <div class="sol-stat-item">
+      <div class="sol-stat-icon total"><i class="pi pi-list"></i></div>
+      <div class="sol-stat-info">
+        <span class="sol-stat-num">{{ solicitudesView.length }}</span>
+        <span class="sol-stat-label">Total</span>
+      </div>
+    </div>
+    <div class="sol-stat-item">
+      <div class="sol-stat-icon pending"><i class="pi pi-clock"></i></div>
+      <div class="sol-stat-info">
+        <span class="sol-stat-num">{{ countByEstado(1) }}</span>
+        <span class="sol-stat-label">Pendientes</span>
+      </div>
+    </div>
+    <div class="sol-stat-item">
+      <div class="sol-stat-icon confirmed"><i class="pi pi-check-circle"></i></div>
+      <div class="sol-stat-info">
+        <span class="sol-stat-num">{{ countByEstado(3) }}</span>
+        <span class="sol-stat-label">Confirmadas</span>
+      </div>
+    </div>
+    <div class="sol-stat-item">
+      <div class="sol-stat-icon rejected"><i class="pi pi-times-circle"></i></div>
+      <div class="sol-stat-info">
+        <span class="sol-stat-num">{{ countByEstado(4) + countByEstado(5) }}</span>
+        <span class="sol-stat-label">Rechazadas / Canceladas</span>
+      </div>
     </div>
   </div>
-  <div class="sol-stat-item">
-    <div class="sol-stat-icon pending"><i class="pi pi-clock"></i></div>
-    <div class="sol-stat-info">
-      <span class="sol-stat-num">{{ countByEstado(1) }}</span>
-      <span class="sol-stat-label">Pendientes</span>
-    </div>
-  </div>
-  <div class="sol-stat-item">
-    <div class="sol-stat-icon confirmed"><i class="pi pi-check-circle"></i></div>
-    <div class="sol-stat-info">
-      <span class="sol-stat-num">{{ countByEstado(3) }}</span>
-      <span class="sol-stat-label">Confirmadas</span>
-    </div>
-  </div>
-  <div class="sol-stat-item">
-    <div class="sol-stat-icon rejected"><i class="pi pi-times-circle"></i></div>
-    <div class="sol-stat-info">
-      <span class="sol-stat-num">{{ countByEstado(4) + countByEstado(5) }}</span>
-      <span class="sol-stat-label">Rechazadas / Canceladas</span>
-    </div>
-  </div>
-</div>
+}
 
 <!-- Table -->
 <div class="sol-table-card">
@@ -125,3 +134,26 @@
     </ng-template>
   </p-table>
 </div>
+
+<!-- Diálogo para Paciente -->
+<p-dialog header="Solicitar Nueva Cita" [(visible)]="solicitudDialog" [modal]="true" [style]="{width: '450px'}">
+  <div class="dialog-form">
+    <div class="field">
+      <label>Doctor *</label>
+      <select class="p-inputtext" [(ngModel)]="solicitudForm.medicoId">
+        <option [ngValue]="null">Seleccione un doctor</option>
+        @for (d of data.doctores; track d.medicoId) {
+          <option [ngValue]="d.medicoId">{{ d.nombrePublico }} - {{ data.getDoctorEspecialidad(d.medicoId) }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label>Motivo de la consulta</label>
+      <textarea pInputText [(ngModel)]="solicitudForm.motivo" rows="3" placeholder="Describa el motivo de su consulta..."></textarea>
+    </div>
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" icon="pi pi-times" [text]="true" (onClick)="solicitudDialog = false" />
+    <p-button label="Enviar Solicitud" icon="pi pi-send" (onClick)="saveSolicitud()" />
+  </ng-template>
+</p-dialog>

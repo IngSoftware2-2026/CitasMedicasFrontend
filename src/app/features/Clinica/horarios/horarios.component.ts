@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MockDataService } from '../../../core/services/Clinica/mock-data.service';
+import { AuthService } from '../../../core/services/Accesos/auth.service';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -30,10 +31,15 @@ export class HorariosComponent {
 
   get doctores() { return this.data.doctores; }
 
+  get esSoloLectura(): boolean {
+    return this.auth.esPaciente;
+  }
+
   constructor(
     public data: MockDataService,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private auth: AuthService
   ) {}
 
   getDiaSemana(dia: number): string {

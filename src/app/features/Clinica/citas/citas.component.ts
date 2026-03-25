@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { MockDataService } from '../../../core/services/Clinica/mock-data.service';
+import { AuthService } from '../../../core/services/Accesos/auth.service';
 import { Cita } from '../../../core/models/Clinica/Citas/cita.model';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
@@ -23,6 +24,20 @@ import { InputIconModule } from 'primeng/inputicon';
   styleUrl: './citas.component.css'
 })
 export class CitasComponent {
+  private auth = inject(AuthService);
+
+  get esAdmin(): boolean {
+    return this.auth.esAdmin;
+  }
+
+  get esRecepcion(): boolean {
+    return this.auth.esRecepcion;
+  }
+
+  get puedeGestionarCitas(): boolean {
+    return this.esAdmin || this.esRecepcion;
+  }
+
   searchCita = '';
   citaDialog = false;
   citaDetailDialog = false;

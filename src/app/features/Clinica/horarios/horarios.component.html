@@ -8,7 +8,9 @@
       <p>Gestión de horarios</p>
     </div>
   </div>
-  <p-button label="Nuevo Horario" icon="pi pi-plus" (onClick)="openHorarioDialog()" />
+  @if (!esSoloLectura) {
+    <p-button label="Nuevo Horario" icon="pi pi-plus" (onClick)="openHorarioDialog()" />
+  }
 </div>
 @for (d of doctores; track d.medicoId) {
   @if (data.getHorariosDeDoctor(d.medicoId).length > 0) {
@@ -19,8 +21,10 @@
       <div class="horario-chip">
         <strong>{{ getDiaSemana(h.diaSemana) }}</strong>
         <span>{{ h.horaInicio }} - {{ h.horaFin }}</span>
-        <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info" size="small" (onClick)="openHorarioDialog(h)" />
-        <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small" (onClick)="deleteHorario(h)" />
+        @if (!esSoloLectura) {
+          <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info" size="small" (onClick)="openHorarioDialog(h)" />
+          <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small" (onClick)="deleteHorario(h)" />
+        }
       </div>
       }
     </div>

@@ -1,3 +1,6 @@
+/**
+ * Interfaces para el servicio de usuarios.
+ */
 import { Observable } from 'rxjs';
 
 export interface LoginRequest {

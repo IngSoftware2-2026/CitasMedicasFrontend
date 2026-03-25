@@ -1,3 +1,6 @@
+/**
+ * Interfaces para el servicio de roles.
+ */
 import { Observable } from 'rxjs';
 
 export interface RolRequest {
