@@ -65,9 +65,13 @@
     </div>
 
     <div class="doc-card-avatar-wrap">
-      <div [class]="'doc-card-avatar ' + getColorClass(d.medicoId)">
-        {{ getInitials(d.nombrePublico) }}
-      </div>
+      @if (d.imagen) {
+        <img class="doc-card-avatar-img" [src]="d.imagen | cloudinaryThumb:80:80" [alt]="d.nombrePublico" />
+      } @else {
+        <div [class]="'doc-card-avatar ' + getColorClass(d.medicoId)">
+          {{ getInitials(d.nombrePublico) }}
+        </div>
+      }
     </div>
 
     <div class="doc-card-body">
@@ -116,9 +120,11 @@
 <p-dialog header="Detalle del Doctor" [(visible)]="doctorDetailDialog" [modal]="true" [style]="{width: '650px'}" styleClass="doc-detail-dialog">
   @if (detailDoctor) {
   <div class="doc-detail-header">
-    <div [class]="'doc-detail-avatar ' + getColorClass(detailDoctor.medicoId)">
-      {{ getInitials(detailDoctor.nombrePublico) }}
-    </div>
+    <app-doctor-imagen-upload
+      [imagenActual]="detailDoctor.imagen ?? null"
+      [nombreDoctor]="detailDoctor.nombrePublico"
+      [soloVista]="true"
+    />
     <div class="doc-detail-header-info">
       <h3>{{ detailDoctor.nombrePublico }}</h3>
       <div class="doc-detail-meta">
@@ -227,6 +233,25 @@
   <!-- TAB: GENERAL -->
   @if (activeTab === 'general' || !doctorForm['medicoId']) {
     <div class="dialog-form">
+      <!-- Image upload section -->
+      @if (doctorForm['medicoId']) {
+        <div class="form-imagen-section">
+          <app-doctor-imagen-upload
+            [imagenActual]="doctorForm['imagen'] ?? null"
+            [nombreDoctor]="doctorForm['nombrePublico'] ?? ''"
+            (archivoConfirmado)="onEditImagenConfirmado($event)"
+          />
+        </div>
+      } @else {
+        <div class="form-imagen-section">
+          <app-doctor-imagen-upload
+            [imagenActual]="null"
+            [nombreDoctor]="doctorForm['nombrePublico'] ?? ''"
+            (archivoConfirmado)="onCreationImagenSubida($event)"
+          />
+        </div>
+      }
+
       <div class="field" [class.field-error]="formErrors['nombrePublico']">
         <label>Nombre Público *</label>
         <input pInputText [(ngModel)]="doctorForm['nombrePublico']" placeholder="Ej: Dr. Juan Pérez" />

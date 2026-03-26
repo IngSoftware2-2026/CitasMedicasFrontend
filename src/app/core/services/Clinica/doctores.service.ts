@@ -85,6 +85,10 @@ export class DoctoresService {
     return this.http.put<void>(`${this.baseUrl}/${id}/activo?activo=${activo}`, {});
   }
 
+  actualizarImagen(id: number, imagen: string): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/${id}/imagen`, { imagen });
+  }
+
   // ==================== SPECIALTIES ====================
 
   /**
@@ -241,6 +245,7 @@ export class DoctoresService {
       duracionDefaultMinutos: d.duracionDefaultMinutos ?? d.DuracionDefaultMinutos ?? 30,
       minutosBuffer: d.minutosBuffer ?? d.MinutosBuffer ?? 0,
       activo: d.activo ?? d.Activo ?? true,
+      imagen: d.imagen ?? d.Imagen ?? null,
       // Specialty/Sala from SP join (may or may not be present)
       nombreEspecialidad: d.nombreEspecialidad ?? d.NombreEspecialidad ?? '',
       nombreSala: d.nombreSala ?? d.NombreSala ?? '',

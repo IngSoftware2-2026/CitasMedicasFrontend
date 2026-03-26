@@ -1,0 +1,217 @@
+<div class="page-container">
+  <!-- Header -->
+  <div class="page-header-container">
+    <div class="page-header-left">
+      <div class="page-header-icon"><i class="pi pi-clipboard"></i></div>
+      <div class="page-header-text">
+        <h2>Solicitudes de Citas</h2>
+        <p>Gestión y seguimiento de solicitudes</p>
+      </div>
+    </div>
+    @if (pendientesCount > 0) {
+      <span class="header-badge">{{ pendientesCount }} pendiente{{ pendientesCount > 1 ? 's' : '' }}</span>
+    }
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon total"><i class="pi pi-list"></i></div>
+      <div class="stat-info">
+        <span class="stat-num">{{ solicitudes().length }}</span>
+        <span class="stat-label">Total</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon pending"><i class="pi pi-clock"></i></div>
+      <div class="stat-info">
+        <span class="stat-num">{{ pendientesCount }}</span>
+        <span class="stat-label">Pendientes</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon approved"><i class="pi pi-check-circle"></i></div>
+      <div class="stat-info">
+        <span class="stat-num">{{ aprobadasCount }}</span>
+        <span class="stat-label">Aprobadas</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon rejected"><i class="pi pi-times-circle"></i></div>
+      <div class="stat-info">
+        <span class="stat-num">{{ rechazadasCount }}</span>
+        <span class="stat-label">Rechazadas</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon rescheduled"><i class="pi pi-replay"></i></div>
+      <div class="stat-info">
+        <span class="stat-num">{{ reprogramadasCount }}</span>
+        <span class="stat-label">Reprogramadas</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-card">
+    <div class="filters-row">
+      <div class="filter-group">
+        <label>Tipo</label>
+        <select [(ngModel)]="filtroTipo">
+          <option value="">Todas</option>
+          <option value="PUBLICA">Públicas</option>
+          <option value="USUARIO">De usuarios</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Estado</label>
+        <select [(ngModel)]="filtroEstado">
+          <option value="">Todos</option>
+          <option value="1">Pendiente</option>
+          <option value="2">Aprobada</option>
+          <option value="3">Rechazada</option>
+          <option value="4">Reprogramada</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Desde</label>
+        <input type="date" [(ngModel)]="filtroDesde" />
+      </div>
+      <div class="filter-group">
+        <label>Hasta</label>
+        <input type="date" [(ngModel)]="filtroHasta" />
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn-primary btn-sm" (click)="filtrar()">
+          <i class="pi pi-search"></i> Filtrar
+        </button>
+        <button class="btn btn-outline btn-sm" (click)="limpiarFiltros()">
+          <i class="pi pi-filter-slash"></i> Limpiar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="table-card">
+    <div class="table-header">
+      <div class="search-box">
+        <i class="pi pi-search"></i>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          placeholder="Buscar por paciente, doctor, motivo..."
+        />
+      </div>
+      <span class="result-count">{{ solicitudesFiltradas.length }} solicitudes</span>
+    </div>
+
+    <!-- Table -->
+    @if (loading()) {
+      <div class="skeleton-table">
+        @for (row of [1,2,3]; track row) {
+          <div class="skeleton-row">
+            <div class="skeleton-cell sk-sm"></div>
+            <div class="skeleton-cell sk-badge"></div>
+            <div class="skeleton-cell sk-md"></div>
+            <div class="skeleton-cell sk-sm"></div>
+            <div class="skeleton-cell sk-md"></div>
+            <div class="skeleton-cell sk-lg"></div>
+            <div class="skeleton-cell sk-badge"></div>
+            <div class="skeleton-cell sk-sm"></div>
+            <div class="skeleton-cell sk-icon"></div>
+          </div>
+        }
+      </div>
+    } @else if (solicitudesFiltradas.length === 0) {
+      <div class="empty-state">
+        <i class="pi pi-inbox"></i>
+        <p>No se encontraron solicitudes</p>
+        <span>No se encontraron solicitudes con los filtros aplicados</span>
+      </div>
+    } @else {
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>#ID</th>
+              <th>Tipo</th>
+              <th>Paciente</th>
+              <th>Teléfono</th>
+              <th>Doctor</th>
+              <th>Fecha solicitada</th>
+              <th>Estado</th>
+              <th>Fecha solicitud</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (sol of solicitudesPaginadas; track sol.solicitudId) {
+              <tr class="table-row" (click)="verDetalle(sol)">
+                <td><span class="row-id">#{{ sol.solicitudId }}</span></td>
+                <td>
+                  <span class="badge" [class]="getTipoClass(sol.tipo)">
+                    {{ sol.tipo === 'PUBLICA' ? 'Pública' : 'Usuario' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="person-cell">
+                    <span class="avatar" [class]="sol.tipo === 'PUBLICA' ? 'av-blue' : 'av-green'">
+                      {{ getInitials(sol.nombrePaciente) }}
+                    </span>
+                    <span class="person-name">{{ sol.nombrePaciente }}</span>
+                  </div>
+                </td>
+                <td><span class="cell-text">{{ sol.telefono }}</span></td>
+                <td>
+                  <div class="person-cell">
+                    <span class="avatar av-purple">{{ getInitials(sol.medico) }}</span>
+                    <span class="person-name">{{ sol.medico }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="date-cell">
+                    <span class="date-main">{{ sol.fechaHoraInicio | date:'dd/MM/yyyy' }}</span>
+                    <span class="date-secondary">{{ sol.fechaHoraInicio | date:'HH:mm' }} hrs</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge" [class]="getEstadoClass(sol.codigoEstado)">
+                    {{ sol.estado }}
+                  </span>
+                </td>
+                <td>
+                  <span class="cell-date">{{ sol.fechaCreacion | date:'dd/MM/yyyy' }}</span>
+                </td>
+                <td>
+                  <button class="action-btn" (click)="verDetalle(sol); $event.stopPropagation()" title="Ver detalle">
+                    <i class="pi pi-eye"></i>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      @if (totalPages > 1) {
+        <div class="pagination">
+          <button class="page-btn" [disabled]="currentPage === 1" (click)="cambiarPagina(currentPage - 1)">
+            <i class="pi pi-chevron-left"></i>
+          </button>
+          @for (p of [].constructor(totalPages); track $index) {
+            <button
+              class="page-btn"
+              [class.active]="currentPage === $index + 1"
+              (click)="cambiarPagina($index + 1)"
+            >{{ $index + 1 }}</button>
+          }
+          <button class="page-btn" [disabled]="currentPage === totalPages" (click)="cambiarPagina(currentPage + 1)">
+            <i class="pi pi-chevron-right"></i>
+          </button>
+        </div>
+      }
+    }
+  </div>
+</div>

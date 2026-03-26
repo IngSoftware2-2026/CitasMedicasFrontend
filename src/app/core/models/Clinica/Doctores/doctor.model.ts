@@ -9,6 +9,7 @@ export interface Doctor {
   activo: boolean;
   nombreEspecialidad?: string;
   horarios?: any[];
+  imagen?: string | null;
 }
 
 export interface DoctorEspecialidad {

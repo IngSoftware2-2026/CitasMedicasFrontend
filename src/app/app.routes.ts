@@ -6,6 +6,9 @@ import { PacientesComponent } from './features/Clinica/pacientes/pacientes.compo
 import { DoctoresComponent } from './features/Clinica/doctores/doctores.component';
 import { CitasComponent } from './features/Clinica/citas/citas.component';
 import { SolicitudesComponent } from './features/Clinica/solicitudes/solicitudes.component';
+import { SolicitudPublicaFormComponent } from './features/Clinica/solicitudes/solicitud-publica-form/solicitud-publica-form.component';
+import { SolicitudesListaComponent } from './features/Clinica/solicitudes/solicitudes-lista/solicitudes-lista.component';
+import { SolicitudDetalleComponent } from './features/Clinica/solicitudes/solicitud-detalle/solicitud-detalle.component';
 import { SalasComponent } from './features/Catalogos/salas/salas.component';
 import { EspecialidadesComponent } from './features/Catalogos/especialidades/especialidades.component';
 import { PermisosComponent } from './features/Catalogos/permisos/permisos.component';
@@ -32,11 +35,14 @@ const ROUTES = {
   USUARIOS: 'usuarios',
   ADMIN: 'admin',
   CONFIGURACIONES: 'configuraciones',
+  SOLICITAR_CITA: 'solicitar-cita',
+  SOLICITUD_DETALLE: 'solicitudes/:id',
   EMPTY: ''
 } as const;
 
 export const routes: Routes = [
   { path: ROUTES.LOGIN, component: LoginComponent },
+  { path: ROUTES.SOLICITAR_CITA, component: SolicitudPublicaFormComponent },
   {
     path: ROUTES.EMPTY,
     component: LayoutComponent,
@@ -68,7 +74,13 @@ export const routes: Routes = [
       },
       {
         path: ROUTES.SOLICITUDES,
-        component: SolicitudesComponent,
+        component: SolicitudesListaComponent,
+        canActivate: [permissionGuard],
+        data: { routeName: 'SOLICITUDES' }
+      },
+      {
+        path: ROUTES.SOLICITUD_DETALLE,
+        component: SolicitudDetalleComponent,
         canActivate: [permissionGuard],
         data: { routeName: 'SOLICITUDES' }
       },

@@ -1,0 +1,204 @@
+<app-notification />
+
+<div class="public-page">
+  <!-- Header -->
+  <header class="public-header">
+    <div class="header-content">
+      <div class="brand">
+        <span class="brand-icon">+</span>
+        <span class="brand-name">MediCitas Pro</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="public-main">
+    @if (enviado()) {
+      <!-- Success State -->
+      <div class="success-card">
+        <div class="success-icon">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <h2>¡Solicitud Enviada!</h2>
+        <p class="success-message">
+          Tu solicitud fue enviada exitosamente.
+          Te contactaremos pronto al número <strong>{{ telefonoEnviado }}</strong> para confirmar tu cita.
+        </p>
+        <button class="btn btn-primary" (click)="nuevaSolicitud()">
+          <i class="pi pi-plus-circle"></i>
+          Enviar otra solicitud
+        </button>
+      </div>
+    } @else {
+      <!-- Form Card -->
+      <div class="form-card">
+        <div class="form-header">
+          <div class="form-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <h1>Solicitar Cita Médica</h1>
+          <p>Completa el formulario y nos comunicaremos contigo para confirmar tu cita</p>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="solicitud-form" novalidate>
+          <!-- Nombre -->
+          <div class="field">
+            <label for="nombrePaciente">Nombre completo <span class="required">*</span></label>
+            <input
+              id="nombrePaciente"
+              type="text"
+              formControlName="nombrePaciente"
+              placeholder="Ingresa tu nombre completo"
+              maxlength="100"
+              [class.field-error]="f['nombrePaciente'].touched && f['nombrePaciente'].invalid"
+            />
+            @if (f['nombrePaciente'].touched && f['nombrePaciente'].errors) {
+              <span class="error-msg">
+                @if (f['nombrePaciente'].errors['required']) { El nombre es requerido }
+                @else if (f['nombrePaciente'].errors['minlength']) { Mínimo 3 caracteres }
+                @else if (f['nombrePaciente'].errors['maxlength']) { Máximo 100 caracteres }
+              </span>
+            }
+          </div>
+
+          <!-- Teléfono & Email -->
+          <div class="field-row">
+            <div class="field">
+              <label for="telefono">Teléfono <span class="required">*</span></label>
+              <input
+                id="telefono"
+                type="tel"
+                formControlName="telefono"
+                placeholder="Ej: +502 4123-4567"
+                [class.field-error]="f['telefono'].touched && f['telefono'].invalid"
+              />
+              @if (f['telefono'].touched && f['telefono'].errors) {
+                <span class="error-msg">
+                  @if (f['telefono'].errors['required']) { El teléfono es requerido }
+                  @else if (f['telefono'].errors['pattern']) { Formato inválido (mín. 8 dígitos) }
+                </span>
+              }
+            </div>
+            <div class="field">
+              <label for="email">Correo electrónico</label>
+              <input
+                id="email"
+                type="email"
+                formControlName="email"
+                placeholder="ejemplo@correo.com"
+                [class.field-error]="f['email'].touched && f['email'].invalid"
+              />
+              @if (f['email'].touched && f['email'].errors) {
+                <span class="error-msg">Correo electrónico inválido</span>
+              }
+            </div>
+          </div>
+
+          <!-- Doctor -->
+          <div class="field">
+            <label for="medicoId">Doctor <span class="required">*</span></label>
+            @if (loadingDoctores()) {
+              <div class="loading-field">
+                <div class="spinner-small"></div>
+                <span>Cargando doctores...</span>
+              </div>
+            } @else {
+              <select
+                id="medicoId"
+                formControlName="medicoId"
+                [class.field-error]="f['medicoId'].touched && f['medicoId'].invalid"
+              >
+                <option [ngValue]="null" disabled>Selecciona un doctor</option>
+                @for (doc of doctores(); track doc.medicoId) {
+                  <option [ngValue]="doc.medicoId">
+                    Dr. {{ doc.nombrePublico }} — {{ doc.nombreEspecialidad || 'General' }}
+                  </option>
+                }
+              </select>
+            }
+            @if (f['medicoId'].touched && f['medicoId'].errors) {
+              <span class="error-msg">Selecciona un doctor</span>
+            }
+          </div>
+
+          <!-- Fecha & Hora -->
+          <div class="field-row">
+            <div class="field">
+              <label for="fecha">Fecha deseada <span class="required">*</span></label>
+              <input
+                id="fecha"
+                type="date"
+                formControlName="fecha"
+                [min]="minDate"
+                [class.field-error]="f['fecha'].touched && f['fecha'].invalid"
+              />
+              @if (f['fecha'].touched && f['fecha'].errors) {
+                <span class="error-msg">La fecha es requerida (mínimo mañana)</span>
+              }
+            </div>
+            <div class="field">
+              <label for="hora">Hora deseada <span class="required">*</span></label>
+              <input
+                id="hora"
+                type="time"
+                formControlName="hora"
+                min="07:00"
+                max="20:00"
+                [class.field-error]="f['hora'].touched && f['hora'].invalid"
+              />
+              @if (f['hora'].touched && f['hora'].errors) {
+                <span class="error-msg">La hora es requerida (07:00 - 20:00)</span>
+              }
+            </div>
+          </div>
+
+          <!-- Motivo -->
+          <div class="field">
+            <label for="motivo">Motivo de consulta</label>
+            <textarea
+              id="motivo"
+              formControlName="motivo"
+              rows="3"
+              maxlength="500"
+              placeholder="Describe brevemente tu motivo de consulta"
+              [class.field-error]="f['motivo'].touched && f['motivo'].invalid"
+            ></textarea>
+            <span class="char-count">{{ form.get('motivo')?.value?.length || 0 }} / 500</span>
+            @if (f['motivo'].touched && f['motivo'].errors) {
+              <span class="error-msg">Máximo 500 caracteres</span>
+            }
+          </div>
+
+          <!-- Submit -->
+          <button
+            type="submit"
+            class="btn btn-primary btn-submit"
+            [disabled]="loading()"
+            [class.loading]="loading()"
+          >
+            @if (loading()) {
+              <div class="spinner-small white"></div>
+              Enviando...
+            } @else {
+              <i class="pi pi-send"></i>
+              Enviar Solicitud
+            }
+          </button>
+        </form>
+      </div>
+    }
+  </main>
+
+  <!-- Footer -->
+  <footer class="public-footer">
+    <p>&copy; {{ currentYear }} MediCitas Pro — Todos los derechos reservados</p>
+  </footer>
+</div>

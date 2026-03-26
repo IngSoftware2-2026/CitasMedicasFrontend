@@ -1,0 +1,351 @@
+<div class="page-container">
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb">
+    <a routerLink="/dashboard"><i class="pi pi-home"></i> Inicio</a>
+    <i class="pi pi-chevron-right separator"></i>
+    <a routerLink="/solicitudes">Solicitudes</a>
+    <i class="pi pi-chevron-right separator"></i>
+    <span class="current">Detalle #{{ solicitud()?.solicitudId }}</span>
+  </nav>
+
+  <!-- Back button -->
+  <button class="back-btn" (click)="volver()">
+    <i class="pi pi-arrow-left"></i> Volver al listado
+  </button>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando detalle...</p>
+    </div>
+  } @else if (solicitud(); as sol) {
+    <!-- Header -->
+    <div class="detail-header">
+      <div class="detail-header-left">
+        <div class="detail-icon">
+          <i class="pi pi-clipboard"></i>
+        </div>
+        <div>
+          <h2>Solicitud #{{ sol.solicitudId }}</h2>
+          <div class="detail-meta">
+            <span class="badge" [class]="sol.tipo === 'PUBLICA' ? 'badge-tipo-publica' : 'badge-tipo-usuario'">
+              {{ sol.tipo === 'PUBLICA' ? 'Solicitud Pública' : 'Solicitud de Usuario' }}
+            </span>
+            <span class="badge" [class]="getEstadoClass(sol.codigoEstado)">
+              {{ sol.estado }}
+            </span>
+          </div>
+        </div>
+      </div>
+      @if (esPendiente) {
+        <div class="detail-actions">
+          <button class="btn btn-success" (click)="abrirAprobar()" [disabled]="actionLoading()">
+            <i class="pi pi-check"></i> Aprobar y crear cita
+          </button>
+          <button class="btn btn-warning" (click)="toggleReprogramar()" [disabled]="actionLoading()">
+            <i class="pi pi-replay"></i> Proponer otro horario
+          </button>
+          <button class="btn btn-danger" (click)="abrirRechazar()" [disabled]="actionLoading()">
+            <i class="pi pi-times"></i> Rechazar
+          </button>
+        </div>
+      }
+    </div>
+
+    <!-- Detail Cards -->
+    <div class="cards-grid">
+      <!-- Paciente Info -->
+      <div class="detail-card">
+        <div class="card-header">
+          <i class="pi pi-user"></i>
+          <h3>Datos del Paciente</h3>
+        </div>
+        <div class="card-body">
+          <div class="info-row">
+            <span class="info-label">Nombre</span>
+            <span class="info-value">{{ sol.nombrePaciente }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Teléfono</span>
+            <span class="info-value">{{ sol.telefono }}</span>
+          </div>
+          @if (sol.email) {
+            <div class="info-row">
+              <span class="info-label">Correo</span>
+              <span class="info-value">{{ sol.email }}</span>
+            </div>
+          }
+          @if (sol.tipo === 'USUARIO' && sol.pacienteId) {
+            <div class="info-row">
+              <span class="info-label">ID Paciente</span>
+              <span class="info-value link">#{{ sol.pacienteId }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Cita Info -->
+      <div class="detail-card">
+        <div class="card-header">
+          <i class="pi pi-calendar"></i>
+          <h3>Datos de la Cita</h3>
+        </div>
+        <div class="card-body">
+          <div class="info-row">
+            <span class="info-label">Doctor</span>
+            <span class="info-value">{{ sol.medico }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Fecha deseada</span>
+            <span class="info-value">{{ sol.fechaHoraInicio | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+          @if (sol.duracionMinutos) {
+            <div class="info-row">
+              <span class="info-label">Duración</span>
+              <span class="info-value">{{ sol.duracionMinutos }} minutos</span>
+            </div>
+          }
+          @if (sol.motivo) {
+            <div class="info-row">
+              <span class="info-label">Motivo</span>
+              <span class="info-value motivo-text">{{ sol.motivo }}</span>
+            </div>
+          }
+          <div class="info-row">
+            <span class="info-label">Fecha de solicitud</span>
+            <span class="info-value">{{ sol.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reprogramar Form -->
+    @if (showReprogramarForm()) {
+      <div class="reprogramar-card">
+        <div class="card-header">
+          <i class="pi pi-replay"></i>
+          <h3>Proponer nuevo horario</h3>
+        </div>
+        <div class="card-body">
+          <div class="inline-form">
+            <div class="field">
+              <label>Nueva fecha y hora propuesta</label>
+              <input type="datetime-local" [(ngModel)]="nuevaFechaHora" />
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary" (click)="enviarPropuesta()" [disabled]="actionLoading()">
+                @if (actionLoading()) {
+                  <div class="spinner-small white"></div>
+                } @else {
+                  <i class="pi pi-send"></i>
+                }
+                Enviar propuesta
+              </button>
+              <button class="btn btn-outline" (click)="toggleReprogramar()">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Propuestas historial -->
+    @if (sol.propuestas && sol.propuestas.length > 0) {
+      <div class="propuestas-card">
+        <div class="card-header">
+          <i class="pi pi-history"></i>
+          <h3>Historial de Propuestas</h3>
+        </div>
+        <div class="card-body">
+          @for (p of sol.propuestas; track p.propuestaId) {
+            <div class="propuesta-item">
+              <div class="propuesta-info">
+                <span class="propuesta-fecha">{{ p.opcionInicio | date:'dd/MM/yyyy HH:mm' }}</span>
+                <span class="propuesta-estado badge" [class]="p.estado === 'PENDIENTE' ? 'badge-pending' : p.estado === 'ACEPTADA' ? 'badge-approved' : 'badge-rejected'">
+                  {{ p.estado }}
+                </span>
+                <span class="propuesta-date">Creada: {{ p.fechaCreacion | date:'dd/MM/yyyy' }}</span>
+              </div>
+              @if (p.estado === 'PENDIENTE') {
+                <div class="propuesta-actions">
+                  <button class="btn-icon btn-icon-success" (click)="aceptarPropuesta(p)" [disabled]="actionLoading()" title="Aceptar">
+                    <i class="pi pi-check"></i>
+                  </button>
+                  <button class="btn-icon btn-icon-danger" (click)="rechazarPropuesta(p)" [disabled]="actionLoading()" title="Rechazar">
+                    <i class="pi pi-times"></i>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+  }
+</div>
+
+<!-- ===== MODAL: Aprobar y crear cita ===== -->
+@if (showAprobarDialog()) {
+  <div class="modal-overlay" (click)="showAprobarDialog.set(false)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="pi pi-check-circle"></i> Aprobar y Crear Cita</h3>
+        <button class="modal-close" (click)="showAprobarDialog.set(false)">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Paciente Section (solo para PUBLICA) -->
+        @if (solicitud()?.tipo === 'PUBLICA') {
+          <div class="modal-section">
+            <h4>Datos del Paciente</h4>
+            <div class="toggle-group">
+              <button class="toggle-btn" [class.active]="pacienteMode === 'existente'" (click)="pacienteMode = 'existente'">
+                Paciente existente
+              </button>
+              <button class="toggle-btn" [class.active]="pacienteMode === 'nuevo'" (click)="pacienteMode = 'nuevo'">
+                Crear nuevo paciente
+              </button>
+            </div>
+
+            @if (pacienteMode === 'existente') {
+              <div class="field">
+                <label>Buscar paciente</label>
+                <input type="text" [(ngModel)]="pacienteBusqueda" placeholder="Buscar por nombre o identidad..." />
+              </div>
+              <div class="patient-list">
+                @for (p of pacientesFiltrados; track p.pacienteId) {
+                  <div
+                    class="patient-item"
+                    [class.selected]="pacienteSeleccionado === p.pacienteId"
+                    (click)="pacienteSeleccionado = p.pacienteId"
+                  >
+                    <div class="patient-avatar">{{ (p.nombres ?? p.paciente ?? 'P')?.charAt(0) }}</div>
+                    <div class="patient-info">
+                      <span class="patient-name">{{ p.nombres ?? '' }} {{ p.apellidos ?? '' }}{{ p.paciente ?? '' }}</span>
+                    </div>
+                    @if (pacienteSeleccionado === p.pacienteId) {
+                      <i class="pi pi-check-circle selected-icon"></i>
+                    }
+                  </div>
+                }
+                @if (pacientesFiltrados.length === 0) {
+                  <p class="no-results">No se encontraron pacientes</p>
+                }
+              </div>
+            } @else {
+              <div class="form-grid">
+                <div class="field">
+                  <label>Nombres *</label>
+                  <input type="text" [(ngModel)]="nuevoPaciente.nombres" placeholder="Nombres" />
+                </div>
+                <div class="field">
+                  <label>Apellidos *</label>
+                  <input type="text" [(ngModel)]="nuevoPaciente.apellidos" placeholder="Apellidos" />
+                </div>
+                <div class="field">
+                  <label>Teléfono *</label>
+                  <input type="tel" [(ngModel)]="nuevoPaciente.telefono" placeholder="Teléfono" />
+                </div>
+                <div class="field">
+                  <label>Correo</label>
+                  <input type="email" [(ngModel)]="nuevoPaciente.correo" placeholder="Correo" />
+                </div>
+                <div class="field">
+                  <label>No. Identidad *</label>
+                  <input type="text" [(ngModel)]="nuevoPaciente.numeroIdentidad" placeholder="Número de identidad" />
+                </div>
+                <div class="field">
+                  <label>Fecha Nacimiento</label>
+                  <input type="date" [(ngModel)]="nuevoPaciente.fechaNacimiento" />
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="modal-section">
+            <h4>Paciente</h4>
+            <div class="patient-readonly">
+              <i class="pi pi-user"></i>
+              <span>{{ solicitud()?.nombrePaciente }} (ID: #{{ solicitud()?.pacienteId }})</span>
+            </div>
+          </div>
+        }
+
+        <!-- Cita Section -->
+        <div class="modal-section">
+          <h4>Detalles de la Cita</h4>
+          <div class="form-grid">
+            <div class="field">
+              <label>Sala *</label>
+              <select [(ngModel)]="salaSeleccionada">
+                <option [ngValue]="null" disabled>Selecciona una sala</option>
+                @for (s of salas(); track s.salaId) {
+                  <option [ngValue]="s.salaId">{{ s.nombreSala }} — {{ s.codigoSala }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label>Duración (min) *</label>
+              <input type="number" [(ngModel)]="duracionMinutos" min="10" max="120" />
+            </div>
+            <div class="field field-full">
+              <label>Fecha y hora de inicio *</label>
+              <input type="datetime-local" [(ngModel)]="fechaInicio" />
+            </div>
+            @if (calcularFin) {
+              <div class="field field-full">
+                <div class="fin-calculado">
+                  <i class="pi pi-clock"></i>
+                  Hora de fin calculada: <strong>{{ calcularFin }}</strong>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="showAprobarDialog.set(false)">Cancelar</button>
+        <button class="btn btn-success" (click)="confirmarAprobar()" [disabled]="actionLoading()">
+          @if (actionLoading()) {
+            <div class="spinner-small white"></div>
+          } @else {
+            <i class="pi pi-check"></i>
+          }
+          Confirmar y crear cita
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ===== MODAL: Rechazar ===== -->
+@if (showRechazarDialog()) {
+  <div class="modal-overlay" (click)="showRechazarDialog.set(false)">
+    <div class="modal modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="pi pi-exclamation-triangle"></i> Rechazar Solicitud</h3>
+        <button class="modal-close" (click)="showRechazarDialog.set(false)">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+      <div class="modal-body text-center">
+        <div class="confirm-icon">
+          <i class="pi pi-exclamation-triangle"></i>
+        </div>
+        <p class="confirm-text">¿Confirmas que deseas rechazar esta solicitud?</p>
+        <p class="confirm-subtext">Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="showRechazarDialog.set(false)">Cancelar</button>
+        <button class="btn btn-danger" (click)="confirmarRechazar()" [disabled]="actionLoading()">
+          @if (actionLoading()) {
+            <div class="spinner-small white"></div>
+          } @else {
+            <i class="pi pi-times"></i>
+          }
+          Rechazar solicitud
+        </button>
+      </div>
+    </div>
+  </div>
+}
