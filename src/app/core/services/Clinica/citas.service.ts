@@ -2,16 +2,16 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { environment } from '../../../environments/environment';
-import { ApiResponse } from '../models/api-response.model';
-import { CitasCambiarEstadoRequest } from '../models/Clinica/Citas/citas-cambiar-estado.model';
-import { CitasFiltroRequest } from '../models/Clinica/Citas/citas-filtro.model';
-import { CitasInsertarRequest } from '../models/Clinica/Citas/citas-insertar.model';
-import { DoctorListado } from '../models/Clinica/Doctores/doctor-listado.model';
-import { PacienteListado } from '../models/Clinica/Pacientes/paciente-listado.model';
-import { CitaDetalleResponse, CitaListadoResponse } from '../models/Clinica/Citas/citas-read.model';
-import { Sala } from '../models/Catalogos/sala.model';
-import { RequestStatusResponse } from '../models/request-status.model';
+import { environment } from '../../../../environments/environment';
+import { ApiResponse } from '../../models/api-response.model';
+import { CitasCambiarEstadoRequest } from '../../models/Clinica/Citas/citas-cambiar-estado.model';
+import { CitasFiltroRequest } from '../../models/Clinica/Citas/citas-filtro.model';
+import { CitasInsertarRequest } from '../../models/Clinica/Citas/citas-insertar.model';
+import { DoctorListado } from '../../models/Clinica/Doctores/doctor-listado.model';
+import { PacienteListado } from '../../models/Clinica/Pacientes/paciente-listado.model';
+import { CitaDetalleResponse, CitaListadoResponse } from '../../models/Clinica/Citas/citas-read.model';
+import { Sala } from '../../models/Catalogos/sala.model';
+import { RequestStatusResponse } from '../../models/request-status.model';
 
 @Injectable({ providedIn: 'root' })
 export class CitasService {

@@ -77,6 +77,22 @@ export class ConsultasComponent implements OnInit {
     this.consultaDialog = true;
   }
 
+  imprimirConsulta(consulta: any): void {
+    console.log('Imprimiendo consulta:', consulta);
+    const printContent = `
+      <h1>Consulta Médica</h1>
+      <p><strong>Motivo:</strong> ${consulta.motivo || 'N/A'}</p>
+      <p><strong>Notas:</strong> ${consulta.notas || 'N/A'}</p>
+      <p><strong>Tratamiento:</strong> ${consulta.tratamiento || 'N/A'}</p>
+    `;
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  }
+
   saveConsulta(): void {
     if (!this.consultaForm['citaId']) {
       this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Cita es obligatoria' });
