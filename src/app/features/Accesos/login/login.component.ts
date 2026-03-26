@@ -1,39 +1,9 @@
 /**
- * ============================================================
- * Componente de Inicio de Sesión
- * ============================================================
- * 
- * Descripción:
- * -----------
+
  * Gestiona el proceso de autenticación de usuarios en el sistema.
  * Permite a los usuarios iniciar sesión con su nombre de usuario
  * y contraseña.
- * 
- * Características:
- * - Validación de credenciales
- * - Toggle para mostrar/ocultar contraseña
- * - Mensajes de error para credenciales inválidas
- * - Redirección tras login exitoso
- * 
- * Flujo de Autenticación:
- * ----------------------
- * 1. Usuario ingresa credenciales
- * 2. Se validan campos obligatorios
- * 3. Se envía petición al servidor
- * 4. Si es exitoso, se guardan datos en localStorage
- * 5. Se redirige al dashboard
- * 
- * Servicios Utilizados:
- * -------------------
- * - LoginOperations: Lógica de autenticación
- * 
- * Datos Almacenados tras Login:
- * -----------------------------
- * - token: JWT del usuario
- * - usuarioId: ID del usuario
- * - rolId: ID del rol
- * - codigoRol: Código del rol
- */
+ **/
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LoginRequest } from '../../../core/models/Accesos/usuario.model';

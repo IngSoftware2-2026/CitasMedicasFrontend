@@ -77,28 +77,13 @@ export class ConsultasComponent implements OnInit {
     this.consultaDialog = true;
   }
 
-  imprimirConsulta(consulta: any): void {
-    console.log('Imprimiendo consulta:', consulta);
-    const printContent = `
-      <h1>Consulta Médica</h1>
-      <p><strong>Motivo:</strong> ${consulta.motivo || 'N/A'}</p>
-      <p><strong>Notas:</strong> ${consulta.notas || 'N/A'}</p>
-      <p><strong>Tratamiento:</strong> ${consulta.tratamiento || 'N/A'}</p>
-    `;
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(printContent);
-      printWindow.document.close();
-      printWindow.print();
-    }
-  }
-
+  
   saveConsulta(): void {
     if (!this.consultaForm['citaId']) {
       this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Cita es obligatoria' });
       return;
     }
-
+    
     if (this.consultaForm['consultaId']) {
       const payload: any = {
         consultaId: Number(this.consultaForm['consultaId']),
@@ -140,8 +125,39 @@ export class ConsultasComponent implements OnInit {
       });
     }
   }
-
-
-
-
+  
+  imprimirConsulta(consulta: any): void {
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Consulta Médica #${consulta.consultaId}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          h1 { color: #333; }
+          p { margin: 10px 0; }
+        </style>
+      </head>
+      <body>
+        <h1>Consulta Médica #${consulta.consultaId}</h1>
+        <p><strong>Fecha:</strong> ${new Date(consulta.fecha).toLocaleString()}</p>
+        <p><strong>Cita:</strong> #${consulta.citaId}</p>
+        <p><strong>Motivo:</strong> ${consulta.motivo || 'N/A'}</p>
+        <p><strong>Notas:</strong> ${consulta.notas || 'N/A'}</p>
+        <p><strong>Tratamiento:</strong> ${consulta.tratamiento || 'N/A'}</p>
+        <script>window.onload = function() { window.print(); }</script>
+      </body>
+      </html>
+    `;
+  
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+  
+    iframe.contentWindow?.document.write(printContent);
+    iframe.contentWindow?.document.close();
+  }
+  
+  
+  
 }

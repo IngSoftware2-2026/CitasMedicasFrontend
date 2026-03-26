@@ -1,6 +1,4 @@
-<!-- ============================================================
-     ENCABEZADO DE PÁGINA
-     ============================================================ -->
+<!-- ENCABEZADO DE PÁGINA-->
 <div class="page-header-container">
   <div class="page-header-left">
     <div class="page-header-icon">
@@ -18,9 +16,7 @@
     (onClick)="abrirModalUsuario()" />
 </div>
 
-<!-- ============================================================
-     FILTROS DE BÚSQUEDA
-     ============================================================ -->
+<!-- FILTROS DE BÚSQUEDA-->
 <div class="usuarios-filters">
   <p-iconfield class="usuarios-search">
     <p-inputicon styleClass="pi pi-search" />
@@ -42,9 +38,7 @@
     appendTo="body" />
 </div>
 
-<!-- ============================================================
-     TARJETAS DE ESTADÍSTICAS
-     ============================================================ -->
+<!-- TARJETAS DE ESTADÍSTICAS-->
 <div class="usuarios-stats">
   <div class="usuarios-stat-item">
     <div class="usuarios-stat-icon usuarios-stat-icon--blue">
@@ -87,9 +81,7 @@
   </div>
 </div>
 
-<!-- ============================================================
-     TABLA DE USUARIOS
-     ============================================================ -->
+<!-- TABLA DE USUARIOS-->
 <div class="usuarios-table-card">
   <p-table 
     [value]="listaFiltrada()" 
@@ -169,9 +161,7 @@
   </p-table>
 </div>
 
-<!-- ============================================================
-     MODAL: DETALLE DEL USUARIO
-     ============================================================ -->
+<!-- MODAL: DETALLE DEL USUARIO-->
 <p-dialog 
   header="Detalle del Usuario" 
   [(visible)]="mostrarModalDetalle" 
@@ -233,9 +223,7 @@
 
 </p-dialog>
 
-<!-- ============================================================
-     MODAL: CREAR / EDITAR USUARIO
-     ============================================================ -->
+<!-- MODAL: CREAR / EDITAR USUARIO-->
 <p-dialog 
   [header]="esEdicion() ? 'Editar Usuario' : 'Nuevo Usuario'" 
   [(visible)]="mostrarModalUsuario" 
