@@ -239,7 +239,7 @@
           <app-doctor-imagen-upload
             [imagenActual]="doctorForm['imagen'] ?? null"
             [nombreDoctor]="doctorForm['nombrePublico'] ?? ''"
-            (archivoConfirmado)="onEditImagenConfirmado($event)"
+            (archivoSeleccionado)="onEditImagenConfirmado($event)"
           />
         </div>
       } @else {
@@ -247,7 +247,7 @@
           <app-doctor-imagen-upload
             [imagenActual]="null"
             [nombreDoctor]="doctorForm['nombrePublico'] ?? ''"
-            (archivoConfirmado)="onCreationImagenSubida($event)"
+            (archivoSeleccionado)="onCreationImagenSubida($event)"
           />
         </div>
       }

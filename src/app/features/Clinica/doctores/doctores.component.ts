@@ -24,7 +24,7 @@ import { CloudinaryService } from '../../../core/services/cloudinary.service';
 import { Especialidad } from '../../../core/models/Catalogos/especialidad.model';
 import { Usuario } from '../../../core/models/Accesos/usuario.model';
 import { CloudinaryThumbPipe } from '../../../core/shared/pipes/cloudinary-thumb.pipe';
-import { DoctorImagenUploadComponent } from '../../../shared/doctor-imagen-upload/doctor-imagen-upload.component';
+import { DoctorImagenUploadComponent } from '../../../core/shared/components/doctor-imagen-upload/doctor-imagen-upload.component';
 
 @Component({
   selector: 'app-doctores',
