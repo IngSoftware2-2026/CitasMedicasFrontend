@@ -1,109 +1,109 @@
 import { Injectable, inject, ChangeDetectorRef } from '@angular/core';
 import { MessageService } from 'primeng/api';
-import { RolService } from '../../../../core/services/Accesos/rol.service';
+import { RolService } from '../../../../core/services/Accesos/roles/rol.service';
 import { Rol } from '../../../../core/models/Accesos/rol.model';
 import { Subject, takeUntil, BehaviorSubject } from 'rxjs';
 
 @Injectable()
-export class AdminRolOperations {
+export class RolesAdminService {
   private rolService = inject(RolService);
   private messageService = inject(MessageService);
-  private cdr: ChangeDetectorRef | null = null;
+  private changeDetector: ChangeDetectorRef | null = null;
   
   private destroy$ = new Subject<void>();
-  private rolesSubject = new BehaviorSubject<any[]>([]);
+  private rolesSubject = new BehaviorSubject<Rol[]>([]);
   roles$ = this.rolesSubject.asObservable();
 
   constructor() {
-    this.loadRoles();
+    this.obtenerRoles();
   }
 
-  setCdr(cdr: ChangeDetectorRef) {
-    this.cdr = cdr;
+  setChangeDetector(cdr: ChangeDetectorRef): void {
+    this.changeDetector = cdr;
   }
 
-  private loadRoles(): void {
-    console.log('Cargando roles...');
+  private obtenerRoles(): void {
     this.rolService.listar()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (data) => {
-          console.log('Roles cargados:', data);
-          this.rolesSubject.next(data || []);
-          this.cdr?.detectChanges();
+        next: (roles) => {
+          this.rolesSubject.next(roles || []);
+          this.changeDetector?.detectChanges();
         },
-        error: (err) => {
-          console.error('Error cargando roles:', err);
+        error: (error) => {
+          console.error('Error cargando roles:', error);
           this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar roles' });
           this.rolesSubject.next([]);
-          this.cdr?.detectChanges();
+          this.changeDetector?.detectChanges();
         }
       });
   }
 
-  get roles(): Rol[] {
+  get listaRoles(): Rol[] {
     return this.rolesSubject.getValue();
   }
 
-  get rolPermisos(): any[] {
-    return this.rolesSubject.getValue();
-  }
-
-  save(r: Partial<Rol>, isEdit: boolean): void {
-    console.log('Guardando rol:', r, 'isEdit:', isEdit);
-    if (!r.codigoRol || !r.nombreRol) {
-      this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Codigo y nombre son obligatorios' });
+  guardarRol(rol: Partial<Rol>, esEdicion: boolean): void {
+    if (!rol.codigoRol || !rol.nombreRol) {
+      this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Código y nombre son obligatorios' });
       return;
     }
 
-    if (isEdit && r.rolId) {
-      this.rolService.actualizarRol(r.rolId, r)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            this.loadRoles();
-            this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Rol actualizado' });
-            this.cdr?.detectChanges();
-          },
-          error: (err) => {
-            console.error('Error actualizando rol:', err);
-            this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.mensaje || 'Error al actualizar rol' });
-            this.cdr?.detectChanges();
-          }
-        });
+    if (esEdicion && rol.rolId) {
+      this.actualizarRol(rol);
     } else {
-      this.rolService.insertar(r)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            this.loadRoles();
-            this.messageService.add({ severity: 'success', summary: 'Creado', detail: 'Rol creado' });
-            this.cdr?.detectChanges();
-          },
-          error: (err) => {
-            console.error('Error insertando rol:', err);
-            this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.mensaje || 'Error al crear rol' });
-            this.cdr?.detectChanges();
-          }
-        });
+      this.crearRol(rol);
     }
   }
 
-  delete(r: Rol, onConfirm: () => void): void {
-    console.log('Eliminando rol:', r.rolId, r.nombreRol);
-    this.rolService.eliminarRol(r.rolId)
+  private crearRol(rol: Partial<Rol>): void {
+    this.rolService.insertar(rol)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.loadRoles();
-          this.messageService.add({ severity: 'success', summary: 'Eliminado', detail: 'Rol eliminado' });
-          onConfirm();
-          this.cdr?.detectChanges();
+          this.obtenerRoles();
+          this.messageService.add({ severity: 'success', summary: 'Creado', detail: 'Rol creado exitosamente' });
+          this.changeDetector?.detectChanges();
         },
-        error: (err) => {
-          console.error('Error eliminando rol:', err);
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.mensaje || err?.error?.message || 'Error al eliminar rol' });
-          this.cdr?.detectChanges();
+        error: (error) => {
+          console.error('Error creando rol:', error);
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: error?.error?.mensaje || 'Error al crear rol' });
+          this.changeDetector?.detectChanges();
+        }
+      });
+  }
+
+  private actualizarRol(rol: Partial<Rol>): void {
+    this.rolService.actualizarRol(rol.rolId!, rol)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.obtenerRoles();
+          this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Rol actualizado exitosamente' });
+          this.changeDetector?.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error actualizando rol:', error);
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: error?.error?.mensaje || 'Error al actualizar rol' });
+          this.changeDetector?.detectChanges();
+        }
+      });
+  }
+
+  eliminarRol(rol: Rol, onConfirm: () => void): void {
+    this.rolService.eliminarRol(rol.rolId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.obtenerRoles();
+          this.messageService.add({ severity: 'success', summary: 'Eliminado', detail: 'Rol eliminado exitosamente' });
+          onConfirm();
+          this.changeDetector?.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error eliminando rol:', error);
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: error?.error?.mensaje || 'Error al eliminar rol' });
+          this.changeDetector?.detectChanges();
         }
       });
   }

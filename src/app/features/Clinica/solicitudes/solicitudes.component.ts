@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MockDataService } from '../../../core/services/Clinica/mock-data.service';
-import { AuthService } from '../../../core/services/Accesos/auth.service';
+import { AuthService } from '../../../core/services/Accesos/auth/auth.service';
 import { MessageService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';

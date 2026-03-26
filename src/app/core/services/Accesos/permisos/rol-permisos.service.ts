@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { ROLES, CodigoRol } from '../../constants/roles';
-import { PERMISSIONS } from '../../constants/permissions';
+import { ROLES, CodigoRol } from '../../../constants/roles';
+import { PERMISSIONS } from '../../../constants/permissions';
 
 const PERMISOS_POR_ROL: Record<CodigoRol, string[]> = {
   [ROLES.ADMIN]: [

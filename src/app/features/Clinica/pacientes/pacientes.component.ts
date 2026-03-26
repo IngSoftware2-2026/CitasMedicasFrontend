@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { switchMap } from 'rxjs';
 import { PacienteService } from '../../../core/services/Clinica/paciente.service';
-import { UsuarioService } from '../../../core/services/Accesos/usuario.service';
+import { UsuarioService } from '../../../core/services/Accesos/usuarios/usuario.service';
 import { ErrorHandlerService } from '../../../core/services/Http/error-handler.service';
 import { Paciente } from '../../../core/models/Clinica/Pacientes/paciente.model';
 import { ConfirmationService } from 'primeng/api';

@@ -1,0 +1,102 @@
+<div class="roles-container">
+  <div class="roles-header">
+    <div class="roles-header-title">
+      <div class="roles-header-icon">
+        <i class="pi pi-id-card"></i>
+      </div>
+      <div>
+        <h2>Gestión de Roles</h2>
+        <p>Administrar roles del sistema</p>
+      </div>
+    </div>
+    @if (puedeEditar) {
+      <p-button label="Nuevo Rol" icon="pi pi-plus" styleClass="p-button-rounded p-button-white" (onClick)="abrirDialogoRol()" />
+    }
+  </div>
+
+  <div class="roles-grid">
+    @for (rol of listaRoles; track rol.rolId) {
+    <div class="role-card">
+      <div class="role-card-header">
+        <div class="role-info">
+          <div class="role-avatar" [class]="obtenerClaseAvatar(rol.codigoRol)">
+            <i [class]="obtenerIconoRol(rol.codigoRol)"></i>
+          </div>
+          <div class="role-details">
+            <h3>{{ rol.nombreRol || 'Sin nombre' }}</h3>
+            <span class="role-code">{{ rol.codigoRol || 'SIN CÓDIGO' }}</span>
+          </div>
+        </div>
+        @if (puedeEditar) {
+          <div class="role-actions">
+            <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info" size="small" pTooltip="Editar rol" tooltipPosition="top" (onClick)="abrirDialogoRol(rol)" />
+            @if (puedeEliminar) {
+              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small" pTooltip="Eliminar rol" tooltipPosition="top" (onClick)="eliminarRol(rol)" />
+            }
+          </div>
+        }
+      </div>
+      <div class="role-card-footer">
+        <span class="role-id">ID: {{ rol.rolId }}</span>
+      </div>
+
+      <div class="role-card-body">
+        <div class="role-permisos-toggle" (click)="alternarExpandirRol(rol.rolId)">
+          <div class="role-permisos-toggle-left">
+            <i class="pi text-sm transition-transform transition-duration-200" [class.pi-chevron-right]="!rolesExpandidos.has(rol.rolId)" [class.pi-chevron-down]="rolesExpandidos.has(rol.rolId)" [class.expanded]="rolesExpandidos.has(rol.rolId)"></i>
+            <span>Permisos asignados</span>
+          </div>
+          <span class="role-permisos-count" [class.empty]="obtenerCantidadPermisos(rol.rolId) === 0">
+            {{ obtenerCantidadPermisos(rol.rolId) }}
+          </span>
+        </div>
+
+        @if (rolesExpandidos.has(rol.rolId)) {
+        <div class="role-permisos-list">
+          @for (permiso of listaPermisos; track permiso.permisoId) {
+          <label class="permiso-item" [class.active]="verificarPermisoAsignado(rol.rolId, permiso.permisoId)">
+            <input type="checkbox" [checked]="verificarPermisoAsignado(rol.rolId, permiso.permisoId)" [disabled]="!puedeEditar" (change)="alternarPermisoRol(rol.rolId, permiso.permisoId)" />
+            <i class="pi pi-shield"></i>
+            <span>{{ permiso.nombrePermiso }}</span>
+          </label>
+          }
+        </div>
+        }
+      </div>
+    </div>
+    } @empty {
+    <div class="role-card-empty">
+      <i class="pi pi-inbox"></i>
+      <p>No hay roles disponibles</p>
+    </div>
+    }
+  </div>
+
+  <p-dialog
+    [header]="(formularioRol.rolId ? 'Editar' : 'Nuevo') + ' Rol'"
+    [(visible)]="mostrarDialogoRol"
+    [modal]="true"
+    [style]="{ width: '450px' }"
+    [breakpoints]="{ '640px': '95vw' }"
+    styleClass="role-dialog border-round-xl"
+  >
+    <div class="dialog-form">
+      <div class="dialog-field">
+        <label>Código <span class="required">*</span></label>
+        <input pInputText [(ngModel)]="formularioRol.codigoRol" placeholder="Ej: ROL_ADMIN" [disabled]="!puedeEditar" />
+      </div>
+      <div class="dialog-field">
+        <label>Nombre <span class="required">*</span></label>
+        <input pInputText [(ngModel)]="formularioRol.nombreRol" placeholder="Ej: Administrador" [disabled]="!puedeEditar" />
+      </div>
+    </div>
+    <ng-template #footer>
+      <div class="dialog-actions">
+        <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="mostrarDialogoRol = false" />
+        @if (puedeEditar) {
+          <p-button label="Guardar" icon="pi pi-check" (onClick)="guardarRol()" />
+        }
+      </div>
+    </ng-template>
+  </p-dialog>
+</div>

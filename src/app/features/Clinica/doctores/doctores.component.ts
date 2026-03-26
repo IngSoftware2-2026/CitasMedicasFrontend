@@ -16,9 +16,9 @@ import { TooltipModule } from 'primeng/tooltip';
 import { SelectModule } from 'primeng/select';
 import { Doctor, DoctorDetalle, DoctorEspecialidad } from '../../../core/models/Clinica/Doctores/doctor.model';
 import { DoctoresService } from '../../../core/services/Clinica/doctores.service';
-import { UsuarioService } from '../../../core/services/Accesos/usuario.service';
+import { UsuarioService } from '../../../core/services/Accesos/usuarios/usuario.service';
 import { EspecialidadesService } from '../../../core/services/Clinica/especialidades.service';
-import { AuthService } from '../../../core/services/Accesos/auth.service';
+import { AuthService } from '../../../core/services/Accesos/auth//auth.service';
 import { Especialidad } from '../../../core/models/Catalogos/especialidad.model';
 import { Usuario } from '../../../core/models/Accesos/usuario.model';
 

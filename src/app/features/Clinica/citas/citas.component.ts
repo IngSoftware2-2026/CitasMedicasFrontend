@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { MockDataService } from '../../../core/services/Clinica/mock-data.service';
-import { AuthService } from '../../../core/services/Accesos/auth.service';
+import { AuthService } from '../../../core/services/Accesos/auth/auth.service';
 import { CitasService } from '../../../core/services/Clinica/citas.service';
 import { ErrorHandlerService } from '../../../core/services/Http/error-handler.service';
 import { CitasCambiarEstadoRequest } from '../../../core/models/Clinica/Citas/citas-cambiar-estado.model';

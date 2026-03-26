@@ -6,10 +6,10 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError } from 'rxjs';
-import { UsuarioService } from './usuario.service';
-import { RolPermisosService } from './rol-permisos.service';
-import { LoginRequest, LoginResponse } from '../../models/Accesos/usuario.model';
-import { CodigoRol, ROLES } from '../../constants/roles';
+import { UsuarioService } from '../usuarios/usuario.service';
+import { RolPermisosService } from '../permisos/rol-permisos.service';
+import { LoginRequest, LoginResponse } from '../../../models/Accesos/usuario.model';
+import { CodigoRol, ROLES } from '../../../constants/roles';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -78,12 +78,30 @@ export class AuthService {
     return this.rolPermisosService;
   }
 
+  get nombreUsuario(): string {
+    return localStorage.getItem('nombreUsuario') || '';
+  }
+
+  get correoUsuario(): string {
+    return localStorage.getItem('correo') || '';
+  }
+
+  get nombreRol(): string {
+    return localStorage.getItem('rolNombre') || '';
+  }
+
   iniciarSesion(credenciales: LoginRequest): Observable<LoginResponse> {
     return this.usuarioServicio.iniciarSesion(credenciales).pipe(
       tap(respuesta => {
         const rolId = respuesta.rol?.rolId ?? 1;
         const codigoRol = respuesta.rol?.codigoRol ?? ROLES.ADMIN;
         this.establecerAuth(respuesta.token, respuesta.usuarioId, rolId, codigoRol);
+        
+        localStorage.setItem('nombreUsuario', respuesta.nombreUsuario);
+        localStorage.setItem('correo', respuesta.correo);
+        if (respuesta.rol?.nombreRol) {
+          localStorage.setItem('rolNombre', respuesta.rol.nombreRol);
+        }
       }),
       catchError(error => {
         console.error('Error de login:', error);
@@ -97,6 +115,9 @@ export class AuthService {
     localStorage.removeItem('usuarioId');
     localStorage.removeItem('rolId');
     localStorage.removeItem('codigoRol');
+    localStorage.removeItem('nombreUsuario');
+    localStorage.removeItem('correo');
+    localStorage.removeItem('rolNombre');
     this.rolPermisosService.limpiarSesion();
     this.autenticado.set(false);
     this.idUsuario.set(null);

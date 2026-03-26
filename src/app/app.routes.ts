@@ -11,7 +11,7 @@ import { EspecialidadesComponent } from './features/Catalogos/especialidades/esp
 import { PermisosComponent } from './features/Catalogos/permisos/permisos.component';
 import { ConsultasComponent } from './features/Clinica/consultas/consultas.component';
 import { HorariosComponent } from './features/Clinica/horarios/horarios.component';
-import { AdminComponent } from './features/Accesos/admin/admin.component';
+import { AdminRolesComponent } from './features/Accesos/admin/admin-roles.component';
 import { UsuariosComponent } from './features/Accesos/usuarios/usuarios.component';
 import { ConfiguracionesComponent } from './features/Accesos/configuraciones/configuraciones.component';
 import { authGuard } from './core/guards/auth.guard';
@@ -110,7 +110,7 @@ export const routes: Routes = [
       },
       {
         path: ROUTES.ADMIN,
-        component: AdminComponent,
+        component: AdminRolesComponent,
         canActivate: [permissionGuard],
         data: { routeName: 'ADMIN' }
       },

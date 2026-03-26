@@ -14,17 +14,15 @@ import { InputIconModule } from 'primeng/inputicon';
 import { SelectModule } from 'primeng/select';
 import { Permiso } from '../../../core/models/Accesos/permiso.model';
 import { Rol } from '../../../core/models/Accesos/rol.model';
-import {
-  AdminPermisoOperations,
-  AdminPermisoRolOperations,
-  AdminUtils
-} from '../../Accesos/admin/operaciones/index';
+import { AdminUtils } from '../../Accesos/admin/operaciones/index';
+import { PermisosAdminService } from '../../Accesos/admin/operaciones/admin-permiso';
+import { PermisosRolAdminService } from '../../Accesos/admin/operaciones/admin-permiso-rol';
 
 @Component({
   selector: 'app-permisos',
   standalone: true,
   imports: [CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, TagModule, ToolbarModule, TooltipModule, IconFieldModule, InputIconModule, SelectModule],
-  providers: [MessageService, ConfirmationService, AdminPermisoOperations, AdminPermisoRolOperations, AdminUtils],
+  providers: [MessageService, ConfirmationService, PermisosAdminService, PermisosRolAdminService, AdminUtils],
   templateUrl: './permisos.component.html',
   styleUrls: ['./permisos.component.css']
 })
@@ -44,8 +42,8 @@ export class PermisosComponent {
   ];
 
   constructor(
-    public permisoOps: AdminPermisoOperations,
-    public permisoRolOps: AdminPermisoRolOperations,
+    public permisoOps: PermisosAdminService,
+    public permisoRolOps: PermisosRolAdminService,
     public utils: AdminUtils,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
@@ -56,7 +54,7 @@ export class PermisosComponent {
     return this.utils.filterPermisos(this.searchPermiso);
   }
 
-  get permisos() { return this.permisoOps.permisos; }
+  get permisos() { return this.permisoOps.listaPermisos; }
   get roles(): Rol[] { return this.utils.getRoles(); }
 
   get permisosAsignados() {
@@ -86,9 +84,9 @@ export class PermisosComponent {
 
   countPermisosAsignados() { return this.utils.countPermisosAsignados(); }
   countPermisosSinRol() { return this.utils.countPermisosSinRol(); }
-  countRolesDelPermiso(id: number) { return this.permisoRolOps.countRolesDelPermiso(id); }
+  countRolesDelPermiso(id: number) { return this.permisoRolOps.contarRolesConPermiso(id); }
   getRolChipClass(cod: string) { return this.utils.getRolChipClass(cod); }
-  rolTienePermiso(rid: number, pid: number) { return this.permisoRolOps.tienePermiso(rid, pid); }
+  rolTienePermiso(rid: number, pid: number) { return this.permisoRolOps.verificarPermisoAsignado(rid, pid); }
 
   openPermisoDialog(p?: Permiso) {
     this.permisoForm = p ? { ...p } : {};
@@ -97,7 +95,7 @@ export class PermisosComponent {
   }
 
   savePermiso() {
-    this.permisoOps.save(this.permisoForm, !!this.permisoForm.permisoId);
+    this.permisoOps.guardarPermiso(this.permisoForm, !!this.permisoForm.permisoId);
     this.permisoDialog = false;
     setTimeout(() => this.cdr.detectChanges(), 500);
   }
@@ -108,7 +106,7 @@ export class PermisosComponent {
       header: 'Confirmar',
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
-        this.permisoOps.delete(p, () => {});
+        this.permisoOps.eliminarPermiso(p, () => {});
         this.cdr.detectChanges();
       }
     });
