@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../models/api-response.model';
@@ -29,7 +29,21 @@ export class CitasService {
   }
 
   insertar(cita: CitasInsertarRequest): Observable<ApiResponse<RequestStatusResponse>> {
-    return this.http.post<ApiResponse<RequestStatusResponse>>(`${this.baseUrl}/Insertar`, cita);
+    console.log('[CrearCita] request', {
+      url: `${this.baseUrl}/Insertar`,
+      payload: cita
+    });
+
+    return this.http.post<ApiResponse<RequestStatusResponse>>(`${this.baseUrl}/Insertar`, cita).pipe(
+      tap({
+        next: (response) => console.log('[CrearCita] response', response),
+        error: (error) => console.error('[CrearCita] error', {
+          status: error?.status,
+          message: error?.message,
+          body: error?.error
+        })
+      })
+    );
   }
 
   cambiarEstado(cambioEstado: CitasCambiarEstadoRequest): Observable<ApiResponse<RequestStatusResponse>> {

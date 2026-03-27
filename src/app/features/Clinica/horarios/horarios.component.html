@@ -1,34 +1,70 @@
-<div class="page-header-container">
-  <div class="page-header-left">
-    <div class="page-header-icon">
-      <i class="pi pi-clock"></i>
-    </div>
-    <div class="page-header-text">
-      <h2>Horarios de Doctores</h2>
-      <p>Gestión de horarios</p>
-    </div>
-  </div>
-  @if (!esSoloLectura) {
-    <p-button label="Nuevo Horario" icon="pi pi-plus" (onClick)="openHorarioDialog()" />
-  }
-</div>
-@for (d of doctores; track d.medicoId) {
-  @if (data.getHorariosDeDoctor(d.medicoId).length > 0) {
-  <p-card styleClass="horario-group">
-    <h3 class="horario-title"><p-avatar icon="pi pi-user" shape="circle" /> {{ d.nombrePublico }} <p-tag [value]="data.getDoctorEspecialidad(d.medicoId)" severity="info" /></h3>
-    <div class="horario-chips">
-      @for (h of data.getHorariosDeDoctor(d.medicoId); track h.horarioId) {
-      <div class="horario-chip">
-        <strong>{{ getDiaSemana(h.diaSemana) }}</strong>
-        <span>{{ h.horaInicio }} - {{ h.horaFin }}</span>
-        @if (!esSoloLectura) {
-          <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info" size="small" (onClick)="openHorarioDialog(h)" />
-          <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small" (onClick)="deleteHorario(h)" />
-        }
+@if (esSoloLectura) {
+  <section class="horario-paciente">
+    <div class="page-header-container">
+      <div class="page-header-left">
+        <div class="page-header-icon">
+          <i class="pi pi-clock"></i>
+        </div>
+        <div class="page-header-text">
+          <h2>Horarios de Atencion</h2>
+          <p>Consulta dias y horas de disponibilidad de nuestros medicos.</p>
+        </div>
       </div>
+    </div>
+
+    @if (cargando) {
+      <div class="empty-state">Cargando horarios...</div>
+    } @else {
+    <div class="horario-patient-grid">
+      @for (d of horariosPaciente; track d.medicoId) {
+        <article class="horario-patient-card">
+          <header>
+            <h3>{{ d.nombrePublico }}</h3>
+            <p-tag [value]="d.especialidad" severity="info" />
+          </header>
+          <div class="horario-chips">
+            @for (h of d.horarios; track h.horarioId) {
+              <div class="horario-chip">
+                <strong>{{ getDiaSemana(h.diaSemana) }}</strong>
+                <span>{{ h.horaInicio }} - {{ h.horaFin }}</span>
+              </div>
+            }
+          </div>
+        </article>
       }
     </div>
-  </p-card>
+    }
+  </section>
+} @else {
+  <div class="page-header-container">
+    <div class="page-header-left">
+      <div class="page-header-icon">
+        <i class="pi pi-clock"></i>
+      </div>
+      <div class="page-header-text">
+        <h2>Horarios de Doctores</h2>
+        <p>Gestion de horarios</p>
+      </div>
+    </div>
+    <p-button label="Nuevo Horario" icon="pi pi-plus" (onClick)="openHorarioDialog()" />
+  </div>
+
+  @for (d of doctores; track d.medicoId) {
+    @if (getHorariosDeDoctor(d.medicoId).length > 0) {
+    <p-card styleClass="horario-group">
+      <h3 class="horario-title"><p-avatar icon="pi pi-user" shape="circle" /> {{ d.nombrePublico }} <p-tag [value]="getEspecialidadDoctor(d.medicoId)" severity="info" /></h3>
+      <div class="horario-chips">
+        @for (h of getHorariosDeDoctor(d.medicoId); track h.horarioId) {
+        <div class="horario-chip">
+          <strong>{{ getDiaSemana(h.diaSemana) }}</strong>
+          <span>{{ h.horaInicio }} - {{ h.horaFin }}</span>
+          <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info" size="small" (onClick)="openHorarioDialog(h)" />
+          <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small" (onClick)="deleteHorario(h)" />
+        </div>
+        }
+      </div>
+    </p-card>
+    }
   }
 }
 

@@ -13,106 +13,127 @@
       <span class="brand-icon">+</span>
       <span>MediCitas</span>
     </div>
-    
+
     <nav class="sidebar-nav">
       <a routerLink="/dashboard" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-        <i class="pi pi-chart-bar"></i> 
-        <span>Dashboard</span>
-      </a> 
+        <i class="pi pi-chart-bar"></i>
+        <span>{{ esPaciente ? 'Inicio' : 'Dashboard' }}</span>
+      </a>
 
-      @if (esAdmin || esRecepcion || esDoctor || esPaciente) {
+      @if (esPaciente) {
         <div class="sidebar-section-inline">
-          <span class="sidebar-section-title">CLÍNICA</span>
+          <span class="sidebar-section-title">ATENCION</span>
         </div>
-      }
 
-      @if (esAdmin || esRecepcion) { 
-        <a routerLink="/pacientes" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-          <i class="pi pi-users"></i> 
-          <span>Pacientes</span>
-        </a> 
-      }
-
-      @if (esAdmin || esRecepcion) { 
-        <a routerLink="/doctores" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-          <i class="pi pi-user"></i> 
-          <span>Doctores</span>
-        </a> 
-      }
-
-      @if (esAdmin || esRecepcion) { 
         <a routerLink="/solicitudes" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-          <i class="pi pi-clipboard"></i> 
-          <span>Solicitudes</span>
-        </a> 
-      }
-
-      @if (esPaciente) { 
-        <a routerLink="/solicitudes" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-          <i class="pi pi-calendar-plus"></i> 
+          <i class="pi pi-calendar-plus"></i>
           <span>Solicitar Cita</span>
-        </a> 
-      }
+        </a>
 
-      @if (esAdmin || esRecepcion || esDoctor || esPaciente) { 
         <a routerLink="/citas" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-          <i class="pi pi-calendar"></i> 
-          <span>Citas</span>
-        </a> 
-      }
+          <i class="pi pi-calendar"></i>
+          <span>Mis Citas</span>
+        </a>
 
-      @if (esAdmin || esDoctor) { 
-        <a routerLink="/consultas" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-          <i class="pi pi-file-edit"></i> 
-          <span>Consultas</span>
-        </a> 
-      }
+        <a routerLink="/doctores" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+          <i class="pi pi-user"></i>
+          <span>Doctores</span>
+        </a>
 
-      @if (esAdmin || esDoctor || esRecepcion) {
-        <div class="sidebar-section-inline">
-          <span class="sidebar-section-title">ADMINISTRACIÓN</span>
-        </div>
-      }
-
-      @if (esAdmin) { 
-        <a routerLink="/usuarios" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-          <i class="pi pi-id-card"></i> 
-          <span>Usuarios</span>
-        </a> 
-      }
-
-      @if (esAdmin) { 
-        <a routerLink="/admin" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-          <i class="pi pi-shield"></i> 
-          <span>Roles</span>
-        </a> 
-      }
-
-      @if (esAdmin || esDoctor) {
-        <div class="sidebar-section-inline">
-          <span class="sidebar-section-title">CATÁLOGOS</span>
-        </div>
-      }
-
-      @if (esAdmin || esDoctor) { 
-        <a routerLink="/salas" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-          <i class="pi pi-building"></i> 
-          <span>Salas</span>
-        </a> 
-      }
-
-      @if (esAdmin || esDoctor) { 
-        <a routerLink="/especialidades" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-          <i class="pi pi-briefcase"></i> 
-          <span>Especialidades</span>
-        </a> 
-      }
-
-      @if (esAdmin || esRecepcion || esDoctor || esPaciente) { 
         <a routerLink="/horarios" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-          <i class="pi pi-clock"></i> 
+          <i class="pi pi-clock"></i>
           <span>Horarios</span>
-        </a> 
+        </a>
+      }
+
+      @if (!esPaciente) {
+        @if (esAdmin || esRecepcion || esDoctor) {
+          <div class="sidebar-section-inline">
+            <span class="sidebar-section-title">CLINICA</span>
+          </div>
+        }
+
+        @if (esAdmin || esRecepcion) {
+          <a routerLink="/pacientes" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="pi pi-users"></i>
+            <span>Pacientes</span>
+          </a>
+        }
+
+        @if (esAdmin || esRecepcion) {
+          <a routerLink="/doctores" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="pi pi-user"></i>
+            <span>Doctores</span>
+          </a>
+        }
+
+        @if (esAdmin || esRecepcion) {
+          <a routerLink="/solicitudes" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="pi pi-clipboard"></i>
+            <span>Solicitudes</span>
+          </a>
+        }
+
+        @if (esAdmin || esRecepcion || esDoctor) {
+          <a routerLink="/citas" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="pi pi-calendar"></i>
+            <span>Citas</span>
+          </a>
+        }
+
+        @if (esAdmin || esDoctor) {
+          <a routerLink="/consultas" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="pi pi-file-edit"></i>
+            <span>Consultas</span>
+          </a>
+        }
+
+        @if (esAdmin || esDoctor || esRecepcion) {
+          <div class="sidebar-section-inline">
+            <span class="sidebar-section-title">ADMINISTRACION</span>
+          </div>
+        }
+
+        @if (esAdmin) {
+          <a routerLink="/usuarios" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="pi pi-id-card"></i>
+            <span>Usuarios</span>
+          </a>
+        }
+
+        @if (esAdmin) {
+          <a routerLink="/admin" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="pi pi-shield"></i>
+            <span>Roles</span>
+          </a>
+        }
+
+        @if (esAdmin || esDoctor) {
+          <div class="sidebar-section-inline">
+            <span class="sidebar-section-title">CATALOGOS</span>
+          </div>
+        }
+
+        @if (esAdmin || esDoctor) {
+          <a routerLink="/salas" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="pi pi-building"></i>
+            <span>Salas</span>
+          </a>
+        }
+
+        @if (esAdmin || esDoctor) {
+          <a routerLink="/especialidades" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="pi pi-briefcase"></i>
+            <span>Especialidades</span>
+          </a>
+        }
+
+        @if (esAdmin || esRecepcion || esDoctor) {
+          <a routerLink="/horarios" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="pi pi-clock"></i>
+            <span>Horarios</span>
+          </a>
+        }
       }
 
       <div class="sidebar-section-inline">
@@ -120,11 +141,11 @@
       </div>
 
       <a routerLink="/configuraciones" routerLinkActive="active" (click)="closeSidebarOnMobile()">
-        <i class="pi pi-cog"></i> 
-        <span>Configuración</span>
+        <i class="pi pi-cog"></i>
+        <span>Configuracion</span>
       </a>
     </nav>
-    
+
     <div class="sidebar-footer">
       <div class="sidebar-user">
         <div class="sidebar-user-avatar">{{ userInitials }}</div>
@@ -134,8 +155,8 @@
         </div>
       </div>
       <button class="sidebar-logout" (click)="cerrarSesion()">
-        <i class="pi pi-sign-out"></i> 
-        <span>Cerrar Sesión</span>
+        <i class="pi pi-sign-out"></i>
+        <span>Cerrar Sesion</span>
       </button>
     </div>
   </aside>

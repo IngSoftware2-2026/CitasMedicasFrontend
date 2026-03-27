@@ -1,9 +1,10 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-import { MockDataService } from '../../../core/services/Clinica/mock-data.service';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/Accesos/auth/auth.service';
 import { CitasService } from '../../../core/services/Clinica/citas.service';
+import { PacienteService } from '../../../core/services/Clinica/paciente.service';
 import { ErrorHandlerService } from '../../../core/services/Http/error-handler.service';
 import { CitasCambiarEstadoRequest } from '../../../core/models/Clinica/Citas/citas-cambiar-estado.model';
 import { CitasFiltroRequest } from '../../../core/models/Clinica/Citas/citas-filtro.model';
@@ -11,6 +12,7 @@ import { CitasInsertarRequest } from '../../../core/models/Clinica/Citas/citas-i
 import { CitaDetalleResponse, CitaListadoResponse } from '../../../core/models/Clinica/Citas/citas-read.model';
 import { DoctorListado } from '../../../core/models/Clinica/Doctores/doctor-listado.model';
 import { PacienteListado } from '../../../core/models/Clinica/Pacientes/paciente-listado.model';
+import { Paciente } from '../../../core/models/Clinica/Pacientes/paciente.model';
 import { Sala } from '../../../core/models/Catalogos/sala.model';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
@@ -27,7 +29,7 @@ import { InputIconModule } from 'primeng/inputicon';
 @Component({
   selector: 'app-citas',
   standalone: true,
-  imports: [FormsModule, DatePipe, TableModule, ButtonModule, DialogModule, InputTextModule, TagModule, ToolbarModule, TooltipModule, DividerModule, IconFieldModule, InputIconModule],
+  imports: [FormsModule, DatePipe, RouterLink, TableModule, ButtonModule, DialogModule, InputTextModule, TagModule, ToolbarModule, TooltipModule, DividerModule, IconFieldModule, InputIconModule],
   templateUrl: './citas.component.html',
   styleUrl: './citas.component.css'
 })
@@ -64,28 +66,47 @@ export class CitasComponent implements OnInit {
   doctoresData: DoctorListado[] = [];
   pacientesData: PacienteListado[] = [];
   salasData: Sala[] = [];
+  perfilPaciente: Paciente | null = null;
 
   get citas() { return this.citasData; }
   get salas() { return this.salasData; }
-  get consultas() { return this.data.consultas; }
   get canManageCitas() {
     const rolId = this.auth.rolIdActual();
     return rolId === 1 || rolId === 3;
+  }
+  get esPaciente(): boolean {
+    return this.auth.esPaciente;
   }
   get currentUser() {
     const usuarioId = this.auth.usuarioIdActual();
     return usuarioId ? { usuarioId } : null;
   }
+  get pacienteIdActual(): number | null {
+    const pacienteIdAuth = this.auth.pacienteIdActual();
+    if (pacienteIdAuth) return pacienteIdAuth;
+
+    const usuarioId = this.auth.usuarioIdActual();
+    if (!usuarioId) return null;
+
+    if (this.perfilPaciente?.pacienteId) {
+      return this.perfilPaciente.pacienteId;
+    }
+    return null;
+  }
 
   get citasView() {
     const term = this.searchCita.toLowerCase();
-    return this.citas.map(c => ({
+    const baseCitas = this.esPaciente && this.pacienteIdActual
+      ? this.citas.filter(c => c.pacienteId === this.pacienteIdActual)
+      : this.citas;
+
+    return baseCitas.map(c => ({
       ...c,
-      pacienteNombre: c.paciente ?? this.data.getPacienteNombre(c.pacienteId),
-      doctorNombre: c.medico ?? this.data.getDoctorNombre(c.medicoId),
-      salaNombre: c.sala ?? this.data.getSalaNombre(c.salaId),
-      estadoNombre: c.estado ?? this.data.getEstadoCitaNombre(c.estadoId),
-      estadoCodigo: c.codigoEstado ?? this.data.getEstadoCitaCodigo(c.estadoId)
+      pacienteNombre: c.paciente ?? `Paciente #${c.pacienteId}`,
+      doctorNombre: c.medico ?? `Medico #${c.medicoId}`,
+      salaNombre: c.sala ?? `Sala #${c.salaId}`,
+      estadoNombre: c.estado ?? c.codigoEstado ?? `Estado #${c.estadoId}`,
+      estadoCodigo: c.codigoEstado ?? ''
     })).filter(c => !term ||
       c.pacienteNombre.toLowerCase().includes(term) ||
       c.doctorNombre.toLowerCase().includes(term) ||
@@ -95,9 +116,9 @@ export class CitasComponent implements OnInit {
   }
 
   constructor(
-    public data: MockDataService,
     private auth: AuthService,
     private citasService: CitasService,
+    private pacienteService: PacienteService,
     private errorHandler: ErrorHandlerService,
     private cdr: ChangeDetectorRef,
     private messageService: MessageService,
@@ -105,9 +126,31 @@ export class CitasComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.cargarCitas();
+    if (this.esPaciente) {
+      this.pacienteService.obtenerPerfilActual().subscribe({
+        next: (perfil) => {
+          this.perfilPaciente = perfil;
+          if (perfil?.pacienteId) {
+            this.auth.establecerPacienteId(perfil.pacienteId);
+            this.filtros.pacienteId = perfil.pacienteId;
+          } else if (this.pacienteIdActual) {
+            this.filtros.pacienteId = this.pacienteIdActual;
+          }
+          this.cargarCitas();
+        },
+        error: () => {
+          if (this.pacienteIdActual) {
+            this.filtros.pacienteId = this.pacienteIdActual;
+          }
+          this.cargarCitas();
+        }
+      });
+    } else {
+      this.cargarCitas();
+    }
+
     this.cargarDoctores();
-    this.cargarPacientes();
+    if (!this.esPaciente) this.cargarPacientes();
     this.cargarSalas();
   }
 
@@ -204,7 +247,7 @@ export class CitasComponent implements OnInit {
 
   limpiarFiltros(): void {
     this.filtros = {
-      pacienteId: null,
+      pacienteId: this.esPaciente ? this.pacienteIdActual : null,
       medicoId: null,
       estadoId: null,
       salaId: null,
@@ -401,7 +444,7 @@ export class CitasComponent implements OnInit {
           this.messageService.add({
             severity: 'success',
             summary: 'Estado',
-            detail: response.message || `Cita ${this.data.getEstadoCitaNombre(nuevoEstado).toLowerCase()}`
+            detail: response.message || 'Estado de cita actualizado'
           });
           this.cargarCitas();
           return;
@@ -439,7 +482,27 @@ export class CitasComponent implements OnInit {
     });
   }
 
-  getConsultaDeCita(citaId: number) {
-    return this.consultas.find(c => c.citaId === citaId) ?? null;
+  getEstadoSeverity(codigo: string | null | undefined): "success" | "info" | "warn" | "danger" | "secondary" | "contrast" | undefined {
+    switch ((codigo ?? '').toUpperCase()) {
+      case 'CONFIRMADA':
+      case 'CONF':
+      case 'PENDIENTE':
+        return 'info';
+      case 'EN_CURSO':
+        return 'warn';
+      case 'FINALIZADA':
+      case 'ATEN':
+      case 'ATENDIDA':
+        return 'success';
+      case 'CANCELADA':
+      case 'CANC':
+      case 'RECHAZADA':
+        return 'danger';
+      case 'NO_ASISTIO':
+      case 'NOAS':
+        return 'secondary';
+      default:
+        return undefined;
+    }
   }
 }

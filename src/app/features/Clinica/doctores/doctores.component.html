@@ -7,6 +7,9 @@
     </div>
     <div class="page-header-text">
       <h2>Doctores</h2>
+      @if (esSoloLectura) {
+        <p class="doc-patient-copy">Conoce el perfil y la disponibilidad del equipo medico.</p>
+      }
       <p>Gestión de doctores del sistema</p>
     </div>
   </div>
@@ -23,6 +26,7 @@
   </p-iconfield>
 
   <!-- Search by ID -->
+  @if (!esSoloLectura) {
   <div class="doc-search-id">
     <input pInputText type="number" [(ngModel)]="searchDoctorId" placeholder="Médico ID" class="doc-id-input" min="1"
       (keydown.enter)="buscarPorId()" />
@@ -35,6 +39,7 @@
       Buscar por ID
     </button>
   </div>
+  }
 
   <select class="doc-filter-select" [(ngModel)]="filterEspecialidadId" (ngModelChange)="onFilterEspecialidad()">
     <option [ngValue]="null">Todas las especialidades</option>
@@ -77,11 +82,13 @@
     <div class="doc-card-body">
       <h4 class="doc-card-name">{{ d.nombrePublico }}</h4>
       <span class="doc-card-specialty">{{ getDoctorEspecialidadDisplay(d) }}</span>
+      @if (!esSoloLectura) {
       <span class="doc-card-id"
             pTooltip="Médico ID es el identificador auto-generado del doctor en la clínica. Es diferente del Usuario ID que vincula al usuario del sistema."
             tooltipPosition="bottom">
         Médico ID: {{ d.medicoId }}
       </span>
+      }
 
       <div class="doc-card-stats">
         <span><i class="pi pi-users"></i> {{ getCitasCount(d.medicoId) }} pacientes</span>
@@ -97,7 +104,7 @@
 
     <div class="doc-card-actions">
       <button class="doc-btn doc-btn--outline" (click)="openDoctorDetail(d)" pTooltip="Ver detalle completo">
-        <i class="pi pi-eye"></i> Ver
+        <i class="pi pi-eye"></i> {{ esSoloLectura ? 'Ver perfil' : 'Ver' }}
       </button>
       @if (!esSoloLectura) {
         <button class="doc-btn doc-btn--filled" (click)="openDoctorDialog(d)" pTooltip="Editar información">

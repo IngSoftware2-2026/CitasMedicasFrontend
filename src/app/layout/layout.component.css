@@ -77,6 +77,10 @@ html, body {
   flex-shrink: 0;
 }
 
+.sidebar-section-inline {
+  padding: 10px 14px 6px;
+}
+
 .sidebar-section-title {
   font-size: 0.55rem;
   font-weight: 600;

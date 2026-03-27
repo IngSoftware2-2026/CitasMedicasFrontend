@@ -6,6 +6,11 @@
   margin: 16px 0;
   flex-wrap: wrap;
 }
+.doc-patient-copy {
+  margin: 0.25rem 0 0;
+  color: var(--text-color-secondary);
+  font-size: 0.82rem;
+}
 .doc-toolbar .mod-search { flex: 1; min-width: 220px; }
 .doc-filter-select {
   padding: 8px 12px;

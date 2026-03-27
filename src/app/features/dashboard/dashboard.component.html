@@ -1,232 +1,133 @@
-<!-- BREADCRUMB -->
-<div class="dashboard-breadcrumb">
-  <span> Inicio / Dashboard</span>
-</div>
-
-<!-- HEADER -->
-<div class="dashboard-header">
-  <div class="dashboard-header-left">
-    <h1>Dashboard</h1>
-    <p class="dashboard-subtitle">Resumen del sistema de gestión clínica</p>
-  </div>
-  <div class="dashboard-header-right">
-    <span class="dashboard-date">{{ currentDate }}</span>
-  </div>
-</div>
-
-<!-- BANNER -->
-<div class="dashboard-banner">
-  <div class="dashboard-banner-user">
-    <div class="dashboard-banner-avatar">{{ userInitials }}</div>
-    <div class="dashboard-banner-info">
-      <span class="dashboard-banner-name">Bienvenido, {{ userName }}</span>
-      <span class="dashboard-banner-email">{{ userEmail }}</span>
-    </div>
-    <span class="dashboard-banner-badge">{{ userRole }}</span>
-  </div>
-  <div class="dashboard-banner-actions">
-    <button class="dashboard-banner-btn dashboard-banner-btn--config" (click)="goToConfig()">
-      <i class="pi pi-cog"></i> Configuración
-    </button>
-    <button class="dashboard-banner-btn dashboard-banner-btn--logout" (click)="logout()">
-      <i class="pi pi-sign-out"></i> Salir
-    </button>
-  </div>
-</div>
-
-
-<!-- BENTO GRID -->
-<div class="bento-grid">
-  @if (auth.esAdmin || auth.esRecepcion) {
-    <!-- ESTADOS - 6 columns -->
-    <div class="bento-box bento-estados">
-      <h2 class="bento-title">Estados de Citas</h2>
-      <div class="bento-estados-list">
-        @for (stat of distributionStats; track stat.label) {
-          <div class="bento-estado-item">
-            <div class="bento-estado-info">
-              <i [class]="stat.icon"></i>
-              <span>{{ stat.label }}</span>
-            </div>
-            <div class="bento-estado-bar">
-              <div class="bento-estado-fill" [style.width.%]="stat.pct" [style.background-color]="stat.color"></div>
-            </div>
-            <span class="bento-estado-count">{{ stat.count }}</span>
-          </div>
-        }
+@if (auth.esPaciente) {
+  <div class="patient-dashboard">
+    <section class="patient-hero">
+      <div class="patient-hero__content">
+        <p class="patient-hero__eyebrow">Portal de Paciente</p>
+        <h1>Hola, {{ userName }}</h1>
+        <p class="patient-hero__subtitle">
+          Te damos la bienvenida. Desde aqui puedes agendar, consultar y dar seguimiento a tu atencion medica.
+        </p>
+        <p class="patient-hero__date">{{ currentDate }}</p>
       </div>
-    </div>
-
-    <!-- SALAS DISPONIBLES - 6 columns -->
-    <div class="bento-box bento-salas">
-      <div class="bento-header">
-        <h2 class="bento-title"> Disponibilidad</h2>
-        @if (auth.esAdmin) {
-          <a class="bento-link" routerLink="/salas">Ver →</a>
-        }
-      </div>
-      <div class="bento-salas-grid">
-        @for (i of [0,1,2,3]; track i) {
-          <div class="bento-sala" [class.sala-occupied]="i === 1" [class.sala-maint]="i === 3">
-            <i [class]="i === 1 ? 'pi pi-spin pi-spinner' : i === 3 ? 'pi pi-wrench' : 'pi pi-check-circle'"></i>
-            <span>Sala {{ i + 1 }}</span>
-            <small>{{ i === 1 ? 'En uso' : i === 3 ? 'Mantenimiento' : 'Libre' }}</small>
-          </div>
-        }
-      </div>
-    </div>
-  }
-
-  @if (auth.esDoctor) {
-    <div class="bento-box bento-estados">
-      <h2 class="bento-title">Mis Estadísticas</h2>
-      <div class="bento-estados-list">
-        @for (stat of distributionStats.slice(0, 3); track stat.label) {
-          <div class="bento-estado-item">
-            <div class="bento-estado-info">
-              <i [class]="stat.icon"></i>
-              <span>{{ stat.label }}</span>
-            </div>
-            <div class="bento-estado-bar">
-              <div class="bento-estado-fill" [style.width.%]="stat.pct" [style.background-color]="stat.color"></div>
-            </div>
-            <span class="bento-estado-count">{{ stat.count }}</span>
-          </div>
-        }
-      </div>
-    </div>
-  }
-
-  @if (auth.esPaciente) {
-    <div class="bento-box bento-estados">
-      <h2 class="bento-title">Bienvenido Paciente</h2>
-      <div class="bento-estados-list">
-        <div class="bento-estado-item">
-          <div class="bento-estado-info">
-            <i class="pi pi-calendar"></i>
-            <span>Citas Programadas</span>
-          </div>
-          <span class="bento-estado-count">{{ recentCitas.length }}</span>
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- ACCESOS RÁPIDOS - Full width -->
-  <div class="bento-box bento-quick">
-    <h2 class="bento-title"> Accesos Rápidos</h2>
-    <div class="bento-quick-grid">
-      @if (auth.esAdmin || auth.esRecepcion || auth.esDoctor) {
-        <button class="bento-quick-btn" routerLink="/citas">
-          <i class="pi pi-plus-circle"></i>
-          <span>Nueva Cita</span>
-        </button>
-      }
-      @if (auth.esAdmin || auth.esRecepcion || auth.esDoctor) {
-        <button class="bento-quick-btn" routerLink="/pacientes">
-          <i class="pi pi-user-plus"></i>
-          <span>Pacientes</span>
-        </button>
-      }
-      @if (auth.esAdmin || auth.esRecepcion) {
-        <button class="bento-quick-btn" routerLink="/doctores">
-          <i class="pi pi-id-card"></i>
-          <span>Doctores</span>
-        </button>
-      }
-      @if (auth.esAdmin || auth.esRecepcion) {
-        <button class="bento-quick-btn" routerLink="/solicitudes">
-          <i class="pi pi-inbox"></i>
-          <span>Solicitudes</span>
-        </button>
-      }
-      @if (auth.esDoctor) {
-        <button class="bento-quick-btn" routerLink="/consultas">
-          <i class="pi pi-file-edit"></i>
-          <span>Consultas</span>
-        </button>
-      }
-      @if (auth.esDoctor) {
-        <button class="bento-quick-btn" routerLink="/horarios">
-          <i class="pi pi-clock"></i>
-          <span>Mis Horarios</span>
-        </button>
-      }
-      @if (auth.esAdmin) {
-        <button class="bento-quick-btn" routerLink="/usuarios">
-          <i class="pi pi-users"></i>
-          <span>Usuarios</span>
-        </button>
-      }
-      @if (auth.esAdmin || auth.esRecepcion) {
-        <button class="bento-quick-btn" routerLink="/especialidades">
-          <i class="pi pi-list"></i>
-          <span>Especialidades</span>
-        </button>
-      }
-      @if (auth.esPaciente) {
-        <button class="bento-quick-btn" routerLink="/citas">
+      <div class="patient-hero__actions">
+        <a routerLink="/solicitudes" class="hero-btn hero-btn--primary">
+          <i class="pi pi-calendar-plus"></i>
+          Solicitar cita
+        </a>
+        <a routerLink="/citas" class="hero-btn hero-btn--secondary">
           <i class="pi pi-calendar"></i>
-          <span>Mis Citas</span>
-        </button>
-        <button class="bento-quick-btn" routerLink="/configuraciones">
-          <i class="pi pi-cog"></i>
-          <span>Configuración</span>
-        </button>
-      }
-    </div>
+          Ver mis citas
+        </a>
+      </div>
+    </section>
+
+    <section class="patient-kpis">
+      <article class="kpi-card">
+        <span class="kpi-icon"><i class="pi pi-list"></i></span>
+        <div>
+          <p class="kpi-value">{{ resumenPaciente.total }}</p>
+          <p class="kpi-label">Citas registradas</p>
+        </div>
+      </article>
+      <article class="kpi-card">
+        <span class="kpi-icon"><i class="pi pi-calendar"></i></span>
+        <div>
+          <p class="kpi-value">{{ resumenPaciente.pendientes }}</p>
+          <p class="kpi-label">Pendientes</p>
+        </div>
+      </article>
+      <article class="kpi-card">
+        <span class="kpi-icon"><i class="pi pi-check-circle"></i></span>
+        <div>
+          <p class="kpi-value">{{ resumenPaciente.atendidas }}</p>
+          <p class="kpi-label">Atenciones finalizadas</p>
+        </div>
+      </article>
+      <article class="kpi-card">
+        <span class="kpi-icon"><i class="pi pi-info-circle"></i></span>
+        <div>
+          <p class="kpi-value">{{ resumenPaciente.canceladas }}</p>
+          <p class="kpi-label">Canceladas / no asistio</p>
+        </div>
+      </article>
+    </section>
+
+    <section class="patient-grid">
+      <article class="panel panel--appointments">
+        <div class="panel-head">
+          <h2>Proximas citas</h2>
+          <a routerLink="/citas">Ir a Mis Citas</a>
+        </div>
+        @if (loadingPaciente) {
+          <p class="empty-text">Cargando citas...</p>
+        } @else if (proximasMisCitas.length > 0) {
+          <div class="appointment-list">
+            @for (cita of proximasMisCitas; track cita.citaId) {
+              <div class="appointment-item">
+                <div class="appointment-date">
+                  <strong>{{ cita.inicio | date:'dd/MM' }}</strong>
+                  <span>{{ cita.inicio | date:'HH:mm' }}</span>
+                </div>
+                <div class="appointment-main">
+                  <p>{{ cita.medico || ('Medico #' + cita.medicoId) }}</p>
+                  <small>{{ cita.sala || ('Sala ' + cita.salaId) }} - {{ cita.estado || cita.codigoEstado }}</small>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="empty-text">No tienes citas proximas. Puedes solicitar una nueva en cualquier momento.</p>
+        }
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Accesos rapidos</h2>
+        </div>
+        <div class="quick-grid">
+          <a routerLink="/solicitudes" class="quick-link"><i class="pi pi-calendar-plus"></i> Solicitar cita</a>
+          <a routerLink="/citas" class="quick-link"><i class="pi pi-calendar"></i> Mis citas</a>
+          <a routerLink="/doctores" class="quick-link"><i class="pi pi-user"></i> Doctores</a>
+          <a routerLink="/horarios" class="quick-link"><i class="pi pi-clock"></i> Horarios</a>
+          <a routerLink="/configuraciones" class="quick-link"><i class="pi pi-cog"></i> Configuracion</a>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Equipo medico destacado</h2>
+        </div>
+        @if (loadingPaciente) {
+          <p class="empty-text">Cargando doctores...</p>
+        } @else if (doctoresDestacados.length > 0) {
+          <div class="doctor-list">
+            @for (doctor of doctoresDestacados; track doctor.medicoId) {
+              <div class="doctor-item">
+                <span class="doctor-avatar">{{ doctor.nombrePublico.charAt(0) }}</span>
+                <div>
+                  <p>{{ doctor.nombrePublico }}</p>
+                  <small>{{ doctor.nombreEspecialidad || 'Especialidad no disponible' }}</small>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="empty-text">No hay doctores disponibles para mostrar.</p>
+        }
+      </article>
+    </section>
   </div>
-
-  <!-- PRÓXIMAS CITAS - Full width -->
-  @if (auth.esAdmin || auth.esRecepcion || auth.esDoctor || auth.esPaciente) {
-    <div class="bento-box bento-citas">
-      <div class="bento-header">
-        <h2 class="bento-title"> Próximas Citas</h2>
-        <a class="bento-link" routerLink="/citas">Ver todas →</a>
+} @else {
+  <div class="admin-dashboard">
+    <div class="dashboard-header">
+      <div>
+        <h1>Dashboard</h1>
+        <p>Sin datos consolidados en tiempo real para esta vista.</p>
       </div>
-      <div class="bento-citas-grid">
-        @for (cita of recentCitas.slice(0, 4); track cita.citaId) {
-          <div class="bento-citas-row">
-            <div class="bento-citas-time">{{ cita.inicio | date:'HH:mm' }}</div>
-            <div class="bento-citas-date">{{ cita.inicio | date:'dd/MM' }}</div>
-            <div class="bento-citas-avatar" [style.background-color]="getAvatarColor(cita.pacienteId)">
-              {{ cita.pacienteInitials }}
-            </div>
-            <div class="bento-citas-info">
-              <span class="bento-citas-name">{{ cita.pacienteNombre }}</span>
-              <span class="bento-citas-doc">{{ cita.doctorNombre }}</span>
-            </div>
-            <div class="bento-citas-sala">
-              <i class="pi pi-building"></i> Sala {{ cita.salaId }}
-            </div>
-            <span class="bento-citas-badge badge--{{ cita.estadoCodigo }}">{{ cita.estadoNombre }}</span>
-          </div>
-        }
-      </div>
+      <span class="dashboard-date">{{ currentDate }}</span>
     </div>
-  }
-
-  @if (auth.esDoctor) {
-    <div class="bento-box bento-citas">
-      <div class="bento-header">
-        <h2 class="bento-title"> Mis Pacientes Recientes</h2>
-        <a class="bento-link" routerLink="/pacientes">Ver todos →</a>
-      </div>
-      <div class="bento-citas-grid">
-        @for (cita of recentCitas.slice(0, 4); track cita.citaId) {
-          <div class="bento-citas-row">
-            <div class="bento-citas-avatar" [style.background-color]="getAvatarColor(cita.pacienteId)">
-              {{ cita.pacienteInitials }}
-            </div>
-            <div class="bento-citas-info">
-              <span class="bento-citas-name">{{ cita.pacienteNombre }}</span>
-              <span class="bento-citas-doc">{{ cita.doctorNombre }}</span>
-            </div>
-            <span class="bento-citas-badge badge--{{ cita.estadoCodigo }}">{{ cita.estadoNombre }}</span>
-          </div>
-        }
-      </div>
-    </div>
-  }
-
-</div>
+    <article class="panel">
+      <p class="empty-text">Esta pantalla no mostrara datos hasta que exista una fuente backend real para este resumen.</p>
+    </article>
+  </div>
+}

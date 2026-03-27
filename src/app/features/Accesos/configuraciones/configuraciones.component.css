@@ -153,6 +153,61 @@
   color: var(--text-color-secondary);
 }
 
+.config-loading {
+  color: var(--text-color-secondary);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.config-profile-warning {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--text-color);
+  font-size: 0.85rem;
+  border: 1px solid rgba(59, 130, 246, 0.28);
+}
+
+.profile-fields {
+  margin-bottom: 14px;
+}
+
+.config-input {
+  padding: 8px 10px;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  background: var(--surface-ground);
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+
+.profile-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.config-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.config-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .config-switch {
   position: relative;
   display: inline-block;

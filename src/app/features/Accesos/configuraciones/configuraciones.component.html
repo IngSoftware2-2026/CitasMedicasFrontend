@@ -1,17 +1,17 @@
 <div class="config-breadcrumb">
-  <span>🏠 Inicio / Configuración</span>
+  <span>Inicio / Configuracion</span>
 </div>
 
 <div class="config-header">
-  <h1>Configuración</h1>
-  <p class="config-subtitle">Administrar preferencias del sistema</p>
+  <h1>Configuracion</h1>
+  <p class="config-subtitle">Administrar preferencias y datos personales</p>
 </div>
 
 <div class="config-content">
   <div class="config-section">
     <h2 class="config-section-title">
       <i class="pi pi-user"></i>
-      Información del Usuario
+      Informacion del Usuario
     </h2>
     <div class="config-card">
       <div class="config-user-header">
@@ -27,7 +27,7 @@
           <span>{{ nombreUsuario }}</span>
         </div>
         <div class="config-field">
-          <label>Correo Electrónico</label>
+          <label>Correo Electronico</label>
           <span>{{ correoUsuario }}</span>
         </div>
         <div class="config-field">
@@ -37,6 +37,58 @@
       </div>
     </div>
   </div>
+
+  @if (esPaciente) {
+    <div class="config-section">
+      <h2 class="config-section-title">
+        <i class="pi pi-id-card"></i>
+        Perfil del Paciente
+      </h2>
+    <div class="config-card">
+        @if (!perfilInicializado || cargandoPerfil) {
+          <div class="config-loading"><i class="pi pi-spin pi-spinner"></i> Cargando perfil...</div>
+        } @else {
+          @if (!perfilPaciente) {
+            <div class="config-profile-warning">
+              No encontramos una ficha de paciente asociada a tu cuenta. Completa estos datos para poder agendar citas.
+            </div>
+          }
+          <div class="config-fields profile-fields">
+            <div class="config-field">
+              <label>Nombres</label>
+              <input class="config-input" [(ngModel)]="perfilForm.nombres" />
+            </div>
+            <div class="config-field">
+              <label>Apellidos</label>
+              <input class="config-input" [(ngModel)]="perfilForm.apellidos" />
+            </div>
+            <div class="config-field">
+              <label>Telefono</label>
+              <input class="config-input" [(ngModel)]="perfilForm.telefono" />
+            </div>
+            <div class="config-field">
+              <label>Correo</label>
+              <input class="config-input" [(ngModel)]="perfilForm.correo" />
+            </div>
+            <div class="config-field">
+              <label>Fecha de Nacimiento</label>
+              <input class="config-input" type="date" [(ngModel)]="perfilForm.fechaNacimiento" />
+            </div>
+            <div class="config-field">
+              <label>Identidad</label>
+              <input class="config-input" [(ngModel)]="perfilForm.numeroIdentidad" />
+            </div>
+          </div>
+          <div class="profile-actions">
+            <button class="config-btn" [disabled]="guardandoPerfil" (click)="guardarPerfilPaciente()">
+              <i class="pi" [class.pi-spin]="guardandoPerfil" [class.pi-spinner]="guardandoPerfil" [class.pi-check]="!guardandoPerfil"></i>
+              {{ guardandoPerfil ? 'Guardando...' : (perfilPaciente ? 'Guardar perfil' : 'Completar perfil') }}
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  }
 
   <div class="config-section">
     <h2 class="config-section-title">
@@ -59,41 +111,12 @@
 
   <div class="config-section">
     <h2 class="config-section-title">
-      <i class="pi pi-bell"></i>
-      Notificaciones
-    </h2>
-    <div class="config-card">
-      <div class="config-option">
-        <div class="config-option-info">
-          <span class="config-option-title">Notificaciones de Citas</span>
-          <span class="config-option-desc">Recibir alertas de nuevas citas</span>
-        </div>
-        <label class="config-switch">
-          <input type="checkbox" checked>
-          <span class="config-slider"></span>
-        </label>
-      </div>
-      <div class="config-option">
-        <div class="config-option-info">
-          <span class="config-option-title">Notificaciones de Solicitudes</span>
-          <span class="config-option-desc">Recibir alertas de nuevas solicitudes</span>
-        </div>
-        <label class="config-switch">
-          <input type="checkbox" checked>
-          <span class="config-slider"></span>
-        </label>
-      </div>
-    </div>
-  </div>
-
-  <div class="config-section">
-    <h2 class="config-section-title">
       <i class="pi pi-info-circle"></i>
-      Información del Sistema
+      Informacion del Sistema
     </h2>
     <div class="config-card">
       <div class="config-field">
-        <label>Versión de la Aplicación</label>
+        <label>Version de la Aplicacion</label>
         <span>1.0.0</span>
       </div>
       <div class="config-field">

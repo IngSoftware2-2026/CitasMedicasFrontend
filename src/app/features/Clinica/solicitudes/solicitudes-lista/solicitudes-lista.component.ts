@@ -1,12 +1,15 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { Router, RouterLink } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { SolicitudesService } from '../../../../core/services/Clinica/solicitudes.service';
+import { CitasService } from '../../../../core/services/Clinica/citas.service';
+import { DoctoresService } from '../../../../core/services/Clinica/doctores.service';
+import { PacienteService } from '../../../../core/services/Clinica/paciente.service';
 import { ErrorHandlerService } from '../../../../core/services/Http/error-handler.service';
 import { AuthService } from '../../../../core/services/Accesos/auth/auth.service';
-import { MockDataService } from '../../../../core/services/Clinica/mock-data.service';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import {
   SolicitudUnificada,
@@ -14,48 +17,323 @@ import {
   TipoSolicitud,
   CambiarEstadoSolicitudDTO
 } from '../../../../core/models/Clinica/Solicitudes/solicitud-publica.model';
+import { CitasInsertarRequest } from '../../../../core/models/Clinica/Citas/citas-insertar.model';
+import { CitaListadoResponse } from '../../../../core/models/Clinica/Citas/citas-read.model';
+import { Doctor } from '../../../../core/models/Clinica/Doctores/doctor.model';
+import { Paciente } from '../../../../core/models/Clinica/Pacientes/paciente.model';
+import { Sala } from '../../../../core/models/Catalogos/sala.model';
 
 @Component({
   selector: 'app-solicitudes-lista',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe],
+  imports: [CommonModule, FormsModule, DatePipe, RouterLink],
   templateUrl: './solicitudes-lista.component.html',
   styleUrl: './solicitudes-lista.component.css'
 })
 export class SolicitudesListaComponent implements OnInit {
   private solicitudesService = inject(SolicitudesService);
+  private citasService = inject(CitasService);
+  private doctoresService = inject(DoctoresService);
+  private pacienteService = inject(PacienteService);
   private errorHandler = inject(ErrorHandlerService);
   private router = inject(Router);
   private auth = inject(AuthService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
-  public data = inject(MockDataService);
 
   solicitudes = signal<SolicitudUnificada[]>([]);
   loading = signal(true);
   searchTerm = '';
-  private usandoMock = false;
 
-  // Filtros
   filtroTipo: '' | 'PUBLICA' | 'USUARIO' = '';
   filtroEstado: '' | '1' | '2' | '3' | '4' = '';
   filtroDesde = '';
   filtroHasta = '';
 
-  // Paginación
   currentPage = 1;
   pageSize = 10;
 
+  perfilPaciente: Paciente | null = null;
+  requiereCompletarPerfil = false;
+  doctoresPaciente: Doctor[] = [];
+  salasPaciente: Sala[] = [];
+  misCitasPaciente: CitaListadoResponse[] = [];
+  creandoCita = false;
+  nuevaCita = {
+    medicoId: null as number | null,
+    fechaHoraInicio: '',
+    motivo: ''
+  };
+
   ngOnInit(): void {
+    if (this.esPaciente) {
+      this.inicializarFlujoPaciente();
+      return;
+    }
+
     this.cargarSolicitudes();
+  }
+
+  get esPaciente(): boolean {
+    return this.auth.esPaciente;
+  }
+
+  get pacienteIdActual(): number | null {
+    const pacienteIdAuth = this.auth.pacienteIdActual();
+    if (pacienteIdAuth) return pacienteIdAuth;
+
+    if (this.perfilPaciente?.pacienteId) {
+      return this.perfilPaciente.pacienteId;
+    }
+    return null;
+  }
+
+  get misCitasOrdenadas(): CitaListadoResponse[] {
+    const term = this.searchTerm.toLowerCase().trim();
+    const base = [...this.misCitasPaciente].sort(
+      (a, b) => new Date(b.inicio).getTime() - new Date(a.inicio).getTime()
+    );
+
+    if (!term) return base;
+    return base.filter(c =>
+      (c.medico ?? '').toLowerCase().includes(term) ||
+      (c.estado ?? '').toLowerCase().includes(term) ||
+      (c.sala ?? '').toLowerCase().includes(term)
+    );
+  }
+
+  get totalMisCitas(): number {
+    return this.misCitasPaciente.length;
+  }
+
+  get misCitasPendientes(): number {
+    return this.misCitasPaciente.filter(c => {
+      const code = (c.codigoEstado ?? '').toUpperCase();
+      return code === 'PENDIENTE' || code === 'CONFIRMADA' || code === 'CONF';
+    }).length;
+  }
+
+  get misCitasAtendidas(): number {
+    return this.misCitasPaciente.filter(c => {
+      const code = (c.codigoEstado ?? '').toUpperCase();
+      return code === 'FINALIZADA' || code === 'ATENDIDA' || code === 'ATEN' || code === 'EN_CURSO';
+    }).length;
+  }
+
+  get misCitasCanceladas(): number {
+    return this.misCitasPaciente.filter(c => {
+      const code = (c.codigoEstado ?? '').toUpperCase();
+      return code === 'CANCELADA' || code === 'NO_ASISTIO' || code === 'CANC' || code === 'NOAS';
+    }).length;
+  }
+
+  private inicializarFlujoPaciente(): void {
+    this.loading.set(true);
+    this.requiereCompletarPerfil = false;
+
+    this.pacienteService.obtenerPerfilActual().pipe(
+      switchMap((perfil) => {
+        this.perfilPaciente = perfil;
+
+        if (perfil?.pacienteId) {
+          this.auth.establecerPacienteId(perfil.pacienteId);
+          this.requiereCompletarPerfil = false;
+        } else {
+          this.requiereCompletarPerfil = true;
+        }
+
+        const pacienteId = this.pacienteIdActual;
+        if (!pacienteId) {
+          return forkJoin({
+            doctores: this.doctoresService.listar(true),
+            salasResponse: this.citasService.listarSalas(),
+            citasResponse: of({ data: [] as CitaListadoResponse[] })
+          });
+        }
+
+        return forkJoin({
+          doctores: this.doctoresService.listar(true),
+          salasResponse: this.citasService.listarSalas(),
+          citasResponse: this.citasService.obtenerPorFiltro({ pacienteId })
+        });
+      })
+    ).subscribe({
+      next: ({ doctores, salasResponse, citasResponse }) => {
+        this.doctoresPaciente = (doctores ?? []).filter(d => d.activo);
+        this.salasPaciente = (salasResponse?.data ?? []).filter(s => s.activo);
+        this.misCitasPaciente = citasResponse?.data ?? [];
+        this.loading.set(false);
+      },
+      error: (error) => {
+        if (error?.status === 404) {
+          this.requiereCompletarPerfil = true;
+          this.perfilPaciente = null;
+
+          forkJoin({
+            doctores: this.doctoresService.listar(true),
+            salasResponse: this.citasService.listarSalas()
+          }).subscribe({
+            next: ({ doctores, salasResponse }) => {
+              this.doctoresPaciente = (doctores ?? []).filter(d => d.activo);
+              this.salasPaciente = (salasResponse?.data ?? []).filter(s => s.activo);
+              this.misCitasPaciente = [];
+              this.loading.set(false);
+            },
+            error: () => {
+              this.loading.set(false);
+              this.errorHandler.showError(500, 'No se pudo cargar informacion base para agendar');
+            }
+          });
+          return;
+        }
+
+        this.loading.set(false);
+        this.errorHandler.showError(error?.status || 500, 'No se pudo cargar el contexto del paciente');
+      }
+    });
+  }
+
+  crearCitaPaciente(): void {
+    const pacienteId = this.pacienteIdActual;
+    if (!pacienteId) {
+      this.errorHandler.showWarning('No se pudo identificar tu perfil de paciente');
+      return;
+    }
+
+    if (!this.nuevaCita.medicoId || this.nuevaCita.medicoId <= 0) {
+      this.errorHandler.showWarning('Debes seleccionar un doctor');
+      return;
+    }
+
+    if (!this.nuevaCita.fechaHoraInicio) {
+      this.errorHandler.showWarning('Debes seleccionar fecha y hora');
+      return;
+    }
+
+    if (!this.nuevaCita.motivo.trim()) {
+      this.errorHandler.showWarning('Debes indicar el motivo de la consulta');
+      return;
+    }
+
+    const doctorLocal = this.doctoresPaciente.find(d => d.medicoId === this.nuevaCita.medicoId);
+    if (!doctorLocal) {
+      this.errorHandler.showWarning('El doctor seleccionado no existe en el catalogo actual');
+      return;
+    }
+
+    this.doctoresService.obtenerPorId(this.nuevaCita.medicoId).subscribe({
+      next: (doctorValidado) => {
+        if (!doctorValidado?.medicoId) {
+          this.errorHandler.showWarning('El doctor seleccionado no esta disponible');
+          return;
+        }
+
+        const salaId = doctorValidado.salaPredeterminadaId ?? this.salasPaciente[0]?.salaId ?? null;
+        if (!salaId) {
+          this.errorHandler.showWarning('No hay una sala disponible para agendar con este doctor');
+          return;
+        }
+
+        const inicio = new Date(this.nuevaCita.fechaHoraInicio);
+        if (Number.isNaN(inicio.getTime())) {
+          this.errorHandler.showWarning('La fecha seleccionada no es valida');
+          return;
+        }
+
+        const duracionMinutos = doctorValidado.duracionDefaultMinutos || 30;
+        const fin = new Date(inicio.getTime() + duracionMinutos * 60000);
+
+        const request: CitasInsertarRequest = {
+          pacienteId,
+          medicoId: doctorValidado.medicoId,
+          salaId,
+          inicio: this.toLocalDateTimeValue(inicio),
+          fin: this.toLocalDateTimeValue(fin),
+          duracionMinutos,
+          creadaPorUsuarioId: this.auth.usuarioIdActual()
+        };
+
+        this.creandoCita = true;
+        this.citasService.insertar(request).subscribe({
+          next: (response) => {
+            this.creandoCita = false;
+
+            if (!response.success) {
+              this.errorHandler.showError(400, response.message || 'No se pudo registrar la cita');
+              return;
+            }
+
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Cita registrada',
+              detail: 'Tu cita fue creada correctamente y se reflejara en Mis Citas.'
+            });
+
+            this.nuevaCita = {
+              medicoId: null,
+              fechaHoraInicio: '',
+              motivo: ''
+            };
+
+            this.cargarMisCitasPaciente();
+          },
+          error: (error) => {
+            this.creandoCita = false;
+            this.errorHandler.showError(error?.status || 500, this.getErrorMessage(error, 'No se pudo crear la cita'));
+          }
+        });
+      },
+      error: () => this.errorHandler.showWarning('No se pudo validar el doctor seleccionado')
+    });
+  }
+
+  irAMisCitas(): void {
+    this.router.navigate(['/citas']);
+  }
+
+  irACompletarPerfil(): void {
+    this.router.navigate(['/configuraciones']);
+  }
+
+  private cargarMisCitasPaciente(): void {
+    const pacienteId = this.pacienteIdActual;
+    if (!pacienteId) return;
+
+    this.citasService.obtenerPorFiltro({ pacienteId }).subscribe({
+      next: (response) => {
+        this.misCitasPaciente = response?.data ?? [];
+      },
+      error: (error) => {
+        this.errorHandler.showError(error?.status || 500, 'No se pudo actualizar Mis Citas');
+      }
+    });
+  }
+
+  private toLocalDateTimeValue(date: Date): string {
+    const pad = (value: number) => value.toString().padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  }
+
+  private getErrorMessage(error: any, fallback: string): string {
+    const message = error?.error?.message
+      ?? error?.error?.Message
+      ?? error?.error?.data?.message
+      ?? error?.error?.data?.Message
+      ?? error?.error?.data?.messageStatus
+      ?? error?.error?.data?.MessageStatus
+      ?? error?.error?.mensaje
+      ?? error?.message
+      ?? fallback;
+
+    return String(message);
   }
 
   cargarSolicitudes(): void {
     this.loading.set(true);
-    this.usandoMock = false;
 
     if (!this.auth.estaAutenticado()) {
-      this.cargarMockData();
+      this.solicitudes.set([]);
+      this.loading.set(false);
       return;
     }
 
@@ -76,9 +354,10 @@ export class SolicitudesListaComponent implements OnInit {
           this.currentPage = 1;
           this.loading.set(false);
         },
-        error: (err) => {
-          console.warn('Error al cargar públicas, usando mock:', err);
-          this.cargarMockData();
+        error: (error) => {
+          this.loading.set(false);
+          this.solicitudes.set([]);
+          this.errorHandler.showError(error?.status || 500, 'No se pudieron cargar solicitudes publicas');
         }
       });
     } else if (tipoFiltro === 'USUARIO') {
@@ -91,9 +370,10 @@ export class SolicitudesListaComponent implements OnInit {
           this.currentPage = 1;
           this.loading.set(false);
         },
-        error: (err) => {
-          console.warn('Error al cargar usuarios, usando mock:', err);
-          this.cargarMockData();
+        error: (error) => {
+          this.loading.set(false);
+          this.solicitudes.set([]);
+          this.errorHandler.showError(error?.status || 500, 'No se pudieron cargar solicitudes de usuario');
         }
       });
     } else {
@@ -114,38 +394,13 @@ export class SolicitudesListaComponent implements OnInit {
           this.currentPage = 1;
           this.loading.set(false);
         },
-        error: (err) => {
-          console.warn('Error al cargar solicitudes, usando mock:', err);
-          this.cargarMockData();
+        error: (error) => {
+          this.loading.set(false);
+          this.solicitudes.set([]);
+          this.errorHandler.showError(error?.status || 500, 'No se pudieron cargar solicitudes');
         }
       });
     }
-  }
-
-  private cargarMockData(): void {
-    this.usandoMock = true;
-    const mockData = this.data.solicitudes.map(s => {
-      const estado = this.data.estadosSolicitud.find(e => e.estadoSolicitudId === s.estadoId);
-      return {
-        solicitudId: s.solicitudId,
-        tipo: 'USUARIO' as TipoSolicitud,
-        nombrePaciente: this.data.getPacienteNombre(s.pacienteId),
-        telefono: '00000000',
-        medicoId: s.medicoId,
-        medico: this.data.getDoctorNombre(s.medicoId),
-        fechaHoraInicio: s.fechaHoraInicio instanceof Date ? s.fechaHoraInicio.toISOString() : s.fechaHoraInicio,
-        duracionMinutos: s.duracionMinutos,
-        motivo: s.motivo,
-        estadoId: s.estadoId,
-        codigoEstado: estado?.codigoEstado ?? 'PENDIENTE',
-        estado: estado?.nombreEstado ?? 'Pendiente',
-        fechaCreacion: s.fechaCreacion instanceof Date ? s.fechaCreacion.toISOString() : s.fechaCreacion,
-        pacienteId: s.pacienteId
-      } as SolicitudUnificada;
-    });
-    this.solicitudes.set(mockData);
-    this.currentPage = 1;
-    this.loading.set(false);
   }
 
   filtrar(): void {
@@ -211,13 +466,16 @@ export class SolicitudesListaComponent implements OnInit {
   }
 
   getEstadoClass(codigo: string): string {
-    switch (codigo) {
+    switch ((codigo || '').toUpperCase()) {
       case 'PENDIENTE': return 'badge-warning';
       case 'APROBADA':
-      case 'CONFIRMADA': return 'badge-success';
-      case 'RECHAZADA': return 'badge-danger';
+      case 'CONFIRMADA':
+      case 'CONF': return 'badge-success';
+      case 'RECHAZADA':
+      case 'CANCELADA': return 'badge-danger';
       case 'REPROGRAMADA':
-      case 'PROPUESTA': return 'badge-info';
+      case 'PROPUESTA':
+      case 'EN_CURSO': return 'badge-info';
       default: return 'badge-secondary';
     }
   }
@@ -238,9 +496,9 @@ export class SolicitudesListaComponent implements OnInit {
   aprobarSolicitud(sol: SolicitudUnificada): void {
     this.confirmationService.confirm({
       message: `¿Aprobar la solicitud de ${sol.nombrePaciente}?`,
-      header: 'Confirmar aprobación',
+      header: 'Confirmar aprobacion',
       icon: 'pi pi-check-circle',
-      acceptLabel: 'Sí, aprobar',
+      acceptLabel: 'Si, aprobar',
       rejectLabel: 'No',
       accept: () => this.ejecutarCambioEstado(sol, 'APROBADA')
     });
@@ -251,28 +509,13 @@ export class SolicitudesListaComponent implements OnInit {
       message: `¿Rechazar la solicitud de ${sol.nombrePaciente}?`,
       header: 'Confirmar rechazo',
       icon: 'pi pi-times-circle',
-      acceptLabel: 'Sí, rechazar',
+      acceptLabel: 'Si, rechazar',
       rejectLabel: 'No',
       accept: () => this.ejecutarCambioEstado(sol, 'RECHAZADA')
     });
   }
 
   private ejecutarCambioEstado(sol: SolicitudUnificada, nuevoEstado: string): void {
-    if (this.usandoMock) {
-      const idx = this.solicitudes().findIndex(s => s.solicitudId === sol.solicitudId);
-      if (idx >= 0) {
-        const updated = [...this.solicitudes()];
-        updated[idx] = { ...updated[idx], codigoEstado: nuevoEstado, estado: nuevoEstado === 'APROBADA' ? 'Aprobada' : 'Rechazada' };
-        this.solicitudes.set(updated);
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: `Solicitud ${nuevoEstado.toLowerCase()}`
-        });
-      }
-      return;
-    }
-
     const dto: CambiarEstadoSolicitudDTO = {
       solicitudId: sol.solicitudId,
       codigoEstado: nuevoEstado
@@ -287,7 +530,7 @@ export class SolicitudesListaComponent implements OnInit {
         if (response.success) {
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Exito',
             detail: `Solicitud ${nuevoEstado.toLowerCase()}`
           });
           this.cargarSolicitudes();

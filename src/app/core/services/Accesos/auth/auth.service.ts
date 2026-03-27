@@ -20,10 +20,12 @@ export class AuthService {
   private autenticado = signal(this.tieneToken());
   private idUsuario = signal<number | null>(this.obtenerIdUsuario());
   private idRol = signal<number | null>(this.obtenerIdRol());
+  private idPaciente = signal<number | null>(this.obtenerIdPaciente());
 
   estaAutenticado = computed(() => this.autenticado());
   usuarioIdActual = computed(() => this.idUsuario());
   rolIdActual = computed(() => this.idRol());
+  pacienteIdActual = computed(() => this.idPaciente());
 
   private tieneToken(): boolean {
     return !!localStorage.getItem('token');
@@ -36,6 +38,11 @@ export class AuthService {
 
   private obtenerIdRol(): number | null {
     const id = localStorage.getItem('rolId');
+    return id ? parseInt(id, 10) : null;
+  }
+
+  private obtenerIdPaciente(): number | null {
+    const id = localStorage.getItem('pacienteId');
     return id ? parseInt(id, 10) : null;
   }
 
@@ -52,6 +59,17 @@ export class AuthService {
     this.autenticado.set(true);
     this.idUsuario.set(usuarioId);
     this.idRol.set(rolId);
+  }
+
+  establecerPacienteId(pacienteId: number | null): void {
+    if (pacienteId && pacienteId > 0) {
+      localStorage.setItem('pacienteId', pacienteId.toString());
+      this.idPaciente.set(pacienteId);
+      return;
+    }
+
+    localStorage.removeItem('pacienteId');
+    this.idPaciente.set(null);
   }
 
   get codigoRolActual(): CodigoRol {
@@ -124,10 +142,12 @@ export class AuthService {
     localStorage.removeItem('correo');
     localStorage.removeItem('telefono');
     localStorage.removeItem('rolNombre');
+    localStorage.removeItem('pacienteId');
     this.rolPermisosService.limpiarSesion();
     this.autenticado.set(false);
     this.idUsuario.set(null);
     this.idRol.set(null);
+    this.idPaciente.set(null);
     this.router.navigate(['/login']);
   }
 }

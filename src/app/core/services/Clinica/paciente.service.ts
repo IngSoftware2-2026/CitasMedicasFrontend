@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, map, tap } from 'rxjs';
 import { ConexionService } from '../Http/conexion.service';
 import { Paciente } from '../../models/Clinica/Pacientes/paciente.model';
 
@@ -21,12 +21,32 @@ export class PacienteService extends ConexionService {
   }
 
   obtenerPorId(pacienteId: number): Observable<Paciente | null> {
-    return this.obtener<Paciente>(`/Pacientes/${pacienteId}`).pipe(
+    return this.obtener<Paciente>('/Pacientes/ObtenerPorId', { pacienteId }).pipe(
       map((respuesta: any) => {
         if (!respuesta) return null;
         if (!respuesta.success && !respuesta.exitoso) return null;
         const datos = respuesta.data ?? respuesta.datos;
         if (datos) return datos as Paciente;
+        return null;
+      })
+    );
+  }
+
+  obtenerPerfilActual(): Observable<Paciente | null> {
+    return this.obtener<Paciente>('/Pacientes/PerfilActual').pipe(
+      tap({
+        next: (respuesta: any) => console.log('[PerfilActual] response', respuesta),
+        error: (error) => console.error('[PerfilActual] error', {
+          status: error?.status,
+          message: error?.message,
+          body: error?.error
+        })
+      }),
+      map((respuesta: any) => {
+        if (!respuesta) return null;
+        const exitoso = respuesta.success ?? respuesta.exitoso;
+        const datos = respuesta.data ?? respuesta.datos;
+        if (exitoso && datos) return datos as Paciente;
         return null;
       })
     );
@@ -47,6 +67,19 @@ export class PacienteService extends ConexionService {
 
   editar(paciente: Partial<Paciente>): Observable<Paciente> {
     return this.crear<Paciente>('/Pacientes/Editar', paciente).pipe(
+      map((respuesta: any) => {
+        if (!respuesta) return paciente as Paciente;
+        const exitoso = respuesta.success ?? respuesta.exitoso;
+        if (exitoso) return paciente as Paciente;
+        const msg = respuesta.message || respuesta.mensaje;
+        if (msg) throw new Error(msg);
+        return paciente as Paciente;
+      })
+    );
+  }
+
+  completarPerfil(paciente: Partial<Paciente>): Observable<Paciente> {
+    return this.crear<Paciente>('/Pacientes/CompletarPerfil', paciente).pipe(
       map((respuesta: any) => {
         if (!respuesta) return paciente as Paciente;
         const exitoso = respuesta.success ?? respuesta.exitoso;
