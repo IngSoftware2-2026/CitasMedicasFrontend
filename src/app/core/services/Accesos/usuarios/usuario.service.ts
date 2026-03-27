@@ -5,10 +5,10 @@
  */
 import { Injectable, inject } from '@angular/core';
 import { Observable, map, catchError, tap } from 'rxjs';
-import { ConexionService, Respuesta } from '../Http/conexion.service';
-import { ErrorHandlerService } from '../Http/error-handler.service';
-import { ERROR_CODES } from '../../shared/models/error-codes';
-import { Usuario, LoginRequest, LoginResponse } from '../../models/Accesos/usuario.model';
+import { ConexionService, Respuesta } from '../../Http/conexion.service';
+import { ErrorHandlerService } from '../../Http/error-handler.service';
+import { ERROR_CODES } from '../../../shared/models/error-codes';
+import { Usuario, LoginRequest, LoginResponse } from '../../../models/Accesos/usuario.model';
 
 /**
  * Servicio que gestiona las operaciones CRUD de usuarios.

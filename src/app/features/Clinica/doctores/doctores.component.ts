@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { switchMap, map, forkJoin, of, Observable, catchError } from 'rxjs';
 import { MockDataService } from '../../../core/services/Clinica/mock-data.service';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
@@ -13,13 +14,17 @@ import { InputIconModule } from 'primeng/inputicon';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
+import { SelectModule } from 'primeng/select';
 import { Doctor, DoctorDetalle, DoctorEspecialidad } from '../../../core/models/Clinica/Doctores/doctor.model';
 import { DoctoresService } from '../../../core/services/Clinica/doctores.service';
-import { UsuarioService } from '../../../core/services/Accesos/usuario.service';
+import { UsuarioService } from '../../../core/services/Accesos/usuarios/usuario.service';
 import { EspecialidadesService } from '../../../core/services/Clinica/especialidades.service';
-import { AuthService } from '../../../core/services/Accesos/auth.service';
+import { AuthService } from '../../../core/services/Accesos/auth//auth.service';
+import { CloudinaryService } from '../../../core/services/Clinica/cloudinary.service';
 import { Especialidad } from '../../../core/models/Catalogos/especialidad.model';
 import { Usuario } from '../../../core/models/Accesos/usuario.model';
+import { CloudinaryThumbPipe } from '../../../core/shared/pipes/cloudinary-thumb.pipe';
+import { DoctorImagenUploadComponent } from '../../../core/shared/components/doctor-imagen-upload/doctor-imagen-upload.component';
 
 @Component({
   selector: 'app-doctores',
@@ -27,7 +32,8 @@ import { Usuario } from '../../../core/models/Accesos/usuario.model';
   imports: [
     FormsModule, ButtonModule, DialogModule, InputTextModule,
     TagModule, ToolbarModule, IconFieldModule, InputIconModule,
-    CheckboxModule, ConfirmDialogModule, TooltipModule
+    CheckboxModule, ConfirmDialogModule, TooltipModule, SelectModule,
+    CloudinaryThumbPipe, DoctorImagenUploadComponent
   ],
   templateUrl: './doctores.component.html',
   styleUrl: './doctores.component.css'
@@ -54,9 +60,13 @@ export class DoctoresComponent implements OnInit {
   newEspecialidadId: number | null = null;
   saving = false;
 
-  // --- Creation: multiple specialties ---
+  // --- Creation: multiple specialties & schedules ---
   creationEspecialidades: { especialidadId: number; nombre: string; principal: boolean }[] = [];
   newCreationEspId: number | null = null;
+  creationHorarios: any[] = [];
+  editHorarios: any[] = [];
+  newHorario: any = { diaSemana: 1, horaInicio: '08:00', horaFin: '17:00' };
+  isHorarioLoading = false;
 
   // --- Validation errors ---
   formErrors: Record<string, string> = {};
@@ -114,7 +124,12 @@ export class DoctoresComponent implements OnInit {
   private usuarioService = inject(UsuarioService);
   private especialidadesService = inject(EspecialidadesService);
   private authService = inject(AuthService);
+  private cloudinaryService = inject(CloudinaryService);
   private cdr = inject(ChangeDetectorRef);
+
+  // Image upload for new doctor creation
+  creationImagenFile: File | null = null;
+  pendingImageFile: File | null = null;
 
   constructor(
     public data: MockDataService,
@@ -158,6 +173,15 @@ export class DoctoresComponent implements OnInit {
       next: (docs) => {
         this.doctoresList = docs;
         this.loadingList = false;
+        
+        // Cargar horarios de cada doctor pasivamente
+        this.doctoresList.forEach(doc => {
+          this.doctoresService.listarHorarios(doc.medicoId).subscribe(horarios => {
+            doc.horarios = horarios;
+            this.cdr.detectChanges();
+          });
+        });
+
         this.cdr.detectChanges();
       },
       error: () => {
@@ -212,6 +236,20 @@ export class DoctoresComponent implements OnInit {
     return this.usuarios.filter(u => u.activo && !usedUserIds.includes(u.usuarioId));
   }
 
+  /** Retorna opciones formateadas para el p-dropdown */
+  getUsuariosDropdownOptions(): any[] {
+    const usedUserIds = this.doctoresList.map((d: any) => d.usuarioId || d.UsuarioId);
+    
+    return this.getAllUsuarios().map(u => {
+      const isLinked = usedUserIds.includes(u.usuarioId);
+      const extraText = isLinked ? ' (Ya vinculado)' : '';
+      return {
+        label: `${u.nombreUsuario} — ${u.correo} (ID: ${u.usuarioId})${extraText}`,
+        value: u.usuarioId
+      };
+    });
+  }
+
   toggleManualEntry() {
     this.manualUsuarioEntry = !this.manualUsuarioEntry;
     if (!this.manualUsuarioEntry) {
@@ -246,6 +284,12 @@ export class DoctoresComponent implements OnInit {
               this.cdr.detectChanges();
             }
           });
+          
+          // Cargar los horarios específicos de este doctor
+          this.doctoresService.listarHorarios(det.medicoId).subscribe(horarios => {
+            if (this.detailDoctor) this.detailDoctor.horarios = horarios;
+            this.cdr.detectChanges();
+          });
         } else {
           this.messageService.add({ severity: 'info', summary: 'No encontrado', detail: `No existe un doctor con ID ${this.searchDoctorId}` });
         }
@@ -279,6 +323,13 @@ export class DoctoresComponent implements OnInit {
   }
 
   getHorarioResumen(medicoId: number): string {
+    const doc = this.doctoresList.find(d => d.medicoId === medicoId);
+    if (doc && doc.horarios && doc.horarios.length > 0) {
+      const first = doc.horarios[0];
+      const horaIni = first.horaInicio?.substring(0, 5) || first.horaInicio;
+      const horaFin = first.horaFin?.substring(0, 5) || first.horaFin;
+      return `${horaIni} - ${horaFin}`;
+    }
     const horarios = this.data.getHorariosDeDoctor(medicoId);
     if (!horarios || horarios.length === 0) return 'Sin horario';
     const first = horarios[0];
@@ -338,6 +389,11 @@ export class DoctoresComponent implements OnInit {
             this.cdr.detectChanges();
           }
         });
+        // Fetch horarios for detail
+        this.doctoresService.listarHorarios(d.medicoId).subscribe(horarios => {
+          if (this.detailDoctor) this.detailDoctor.horarios = horarios;
+          this.cdr.detectChanges();
+        });
       },
       error: () => {
         this.detailLoading = false;
@@ -356,6 +412,11 @@ export class DoctoresComponent implements OnInit {
     this.formErrors = {};
     this.creationEspecialidades = [];
     this.newCreationEspId = null;
+    this.creationHorarios = [];
+    this.editHorarios = [];
+    this.newHorario = { diaSemana: 1, horaInicio: '08:00', horaFin: '17:00' };
+    this.creationImagenFile = null;
+    this.pendingImageFile = null;
 
     this.doctorForm = d ? { ...d } : {
       duracionDefaultMinutos: 30,
@@ -376,6 +437,13 @@ export class DoctoresComponent implements OnInit {
         },
         error: () => {
           this.doctorForm['especialidades'] = [];
+          this.cdr.detectChanges();
+        }
+      });
+
+      this.doctoresService.listarHorarios(d.medicoId).subscribe({
+        next: (horarios) => {
+          this.editHorarios = horarios;
           this.cdr.detectChanges();
         }
       });
@@ -479,17 +547,39 @@ export class DoctoresComponent implements OnInit {
   }
 
   private editarDoctor(): void {
-    this.doctoresService.editar(this.doctorForm['medicoId'], this.doctorForm as Doctor).subscribe({
-      next: () => {
+    // Start Cloudinary upload in parallel with the PUT if there's a pending image
+    const upload$ = this.pendingImageFile
+      ? this.cloudinaryService.uploadImagen(this.pendingImageFile).pipe(catchError(() => of(null as string | null)))
+      : of(null as string | null);
+
+    const edit$ = this.doctoresService.editar(this.doctorForm['medicoId'], this.doctorForm as Doctor);
+
+    forkJoin({ upload: upload$, edit: edit$ }).subscribe({
+      next: ({ upload }) => {
+        const afterEdit = () => {
+          // If we got a Cloudinary URL, PATCH the image on backend
+          if (upload) {
+            this.doctoresService.actualizarImagen(this.doctorForm['medicoId'], upload).subscribe({
+              next: () => {
+                const idx = this.doctoresList.findIndex(d => d.medicoId === this.doctorForm['medicoId']);
+                if (idx !== -1) this.doctoresList[idx].imagen = upload;
+              },
+              error: () => this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'Datos guardados pero no se pudo actualizar la imagen en el servidor' })
+            });
+          } else if (this.pendingImageFile) {
+            this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'Datos guardados pero no se pudo subir la imagen a Cloudinary' });
+          }
+          this.pendingImageFile = null;
+          this.saving = false;
+          this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Doctor actualizado correctamente' });
+          this.cargarDoctores();
+          this.doctorDialog = false;
+        };
+
         const changedActivo = this.originalDoctor && this.originalDoctor.activo !== this.doctorForm['activo'];
         if (changedActivo) {
           this.doctoresService.cambiarActivo(this.doctorForm['medicoId']!, !!this.doctorForm['activo']).subscribe({
-            next: () => {
-              this.saving = false;
-              this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Doctor y estado actualizados' });
-              this.cargarDoctores();
-              this.doctorDialog = false;
-            },
+            next: () => afterEdit(),
             error: () => {
               this.saving = false;
               this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Editó, pero falló al cambiar estado' });
@@ -498,14 +588,12 @@ export class DoctoresComponent implements OnInit {
             }
           });
         } else {
-          this.saving = false;
-          this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Doctor actualizado correctamente' });
-          this.cargarDoctores();
-          this.doctorDialog = false;
+          afterEdit();
         }
       },
       error: (err) => {
         this.saving = false;
+        this.pendingImageFile = null;
         const errorMsg = err?.error?.mensaje || err?.error?.title || err?.message || 'No se pudo actualizar el doctor';
         this.messageService.add({ severity: 'error', summary: 'Error', detail: errorMsg });
       }
@@ -513,18 +601,23 @@ export class DoctoresComponent implements OnInit {
   }
 
   private crearDoctor(): void {
-    this.doctoresService.crear(this.doctorForm as Doctor).subscribe({
-      next: (result) => {
-        console.log('[DoctoresComponent] Crear response:', result);
-        const medId = result.medicoId;
+    // Start Cloudinary upload immediately in parallel with the POST create
+    const upload$: Observable<string | null> = this.creationImagenFile
+      ? this.cloudinaryService.uploadImagen(this.creationImagenFile).pipe(catchError(() => of(null as string | null)))
+      : of(null as string | null);
+
+    const create$ = this.doctoresService.crear(this.doctorForm as Doctor);
+
+    forkJoin({ upload: upload$, create: create$ }).subscribe({
+      next: ({ upload, create }) => {
+        console.log('[DoctoresComponent] Crear response:', create, '| Cloudinary URL:', upload);
+        this._uploadedImageUrl = upload;
+        const medId = create.medicoId;
 
         if (medId && medId > 0) {
-          // Backend returned the new MedicoId — assign specialties
           this.assignSpecialtiesAfterCreation(medId);
         } else {
-          // Fallback: find by UsuarioId
           const usuarioIdToFind = Number(this.doctorForm['usuarioId']);
-          console.log('[DoctoresComponent] No medicoId in response, searching by UsuarioId:', usuarioIdToFind);
           this.findNewDoctorAndAssignSpecialties(usuarioIdToFind);
         }
       },
@@ -536,6 +629,8 @@ export class DoctoresComponent implements OnInit {
       }
     });
   }
+
+  private _uploadedImageUrl: string | null = null;
 
   /** Try all known response formats to extract the new MedicoId */
   private extractMedicoId(response: any): number | null {
@@ -595,8 +690,9 @@ export class DoctoresComponent implements OnInit {
     });
   }
 
-  /** Assign all selected specialties to the new doctor sequentially */
+  /** Assign all selected specialties to the new doctor — in parallel with forkJoin */
   private assignSpecialtiesAfterCreation(medicoId: number): void {
+    this._lastCreatedMedicoId = medicoId;
     const specs = [...this.creationEspecialidades];
 
     if (specs.length === 0) {
@@ -604,53 +700,93 @@ export class DoctoresComponent implements OnInit {
       return;
     }
 
-    let completed = 0;
-    let hasError = false;
+    // Assign all specialties in parallel
+    const assign$ = specs.map(spec =>
+      this.doctoresService.asignarEspecialidad(medicoId, spec.especialidadId).pipe(
+        catchError(err => {
+          console.error(`[DoctoresComponent] Error asignando especialidad ${spec.especialidadId}:`, err);
+          return of(null);
+        })
+      )
+    );
 
-    const assignNext = () => {
-      if (completed >= specs.length) {
-        // All assigned! Now set the principal
+    forkJoin(assign$).subscribe({
+      next: () => {
         const principal = specs.find(s => s.principal);
         if (principal) {
           this.doctoresService.setEspecialidadPrincipal(medicoId, principal.especialidadId).subscribe({
-            next: () => this.finishCreation(),
+            next: () => this.assignHorariosAfterCreation(medicoId),
             error: () => {
               this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'Especialidades asignadas pero no se pudo marcar la principal' });
-              this.finishCreation();
+              this.assignHorariosAfterCreation(medicoId);
             }
           });
         } else {
-          this.finishCreation();
+          this.assignHorariosAfterCreation(medicoId);
         }
-        return;
-      }
-
-      const spec = specs[completed];
-      this.doctoresService.asignarEspecialidad(medicoId, spec.especialidadId).subscribe({
-        next: () => {
-          completed++;
-          assignNext();
-        },
-        error: (err) => {
-          console.error(`[DoctoresComponent] Error asignando especialidad ${spec.especialidadId}:`, err);
-          hasError = true;
-          completed++;
-          assignNext(); // Continue with next, don't stop
-        }
-      });
-    };
-
-    assignNext();
+      },
+      error: () => this.assignHorariosAfterCreation(medicoId)
+    });
   }
 
-  private finishCreation(): void {
-    this.saving = false;
-    const count = this.creationEspecialidades.length;
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Doctor Creado',
-      detail: `Doctor creado exitosamente con ${count} especialidad${count > 1 ? 'es' : ''}`
+  private assignHorariosAfterCreation(medicoId: number): void {
+    const horarios = [...this.creationHorarios];
+
+    if (horarios.length === 0) {
+      this.finishCreation(false);
+      return;
+    }
+
+    // Assign all horarios in parallel
+    const assign$ = horarios.map(h => {
+      h.medicoId = medicoId;
+      return this.doctoresService.crearHorario(h).pipe(
+        catchError(() => of(null))
+      );
     });
+
+    forkJoin(assign$).subscribe({
+      next: (results) => {
+        const hasError = results.some(r => r === null);
+        this.finishCreation(hasError);
+      },
+      error: () => this.finishCreation(true)
+    });
+  }
+
+  private finishCreation(hasHorarioError: boolean = false): void {
+    const medicoId = this._lastCreatedMedicoId;
+    const imageUrl = this._uploadedImageUrl;
+
+    // Image was already uploaded to Cloudinary in parallel with POST create.
+    // Now just PATCH the URL to the backend if we have one.
+    if (imageUrl && medicoId > 0) {
+      this.doctoresService.actualizarImagen(medicoId, imageUrl).subscribe({
+        next: () => this.completeCreation(hasHorarioError),
+        error: () => {
+          this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'Doctor creado pero no se pudo guardar la imagen en el servidor' });
+          this.completeCreation(hasHorarioError);
+        }
+      });
+    } else if (this.creationImagenFile && !imageUrl) {
+      this.messageService.add({ severity: 'warn', summary: 'Aviso', detail: 'Doctor creado pero no se pudo subir la imagen a Cloudinary' });
+      this.completeCreation(hasHorarioError);
+    } else {
+      this.completeCreation(hasHorarioError);
+    }
+  }
+
+  private _lastCreatedMedicoId = 0;
+
+  private completeCreation(hasHorarioError: boolean): void {
+    this.saving = false;
+    this._uploadedImageUrl = null;
+    this.creationImagenFile = null;
+    if (hasHorarioError) {
+       this.messageService.add({ severity: 'warn', summary: 'Doctor Creado', detail: 'Doctor creado, pero ocurrió un error en el servidor al intentar guardar los horarios' });
+    } else {
+       this.messageService.add({ severity: 'success', summary: 'Doctor Creado', detail: `Doctor creado exitosamente con sus configuraciones` });
+    }
     this.cargarDoctores();
     this.doctorDialog = false;
   }
@@ -750,6 +886,111 @@ export class DoctoresComponent implements OnInit {
           },
           error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: `No se pudo ${accion} al doctor` })
         });
+      }
+    });
+  }
+
+  // ==================== HORARIOS MANAGEMENT (CREATE & EDIT MODES) ====================
+
+  addCreationHorario(): void {
+    if (!this.newHorario.horaInicio || !this.newHorario.horaFin) {
+      this.messageService.add({ severity: 'warn', summary: 'Faltan datos', detail: 'Complete hora de inicio y fin' });
+      return;
+    }
+    this.creationHorarios.push({ ...this.newHorario });
+    this.newHorario.horaInicio = '08:00';
+    this.newHorario.horaFin = '17:00';
+  }
+
+  removeCreationHorario(index: number): void {
+    this.creationHorarios.splice(index, 1);
+  }
+
+  onEditImagenConfirmado(file: File): void {
+    this.pendingImageFile = file;
+  }
+
+  onCreationImagenSubida(file: File): void {
+    this.creationImagenFile = file;
+  }
+
+  addEditHorario(): void {
+    if (!this.newHorario.horaInicio || !this.newHorario.horaFin) {
+      this.messageService.add({ severity: 'warn', summary: 'Faltan datos', detail: 'Complete hora de inicio y fin' });
+      return;
+    }
+    this.isHorarioLoading = true;
+    const h = { ...this.newHorario, medicoId: this.doctorForm['medicoId'] };
+    this.doctoresService.crearHorario(h).subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'Guardado', detail: 'Horario agregado exitosamente' });
+        this.refreshHorarios();
+        this.newHorario.horaInicio = '08:00';
+        this.newHorario.horaFin = '17:00';
+      },
+      error: () => {
+        this.isHorarioLoading = false;
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo crear el horario' });
+      }
+    });
+  }
+
+  deleteEditHorario(h: any): void {
+    this.confirmationService.confirm({
+      header: 'Confirmar eliminación',
+      message: '¿Está seguro de eliminar este horario?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.isHorarioLoading = true;
+        this.doctoresService.eliminarHorario(h.horarioId).subscribe({
+          next: () => {
+            this.messageService.add({ severity: 'info', summary: 'Eliminado', detail: 'Horario eliminado' });
+            this.refreshHorarios();
+          },
+          error: () => {
+            this.isHorarioLoading = false;
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el horario' });
+          }
+        });
+      }
+    });
+  }
+
+  updateEditHorario(h: any): void {
+    h.isEditing = false;
+    this.isHorarioLoading = true;
+    this.doctoresService.actualizarHorario(h).subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Horario modificado' });
+        this.refreshHorarios();
+      },
+      error: () => {
+        this.isHorarioLoading = false;
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar el horario' });
+        this.refreshHorarios(); // Reset a la versión original
+      }
+    });
+  }
+
+  refreshHorarios() {
+    this.doctoresService.listarHorarios(this.doctorForm['medicoId']).subscribe({
+      next: (horarios) => {
+        this.editHorarios = horarios;
+        this.isHorarioLoading = false;
+        
+        // Update the card if present
+        const index = this.doctoresList.findIndex(d => d.medicoId === this.doctorForm['medicoId']);
+        if (index !== -1) {
+          this.doctoresList[index].horarios = horarios;
+        }
+
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.isHorarioLoading = false;
       }
     });
   }

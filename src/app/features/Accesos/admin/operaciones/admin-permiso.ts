@@ -4,42 +4,62 @@ import { MockDataService } from '../../../../core/services/Clinica/mock-data.ser
 import { Permiso } from '../../../../core/models/Accesos/permiso.model';
 
 @Injectable()
-export class AdminPermisoOperations {
-  private data = inject(MockDataService);
+export class PermisosAdminService {
+  private mockDataService = inject(MockDataService);
   private messageService = inject(MessageService);
 
-  get permisos() { return this.data.permisos; }
-  get rolPermisos() { return this.data.rolPermisos; }
+  get listaPermisos(): Permiso[] { 
+    return this.mockDataService.permisos; 
+  }
+  
+  get listaRolPermisos(): any[] { 
+    return this.mockDataService.rolPermisos; 
+  }
 
-  save(p: Partial<Permiso>, isEdit: boolean): void {
-    if (!p.codigoPermiso || !p.nombrePermiso) {
-      this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Codigo y nombre son obligatorios' });
+  guardarPermiso(permiso: Partial<Permiso>, esEdicion: boolean): void {
+    if (!permiso.codigoPermiso || !permiso.nombrePermiso) {
+      this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Código y nombre son obligatorios' });
       return;
     }
-    if (isEdit) {
-      const idx = this.permisos.findIndex(perm => perm.permisoId === p.permisoId);
-      if (idx >= 0) {
-        this.permisos[idx] = { ...this.permisos[idx], ...p } as Permiso;
-        this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Permiso actualizado' });
-      }
+    
+    if (esEdicion && permiso.permisoId) {
+      this.actualizarPermiso(permiso);
     } else {
-      this.permisos.push({
-        permisoId: this.data.nextId('permiso'),
-        codigoPermiso: p.codigoPermiso,
-        nombrePermiso: p.nombrePermiso,
-        descripcion: p.descripcion
-      });
-      this.messageService.add({ severity: 'success', summary: 'Creado', detail: 'Permiso creado' });
+      this.crearPermiso(permiso);
     }
   }
 
-  delete(p: Permiso, onConfirm: () => void): void {
-    const idx = this.permisos.indexOf(p);
-    if (idx >= 0) this.permisos.splice(idx, 1);
-    for (let i = this.rolPermisos.length - 1; i >= 0; i--) {
-      if (this.rolPermisos[i].permisoId === p.permisoId) this.rolPermisos.splice(i, 1);
+  private crearPermiso(permiso: Partial<Permiso>): void {
+    this.listaPermisos.push({
+      permisoId: this.mockDataService.nextId('permiso'),
+      codigoPermiso: permiso.codigoPermiso!,
+      nombrePermiso: permiso.nombrePermiso!,
+      descripcion: permiso.descripcion
+    });
+    this.messageService.add({ severity: 'success', summary: 'Creado', detail: 'Permiso creado exitosamente' });
+  }
+
+  private actualizarPermiso(permiso: Partial<Permiso>): void {
+    const indice = this.listaPermisos.findIndex(p => p.permisoId === permiso.permisoId);
+    if (indice >= 0) {
+      this.listaPermisos[indice] = { ...this.listaPermisos[indice], ...permiso } as Permiso;
+      this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Permiso actualizado exitosamente' });
     }
-    this.messageService.add({ severity: 'success', summary: 'Eliminado', detail: 'Permiso eliminado' });
+  }
+
+  eliminarPermiso(permiso: Permiso, onConfirm: () => void): void {
+    const indice = this.listaPermisos.indexOf(permiso);
+    if (indice >= 0) {
+      this.listaPermisos.splice(indice, 1);
+    }
+    
+    for (let i = this.listaRolPermisos.length - 1; i >= 0; i--) {
+      if (this.listaRolPermisos[i].permisoId === permiso.permisoId) {
+        this.listaRolPermisos.splice(i, 1);
+      }
+    }
+    
+    this.messageService.add({ severity: 'success', summary: 'Eliminado', detail: 'Permiso eliminado exitosamente' });
     onConfirm();
   }
 }

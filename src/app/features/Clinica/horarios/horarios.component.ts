@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MockDataService } from '../../../core/services/Clinica/mock-data.service';
-import { AuthService } from '../../../core/services/Accesos/auth.service';
+import { AuthService } from '../../../core/services/Accesos/auth/auth.service';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';

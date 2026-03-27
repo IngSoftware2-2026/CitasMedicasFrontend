@@ -85,6 +85,10 @@ export class DoctoresService {
     return this.http.put<void>(`${this.baseUrl}/${id}/activo?activo=${activo}`, {});
   }
 
+  actualizarImagen(id: number, imagen: string): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/${id}/imagen`, { imagen });
+  }
+
   // ==================== SPECIALTIES ====================
 
   /**
@@ -145,6 +149,56 @@ export class DoctoresService {
     );
   }
 
+  // ==================== HORARIOS ====================
+
+  listarHorarios(medicoId: number): Observable<any[]> {
+    return this.http.get<any>(`${this.baseUrl}/${medicoId}/horarios`).pipe(
+      map(res => {
+        const list = Array.isArray(res) ? res : (res?.datos || res?.data || []);
+        return list.map((h: any) => ({
+          horarioId: h.horarioId ?? h.HorarioId,
+          doctorId: h.doctorId ?? h.DoctorId ?? h.medicoId,
+          medicoId: h.doctorId ?? h.DoctorId ?? h.medicoId,
+          diaSemana: h.diaSemana ?? h.DiaSemana,
+          horaInicio: h.horaInicio ?? h.HoraInicio,
+          horaFin: h.horaFin ?? h.HoraFin,
+          activo: h.activo ?? h.Activo ?? true
+        }));
+      }),
+      catchError(err => {
+        console.error('[DoctoresService] listarHorarios error:', err);
+        return of([]);
+      })
+    );
+  }
+
+  crearHorario(horario: any): Observable<any> {
+    const payload = {
+      doctorId: horario.doctorId ?? horario.medicoId,
+      diaSemana: Number(horario.diaSemana),
+      horaInicio: typeof horario.horaInicio === 'string' && horario.horaInicio.length === 5 ? horario.horaInicio + ':00' : horario.horaInicio,
+      horaFin: typeof horario.horaFin === 'string' && horario.horaFin.length === 5 ? horario.horaFin + ':00' : horario.horaFin,
+      activo: true
+    };
+    return this.http.post<any>(`${this.baseUrl}/horarios`, payload);
+  }
+
+  actualizarHorario(horario: any): Observable<any> {
+    const payload = {
+      horarioId: horario.horarioId,
+      doctorId: horario.doctorId ?? horario.medicoId,
+      diaSemana: Number(horario.diaSemana),
+      horaInicio: typeof horario.horaInicio === 'string' && horario.horaInicio.length === 5 ? horario.horaInicio + ':00' : horario.horaInicio,
+      horaFin: typeof horario.horaFin === 'string' && horario.horaFin.length === 5 ? horario.horaFin + ':00' : horario.horaFin,
+      activo: horario.activo
+    };
+    return this.http.put<any>(`${this.baseUrl}/horarios`, payload);
+  }
+
+  eliminarHorario(horarioId: number): Observable<any> {
+    return this.http.delete<any>(`${this.baseUrl}/horarios/${horarioId}`);
+  }
+
   // ==================== NORMALIZATION ====================
 
   /** Normalize PascalCase → camelCase for a list of doctors and Deduplicate by MedicoId */
@@ -191,6 +245,7 @@ export class DoctoresService {
       duracionDefaultMinutos: d.duracionDefaultMinutos ?? d.DuracionDefaultMinutos ?? 30,
       minutosBuffer: d.minutosBuffer ?? d.MinutosBuffer ?? 0,
       activo: d.activo ?? d.Activo ?? true,
+      imagen: d.imagen ?? d.Imagen ?? null,
       // Specialty/Sala from SP join (may or may not be present)
       nombreEspecialidad: d.nombreEspecialidad ?? d.NombreEspecialidad ?? '',
       nombreSala: d.nombreSala ?? d.NombreSala ?? '',

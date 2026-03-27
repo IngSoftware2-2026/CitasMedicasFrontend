@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { AuthService } from '../core/services/Accesos/auth.service';
+import { AuthService } from '../core/services/Accesos/auth/auth.service';
 import { ThemeService } from '../core/shared/services/theme.service';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { NotificationComponent } from '../core/shared/components/notification/notification/notification.component';
@@ -58,20 +58,20 @@ export class LayoutComponent {
   }
 
   get userName(): string {
-    return localStorage.getItem('nombreUsuario') || 'admin3';
+    return this.auth.nombreUsuario || 'Usuario';
   }
 
   get userRole(): string {
-    return localStorage.getItem('rolNombre') || 'Administrador';
+    return this.auth.nombreRol || 'Sin rol';
   }
 
   get userInitials(): string {
-    const name = this.userName;
-    return name.charAt(0).toUpperCase();
+    const name = this.userName || '';
+    return name.charAt(0).toUpperCase() || 'U';
   }
 
   get userEmail(): string {
-    return localStorage.getItem('correo') || 'admin@medicitas.hn';
+    return this.auth.correoUsuario || '';
   }
 
   cambiarTema(): void {

@@ -1,0 +1,53 @@
+<div class="imagen-upload-container">
+  <input
+    type="file"
+    #fileInput
+    accept="image/jpeg,image/png,image/webp"
+    (change)="onFileSelected($event)"
+    hidden
+  />
+
+  <!-- Avatar display -->
+  <div class="avatar-wrapper" [class.clickable]="!soloVista" (click)="!soloVista && openFileSelector()">
+    @if (previewUrl) {
+      <img class="avatar-img" [src]="previewUrl" alt="Preview" />
+    } @else if (imagenActual) {
+      <img class="avatar-img" [src]="imagenActual" alt="Foto del doctor" />
+    } @else {
+      <div class="avatar-placeholder">
+        @if (initials) {
+          <span class="avatar-initials">{{ initials }}</span>
+        } @else {
+          <i class="pi pi-user"></i>
+        }
+      </div>
+    }
+
+    @if (!soloVista) {
+      <div class="avatar-overlay">
+        <i class="pi pi-camera"></i>
+        <span>{{ (imagenActual || previewUrl) ? 'Cambiar' : 'Subir foto' }}</span>
+      </div>
+    }
+  </div>
+
+  <!-- Action link -->
+  @if (!soloVista) {
+    @if (previewUrl) {
+      <button class="change-link danger" (click)="quitarImagen()" type="button">
+        <i class="pi pi-times"></i> Quitar foto
+      </button>
+    } @else {
+      <button class="change-link" (click)="openFileSelector()" type="button">
+        <i class="pi pi-{{ imagenActual ? 'camera' : 'upload' }}"></i>
+        {{ imagenActual ? 'Cambiar foto' : 'Subir foto' }}
+      </button>
+    }
+  }
+
+  @if (errorMsg) {
+    <div class="upload-msg error">
+      <i class="pi pi-exclamation-circle"></i> {{ errorMsg }}
+    </div>
+  }
+</div>

@@ -1,3 +1,9 @@
+/**
+
+ * Gestiona el proceso de autenticación de usuarios en el sistema.
+ * Permite a los usuarios iniciar sesión con su nombre de usuario
+ * y contraseña.
+ **/
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LoginRequest } from '../../../core/models/Accesos/usuario.model';
@@ -12,31 +18,41 @@ import { LoginOperations } from './operaciones';
   styleUrl: './login.component.css'
 })
 export class LoginComponent {
-  private loginOps = inject(LoginOperations);
+  /** Servicio de operaciones de login */
+  private loginOperaciones = inject(LoginOperations);
 
-  loginUser = 'admin2';
-  loginPass = 'admin123';
-  loginError = '';
-  showPassword = false;
+  /** Nombre de usuario para login */
+  nombreUsuario = 'admin2';
+  
+  /** Contraseña para login */
+  contrasena = 'admin123';
+  
+  /** Mensaje de error de autenticación */
+  mensajeError = '';
+  
+  /** Bandera para mostrar/ocultar contraseña */
+  mostrarContrasena = false;
 
+  /** Alterna la visibilidad de la contraseña */
   togglePassword(): void {
-    this.showPassword = !this.showPassword;
+    this.mostrarContrasena = !this.mostrarContrasena;
   }
 
+  /** Procesa el inicio de sesión */
   login(): void {
-    if (!this.loginUser || !this.loginPass) {
-      this.loginError = 'Ingrese usuario y contraseña';
+    if (!this.nombreUsuario || !this.contrasena) {
+      this.mensajeError = 'Ingrese usuario y contraseña';
       return;
     }
 
-    const credentials: LoginRequest = {
-      nombreUsuario: this.loginUser,
-      clave: this.loginPass
+    const credenciales: LoginRequest = {
+      nombreUsuario: this.nombreUsuario,
+      clave: this.contrasena
     };
 
-    this.loginError = '';
-    this.loginOps.login(credentials, () => {
-      this.loginError = 'Usuario o contraseña incorrectos';
+    this.mensajeError = '';
+    this.loginOperaciones.login(credenciales, () => {
+      this.mensajeError = 'Usuario o contraseña incorrectos';
     });
   }
 }

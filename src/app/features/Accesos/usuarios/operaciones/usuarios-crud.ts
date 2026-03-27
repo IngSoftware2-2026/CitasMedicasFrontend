@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { ChangeDetectorRef } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { Subject, takeUntil } from 'rxjs';
-import { UsuarioService } from '../../../../core/services/Accesos/usuario.service';
+import { UsuarioService } from '../../../../core/services/Accesos/usuarios/usuario.service';
 import { RefreshManager } from '../../../../core/shared/services/data-refresh.service';
 import { Usuario } from '../../../../core/models/Accesos/usuario.model';
 

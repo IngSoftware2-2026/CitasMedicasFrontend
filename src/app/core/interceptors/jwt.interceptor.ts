@@ -5,10 +5,10 @@ import { catchError, throwError } from 'rxjs';
 
 export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
-  const urlsExcluidas = ['/Accesos/Login', '/Accesos/Usuarios/Insertar'];
+  const urlsExcluidas = ['/Accesos/Login', '/Accesos/Usuarios/Insertar', '/Publicas/Insertar'];
   const debeOmitir = urlsExcluidas.some(url => req.url.includes(url));
   
-  if (debeOmitir) {
+  if (debeOmitir || req.url.includes('cloudinary.com')) {
     return next(req);
   }
 

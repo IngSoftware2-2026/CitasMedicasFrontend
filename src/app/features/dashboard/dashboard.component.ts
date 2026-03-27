@@ -7,7 +7,7 @@ import { TagModule } from 'primeng/tag';
 import { MeterGroupModule } from 'primeng/metergroup';
 import { AvatarModule } from 'primeng/avatar';
 import { MockDataService } from '../../core/services/Clinica/mock-data.service';
-import { AuthService } from '../../core/services/Accesos/auth.service';
+import { AuthService } from '../../core/services/Accesos/auth/auth.service';
 import { DashboardStats, DashboardUtils } from './operaciones';
 
 @Component({
@@ -29,7 +29,7 @@ export class DashboardComponent {
   ) {}
 
   get userName(): string {
-    return localStorage.getItem('nombreUsuario') || 'admin3';
+    return this.auth.nombreUsuario || 'Usuario';
   }
 
   get userInitials(): string {
@@ -38,11 +38,11 @@ export class DashboardComponent {
   }
 
   get userEmail(): string {
-    return localStorage.getItem('correo') || 'admin@medicitas.hn';
+    return this.auth.correoUsuario || '';
   }
 
   get userRole(): string {
-    return localStorage.getItem('rolNombre') || 'Administrador';
+    return this.auth.nombreRol || 'Sin rol';
   }
 
   get currentDate(): string {

@@ -1,6 +1,4 @@
-<!-- ============================================================
-     ENCABEZADO DE PÁGINA
-     ============================================================ -->
+<!-- ENCABEZADO DE PÁGINA-->
 <div class="page-header-container">
   <div class="page-header-left">
     <div class="page-header-icon">
@@ -18,9 +16,7 @@
     (onClick)="abrirModalUsuario()" />
 </div>
 
-<!-- ============================================================
-     FILTROS DE BÚSQUEDA
-     ============================================================ -->
+<!-- FILTROS DE BÚSQUEDA-->
 <div class="usuarios-filters">
   <p-iconfield class="usuarios-search">
     <p-inputicon styleClass="pi pi-search" />
@@ -42,9 +38,7 @@
     appendTo="body" />
 </div>
 
-<!-- ============================================================
-     TARJETAS DE ESTADÍSTICAS
-     ============================================================ -->
+<!-- TARJETAS DE ESTADÍSTICAS-->
 <div class="usuarios-stats">
   <div class="usuarios-stat-item">
     <div class="usuarios-stat-icon usuarios-stat-icon--blue">
@@ -81,15 +75,13 @@
       <i class="pi pi-shield"></i>
     </div>
     <div class="usuarios-stat-info">
-      <span class="usuarios-stat-number">{{ administradoresCount() }}</span>
+      <span class="usuarios-stat-number">{{ cantidadAdministradores() }}</span>
       <span class="usuarios-stat-label">Administradores</span>
     </div>
   </div>
 </div>
 
-<!-- ============================================================
-     TABLA DE USUARIOS
-     ============================================================ -->
+<!-- TABLA DE USUARIOS-->
 <div class="usuarios-table-card">
   <p-table 
     [value]="listaFiltrada()" 
@@ -169,24 +161,22 @@
   </p-table>
 </div>
 
-<!-- ============================================================
-     MODAL: DETALLE DEL USUARIO
-     ============================================================ -->
+<!-- MODAL: DETALLE DEL USUARIO-->
 <p-dialog 
   header="Detalle del Usuario" 
-  [(visible)]="detalleDialog" 
+  [(visible)]="mostrarModalDetalle" 
   [modal]="true" 
   [style]="{width: '500px'}" 
   [draggable]="false">
 
-  @if (detalleLoading()) {
+  @if (cargandoDetalle()) {
     <div class="detalle-loading">
       <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
       <p>Cargando detalles...</p>
     </div>
   }
 
-  @if (usuarioDetalle() && !detalleLoading()) {
+  @if (usuarioDetalle() && !cargandoDetalle()) {
     <div class="detalle-content">
       <div class="detalle-header">
         <div [class]="'detalle-avatar detalle-avatar--' + utils.obtenerColorAvatar(usuarioDetalle()!.rolId)">
@@ -233,12 +223,10 @@
 
 </p-dialog>
 
-<!-- ============================================================
-     MODAL: CREAR / EDITAR USUARIO
-     ============================================================ -->
+<!-- MODAL: CREAR / EDITAR USUARIO-->
 <p-dialog 
   [header]="esEdicion() ? 'Editar Usuario' : 'Nuevo Usuario'" 
-  [(visible)]="usuarioDialog" 
+  [(visible)]="mostrarModalUsuario" 
   [modal]="true" 
   [style]="{width: '550px'}" 
   [draggable]="false">
@@ -247,23 +235,23 @@
     <div class="usuarios-form-row">
       <div class="usuarios-field">
         <label>Nombre de Usuario *</label>
-        <input pInputText [ngModel]="usuarioForm().nombreUsuario" (ngModelChange)="usuarioForm.set({...usuarioForm(), nombreUsuario: $event})" />
+        <input pInputText [ngModel]="formularioUsuario().nombreUsuario" (ngModelChange)="formularioUsuario.set({...formularioUsuario(), nombreUsuario: $event})" />
       </div>
       <div class="usuarios-field">
         <label>Correo *</label>
-        <input pInputText [ngModel]="usuarioForm().correo" (ngModelChange)="usuarioForm.set({...usuarioForm(), correo: $event})" type="email" />
+        <input pInputText [ngModel]="formularioUsuario().correo" (ngModelChange)="formularioUsuario.set({...formularioUsuario(), correo: $event})" type="email" />
       </div>
     </div>
     <div class="usuarios-form-row">
       <div class="usuarios-field">
         <label>Teléfono</label>
-        <input pInputText [ngModel]="usuarioForm().telefono" (ngModelChange)="usuarioForm.set({...usuarioForm(), telefono: $event})" />
+        <input pInputText [ngModel]="formularioUsuario().telefono" (ngModelChange)="formularioUsuario.set({...formularioUsuario(), telefono: $event})" />
       </div>
       <div class="usuarios-field">
         <label>Rol *</label>
         <p-select 
-          [ngModel]="usuarioForm().rolId" 
-          (ngModelChange)="usuarioForm.set({...usuarioForm(), rolId: $event})"
+          [ngModel]="formularioUsuario().rolId" 
+          (ngModelChange)="formularioUsuario.set({...formularioUsuario(), rolId: $event})"
           [options]="listaRoles()" 
           optionLabel="nombreRol" 
           optionValue="rolId" 
@@ -275,8 +263,8 @@
     <div class="usuarios-field">
       <label>{{ esEdicion() ? 'Nueva Contraseña' : 'Contraseña *' }}</label>
       <p-password 
-        [ngModel]="usuarioForm().clave" 
-        (ngModelChange)="usuarioForm.set({...usuarioForm(), clave: $event})"
+        [ngModel]="formularioUsuario().clave" 
+        (ngModelChange)="formularioUsuario.set({...formularioUsuario(), clave: $event})"
         [toggleMask]="true" 
         [feedback]="!esEdicion()" 
         [placeholder]="esEdicion() ? 'Dejar vacío para no cambiar' : 'Ingrese contraseña'" 

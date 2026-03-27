@@ -5,8 +5,8 @@
  */
 import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { ConexionService, Respuesta } from '../Http/conexion.service';
-import { Rol } from '../../models/Accesos/rol.model';
+import { ConexionService, Respuesta } from '../../Http/conexion.service';
+import { Rol } from '../../../models/Accesos/rol.model';
 
 /**
  * Servicio que gestiona las operaciones CRUD de roles.

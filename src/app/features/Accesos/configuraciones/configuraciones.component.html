@@ -15,24 +15,24 @@
     </h2>
     <div class="config-card">
       <div class="config-user-header">
-        <div class="config-user-avatar">{{ userInitials }}</div>
+        <div class="config-user-avatar">{{ inicialesUsuario }}</div>
         <div class="config-user-info">
-          <span class="config-user-name">{{ userName }}</span>
-          <span class="config-user-email">{{ userEmail }}</span>
+          <span class="config-user-name">{{ nombreUsuario }}</span>
+          <span class="config-user-email">{{ correoUsuario }}</span>
         </div>
       </div>
       <div class="config-fields">
         <div class="config-field">
           <label>Nombre de Usuario</label>
-          <span>{{ userName }}</span>
+          <span>{{ nombreUsuario }}</span>
         </div>
         <div class="config-field">
           <label>Correo Electrónico</label>
-          <span>{{ userEmail }}</span>
+          <span>{{ correoUsuario }}</span>
         </div>
         <div class="config-field">
           <label>Rol</label>
-          <span class="config-badge">{{ userRole }}</span>
+          <span class="config-badge">{{ rolUsuario }}</span>
         </div>
       </div>
     </div>
@@ -50,7 +50,7 @@
           <span class="config-option-desc">Cambiar entre modo claro y oscuro</span>
         </div>
         <label class="config-switch">
-          <input type="checkbox" [checked]="isDarkMode" (change)="toggleTheme()">
+          <input type="checkbox" [checked]="esModoOscuro" (change)="toggleTema()">
           <span class="config-slider"></span>
         </label>
       </div>

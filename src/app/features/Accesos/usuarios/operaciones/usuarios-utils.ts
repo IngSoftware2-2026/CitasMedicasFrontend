@@ -10,7 +10,7 @@ import { Injectable, inject } from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
 
 // Servicios
-import { RolService } from '../../../../core/services/Accesos/rol.service';
+import { RolService } from '../../../../core/services/Accesos/roles/rol.service';
 
 // Modelos
 import { Usuario } from '../../../../core/models/Accesos/usuario.model';
