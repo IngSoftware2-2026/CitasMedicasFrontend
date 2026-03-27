@@ -24,6 +24,7 @@ export interface LoginResponse {
   usuarioId: number;
   nombreUsuario: string;
   correo: string;
+  telefono?: string;
   token: string;
   rol?: {
     rolId: number;

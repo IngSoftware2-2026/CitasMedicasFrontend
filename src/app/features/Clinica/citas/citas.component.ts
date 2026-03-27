@@ -176,7 +176,18 @@ export class CitasComponent implements OnInit {
   }
 
   countByCodigoEstado(codigoEstado: string): number {
-    return this.citas.filter(c => c.codigoEstado === codigoEstado).length;
+    const codigoNormalizado = codigoEstado.toUpperCase();
+    const mapping: Record<string, string[]> = {
+      'CONF': ['CONFIRMADA', 'CONF'],
+      'ATEN': ['FINALIZADA', 'EN_CURSO', 'ATEN', 'ATENDIDA'],
+      'CANC': ['CANCELADA', 'CANC'],
+      'NOAS': ['NO_ASISTIO', 'NOAS', 'NO ASISTIO']
+    };
+    const codigosAceptados = mapping[codigoNormalizado] ?? [codigoNormalizado];
+    return this.citas.filter(c => {
+      const estado = (c.codigoEstado || '').toUpperCase();
+      return codigosAceptados.includes(estado);
+    }).length;
   }
 
   getInitials(name: string): string {
@@ -266,7 +277,13 @@ export class CitasComponent implements OnInit {
   }
 
   openCitaDialog(): void {
-    this.citaForm = { duracionMinutos: 30 };
+    this.citaForm = { 
+      pacienteId: null,
+      medicoId: null,
+      salaId: null,
+      inicio: null,
+      duracionMinutos: 30 
+    };
     this.citaDialog = true;
   }
 

@@ -187,6 +187,14 @@
                   <button class="action-btn" (click)="verDetalle(sol); $event.stopPropagation()" title="Ver detalle">
                     <i class="pi pi-eye"></i>
                   </button>
+                  @if (puedeGestionar && sol.codigoEstado === 'PENDIENTE') {
+                    <button class="action-btn action-approve" (click)="aprobarSolicitud(sol); $event.stopPropagation()" title="Aprobar">
+                      <i class="pi pi-check"></i>
+                    </button>
+                    <button class="action-btn action-reject" (click)="rechazarSolicitud(sol); $event.stopPropagation()" title="Rechazar">
+                      <i class="pi pi-times"></i>
+                    </button>
+                  }
                 </td>
               </tr>
             }

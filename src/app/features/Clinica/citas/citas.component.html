@@ -161,11 +161,13 @@
     <div class="form-row">
       <div class="field"><label>Paciente *</label>
         <select class="p-inputtext" [(ngModel)]="citaForm['pacienteId']">
+          <option [ngValue]="null">Seleccione un paciente</option>
           @for (p of pacientesData; track p.pacienteId) { <option [ngValue]="p.pacienteId">{{ p.paciente || ((p.nombres || '') + ' ' + (p.apellidos || '')).trim() }}</option> }
         </select>
       </div>
       <div class="field"><label>Doctor *</label>
         <select class="p-inputtext" [(ngModel)]="citaForm['medicoId']">
+          <option [ngValue]="null">Seleccione un doctor</option>
           @for (d of doctoresData; track d.medicoId) { <option [ngValue]="d.medicoId">{{ d.medico || d.nombrePublico }}</option> }
         </select>
       </div>
@@ -173,7 +175,8 @@
     <div class="form-row">
       <div class="field"><label>Sala *</label>
         <select class="p-inputtext" [(ngModel)]="citaForm['salaId']">
-          @for (s of salas; track s.salaId) { <option [ngValue]="s.salaId">{{ s.nombreSala }}</option> }
+          <option [ngValue]="null">Seleccione una sala</option>
+          @for (s of salasData; track s.salaId) { <option [ngValue]="s.salaId">{{ s.nombreSala }}</option> }
         </select>
       </div>
       <div class="field"><label>Duracion (min)</label><input pInputText type="number" [(ngModel)]="citaForm['duracionMinutos']" /></div>

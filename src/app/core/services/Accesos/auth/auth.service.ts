@@ -86,6 +86,10 @@ export class AuthService {
     return localStorage.getItem('correo') || '';
   }
 
+  get telefonoUsuario(): string {
+    return localStorage.getItem('telefono') || '';
+  }
+
   get nombreRol(): string {
     return localStorage.getItem('rolNombre') || '';
   }
@@ -99,6 +103,7 @@ export class AuthService {
         
         localStorage.setItem('nombreUsuario', respuesta.nombreUsuario);
         localStorage.setItem('correo', respuesta.correo);
+        localStorage.setItem('telefono', respuesta.telefono || '');
         if (respuesta.rol?.nombreRol) {
           localStorage.setItem('rolNombre', respuesta.rol.nombreRol);
         }
@@ -117,6 +122,7 @@ export class AuthService {
     localStorage.removeItem('codigoRol');
     localStorage.removeItem('nombreUsuario');
     localStorage.removeItem('correo');
+    localStorage.removeItem('telefono');
     localStorage.removeItem('rolNombre');
     this.rolPermisosService.limpiarSesion();
     this.autenticado.set(false);
