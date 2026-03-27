@@ -16,3 +16,42 @@
 }
 
 .horario-chip strong { color: var(--accent); }
+
+.empty-state {
+  color: var(--text-color-secondary);
+  font-size: 0.9rem;
+  padding: 12px 0;
+}
+
+.horario-patient-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.horario-patient-card {
+  border: 1px solid var(--surface-border);
+  background: var(--surface-card);
+  border-radius: 12px;
+  padding: 0.9rem;
+}
+
+.horario-patient-card header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-bottom: 0.75rem;
+}
+
+.horario-patient-card h3 {
+  margin: 0;
+  color: var(--text-color);
+  font-size: 1rem;
+}
+
+@media (max-width: 900px) {
+  .horario-patient-grid {
+    grid-template-columns: 1fr;
+  }
+}

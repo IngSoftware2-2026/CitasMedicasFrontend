@@ -1,7 +1,6 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { switchMap, map, forkJoin, of, Observable, catchError } from 'rxjs';
-import { MockDataService } from '../../../core/services/Clinica/mock-data.service';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -132,7 +131,6 @@ export class DoctoresComponent implements OnInit {
   pendingImageFile: File | null = null;
 
   constructor(
-    public data: MockDataService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) {}
@@ -159,8 +157,7 @@ export class DoctoresComponent implements OnInit {
       },
       error: (err) => {
         console.error('[DoctoresComponent] Error cargando especialidades:', err);
-        // Si falla el backend, fallback a MockData para no romper la UI
-        this.especialidadesList = this.data.especialidades;
+        this.especialidadesList = [];
         this.cdr.detectChanges();
       }
     });
@@ -314,12 +311,11 @@ export class DoctoresComponent implements OnInit {
   }
 
   getCitasCount(medicoId: number): number {
-    return this.data.citas.filter(c => c.medicoId === medicoId).length || 0;
+    return 0;
   }
 
   getRating(medicoId: number): string {
-    const seed = ((medicoId || 0) * 7 + 3) % 10;
-    return (4.0 + seed / 10).toFixed(1);
+    return 'N/D';
   }
 
   getHorarioResumen(medicoId: number): string {
@@ -330,10 +326,7 @@ export class DoctoresComponent implements OnInit {
       const horaFin = first.horaFin?.substring(0, 5) || first.horaFin;
       return `${horaIni} - ${horaFin}`;
     }
-    const horarios = this.data.getHorariosDeDoctor(medicoId);
-    if (!horarios || horarios.length === 0) return 'Sin horario';
-    const first = horarios[0];
-    return `${first.horaInicio} - ${first.horaFin}`;
+    return 'Sin horario';
   }
 
   getDiaSemana(dia: number): string {
@@ -343,7 +336,7 @@ export class DoctoresComponent implements OnInit {
   getDoctorEspecialidadDisplay(d: any): string {
     if (d.nombreEspecialidad) return d.nombreEspecialidad;
     if (d.especialidadPrincipal) return d.especialidadPrincipal;
-    return this.data.getDoctorEspecialidad(d.medicoId);
+    return 'Especialidad no disponible';
   }
 
   getDoctorSalaDisplay(d: any): string {
@@ -357,9 +350,7 @@ export class DoctoresComponent implements OnInit {
       }
     }
 
-    // Fallback final para los mock logs antiguos
-    const mockSala = this.data.getDoctorSala(d.medicoId);
-    return mockSala ? mockSala : 'No asignada';
+    return 'No asignada';
   }
 
   // ==================== DETAIL DIALOG ====================

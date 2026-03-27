@@ -34,3 +34,107 @@
 .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .detail-item label { font-size: 0.8rem; font-weight: 700; color: var(--text-color-secondary); text-transform: uppercase; display: block; }
 .detail-item p { margin: 4px 0 0; font-size: 1rem; color: var(--text-color); }
+
+.patient-citas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.page-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.page-head h2 {
+  margin: 0;
+}
+
+.page-head p {
+  margin: 0.3rem 0 0;
+  color: var(--text-color-secondary);
+  font-size: 0.9rem;
+}
+
+.patient-link-btn {
+  text-decoration: none;
+  padding: 0.55rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.patient-search {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  padding: 0.75rem;
+}
+
+.patient-card-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.patient-cita-card {
+  border: 1px solid var(--surface-border);
+  background: var(--surface-card);
+  border-radius: 12px;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.patient-cita-card header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.patient-cita-card h3 {
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+.patient-cita-card header p {
+  margin: 0.25rem 0 0;
+  color: var(--text-color-secondary);
+  font-size: 0.82rem;
+}
+
+.patient-cita-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.patient-cita-meta span {
+  font-size: 0.82rem;
+  color: var(--text-color);
+}
+
+.patient-cita-meta i {
+  margin-right: 0.32rem;
+  color: var(--primary-color);
+}
+
+.patient-cita-card footer {
+  display: flex;
+}
+
+@media (max-width: 900px) {
+  .patient-card-list {
+    grid-template-columns: 1fr;
+  }
+}
