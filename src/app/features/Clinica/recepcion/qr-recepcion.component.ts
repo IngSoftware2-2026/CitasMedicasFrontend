@@ -116,8 +116,8 @@ import { ZXingScannerModule } from '@zxing/ngx-scanner';
     .recepcion-header p { margin: 0.25rem 0 0; opacity: 0.85; font-size: 0.9rem; }
     .recepcion-icon { font-size: 2.5rem; }
     .recepcion-input-section, .recepcion-camera-section, .recepcion-validacion {
-      background: #fff;
-      border: 1px solid #e2e8f0;
+      background: var(--surface-card);
+      border: 1px solid var(--surface-border);
       border-radius: 10px;
       padding: 1.25rem;
     }
@@ -127,6 +127,7 @@ import { ZXingScannerModule } from '@zxing/ngx-scanner';
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      color: var(--text-color);
     }
     .recepcion-input-row {
       display: flex;
@@ -151,7 +152,7 @@ import { ZXingScannerModule } from '@zxing/ngx-scanner';
       border: 2px solid #6366f1;
     }
     .scanner-hint {
-      color: #64748b;
+      color: var(--text-color-secondary);
       font-size: 0.85rem;
       margin: 0;
     }
@@ -161,8 +162,8 @@ import { ZXingScannerModule } from '@zxing/ngx-scanner';
       justify-content: center;
       gap: 0.75rem;
       padding: 1.25rem;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
+      background: var(--surface-ground);
+      border: 1px solid var(--surface-border);
       border-radius: 10px;
       color: #6366f1;
       font-size: 0.95rem;
@@ -176,14 +177,16 @@ import { ZXingScannerModule } from '@zxing/ngx-scanner';
     }
     .cita-data-item {
       padding: 0.6rem 0.85rem;
-      background: #f1f5f9;
+      background: var(--surface-ground);
+      border: 1px solid var(--surface-border);
       border-radius: 6px;
       font-size: 0.9rem;
+      color: var(--text-color);
     }
     .cita-data-item strong {
       display: block;
       font-size: 0.75rem;
-      color: #64748b;
+      color: var(--text-color-secondary);
       margin-bottom: 0.15rem;
     }
     .validacion-card {
@@ -194,27 +197,27 @@ import { ZXingScannerModule } from '@zxing/ngx-scanner';
       border-radius: 10px;
     }
     .validacion-card.valida {
-      background: #f0fdf4;
-      border: 1px solid #86efac;
+      background: rgba(34, 197, 94, 0.08);
+      border: 1px solid rgba(34, 197, 94, 0.3);
     }
     .validacion-card.invalida {
-      background: #fef2f2;
-      border: 1px solid #fca5a5;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.3);
     }
     .validacion-icon i { font-size: 2rem; }
     .valida .validacion-icon i { color: #22c55e; }
     .invalida .validacion-icon i { color: #ef4444; }
-    .validacion-info h4 { margin: 0 0 0.25rem; font-size: 1.1rem; }
-    .validacion-info p { margin: 0; color: #64748b; }
+    .validacion-info h4 { margin: 0 0 0.25rem; font-size: 1.1rem; color: var(--text-color); }
+    .validacion-info p { margin: 0; color: var(--text-color-secondary); }
     .recepcion-error {
       display: flex;
       align-items: center;
       gap: 0.75rem;
       padding: 1rem;
-      background: #fef2f2;
-      border: 1px solid #fca5a5;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.3);
       border-radius: 8px;
-      color: #dc2626;
+      color: #ef4444;
     }
     .recepcion-error i { font-size: 1.3rem; }
   `]
