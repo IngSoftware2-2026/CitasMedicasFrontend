@@ -1,3 +1,4 @@
+<p-toast />
 <app-notification />
 <p-confirmDialog />
 
@@ -78,6 +79,13 @@
           <a routerLink="/citas" routerLinkActive="active" (click)="closeSidebarOnMobile()">
             <i class="pi pi-calendar"></i>
             <span>Citas</span>
+          </a>
+        }
+
+        @if (esAdmin || esRecepcion) {
+          <a routerLink="/recepcion" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="pi pi-qrcode"></i>
+            <span>Recepción QR</span>
           </a>
         }
 

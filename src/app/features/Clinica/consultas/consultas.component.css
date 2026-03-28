@@ -14,3 +14,170 @@
 @media (max-width: 960px) {
   .card-grid { grid-template-columns: 1fr; }
 }
+
+/* --- Formulario del diálogo --- */
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-color, #334155);
+}
+
+.field select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--surface-300, #cbd5e1);
+  border-radius: 8px;
+  background: var(--surface-0, #fff);
+  font-size: 0.9rem;
+  color: var(--text-color, #334155);
+  transition: border-color 0.2s;
+  outline: none;
+}
+.field select:focus {
+  border-color: var(--primary-500, #3b82f6);
+  box-shadow: 0 0 0 2px var(--primary-100, #dbeafe);
+}
+
+:host ::ng-deep .field .p-inputtext,
+:host ::ng-deep .field .p-textarea {
+  width: 100%;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+/* --- Dictado: campo con micrófono al lado --- */
+.dictado-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.dictado-field input,
+.dictado-field textarea,
+:host ::ng-deep .dictado-field .p-inputtext,
+:host ::ng-deep .dictado-field .p-textarea {
+  flex: 1;
+  min-width: 0;
+}
+
+.dictado-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--surface-300, #cbd5e1);
+  border-radius: 50%;
+  background: var(--surface-0, #fff);
+  color: var(--text-color-secondary, #64748b);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.dictado-btn i { font-size: 1.1rem; }
+.dictado-btn:hover {
+  border-color: var(--primary-400, #60a5fa);
+  background: var(--primary-50, #eff6ff);
+  color: var(--primary-600, #2563eb);
+  transform: scale(1.08);
+}
+.dictado-btn.dictado-activo {
+  border-color: var(--red-400, #f87171);
+  background: var(--red-50, #fef2f2);
+  color: var(--red-600, #dc2626);
+  animation: dictado-pulse 1.2s ease-in-out infinite;
+}
+.dictado-btn.dictado-activo:hover {
+  background: var(--red-100, #fee2e2);
+}
+
+/* --- Preview de texto interino --- */
+.dictado-preview {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: var(--surface-100, #f1f5f9);
+  border-left: 3px solid var(--primary-400, #60a5fa);
+  color: var(--text-color-secondary, #64748b);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+.dictado-preview i {
+  color: var(--primary-500, #3b82f6);
+  animation: dictado-pulse 1.2s ease-in-out infinite;
+}
+
+/* --- Banner inferior --- */
+.dictado-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  margin-top: 4px;
+  border-radius: 10px;
+  background: var(--primary-50, #eff6ff);
+  border: 1px solid var(--primary-200, #bfdbfe);
+  color: var(--primary-700, #1d4ed8);
+  font-size: 0.87rem;
+}
+.dictado-banner i {
+  font-size: 1.2rem;
+  color: var(--primary-500, #3b82f6);
+}
+
+.dictado-test-btn {
+  margin-left: auto;
+  padding: 6px 14px;
+  border: 1px solid var(--primary-400, #60a5fa);
+  border-radius: 8px;
+  background: var(--surface-0, #fff);
+  color: var(--primary-600, #2563eb);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+.dictado-test-btn:hover {
+  background: var(--primary-500, #3b82f6);
+  color: #fff;
+}
+
+/* --- Estado en footer --- */
+.dictado-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: auto;
+  font-size: 0.85rem;
+  color: var(--red-600, #dc2626);
+}
+
+.dictado-pulse {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--red-500, #ef4444);
+  animation: dictado-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes dictado-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}

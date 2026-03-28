@@ -3,12 +3,13 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../core/services/Accesos/auth/auth.service';
 import { ThemeService } from '../core/shared/services/theme.service';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ToastModule } from 'primeng/toast';
 import { NotificationComponent } from '../core/shared/components/notification/notification/notification.component';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, ConfirmDialogModule, NotificationComponent],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, ConfirmDialogModule, ToastModule, NotificationComponent],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.css'
 })

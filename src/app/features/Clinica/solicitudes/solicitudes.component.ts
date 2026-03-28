@@ -1,11 +1,15 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MockDataService } from '../../../core/services/Clinica/mock-data.service';
 import { AuthService } from '../../../core/services/Accesos/auth/auth.service';
 import { SolicitudesService } from '../../../core/services/Clinica/solicitudes.service';
 import { ErrorHandlerService } from '../../../core/services/Http/error-handler.service';
-import { DoctorPublicoDTO, SolicitudPublicaInsertarDTO } from '../../../core/models/Clinica/Solicitudes/solicitud-publica.model';
+import {
+  DoctorPublicoDTO,
+  SolicitudPublicaInsertarDTO,
+  SolicitudUnificada,
+  CambiarEstadoSolicitudDTO
+} from '../../../core/models/Clinica/Solicitudes/solicitud-publica.model';
 import { MessageService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -35,20 +39,37 @@ export class SolicitudesComponent implements OnInit {
   solicitudForm: any = { medicoId: null, motivo: '' };
   
   doctoresPublicos: DoctorPublicoDTO[] = [];
-  solicitudesMock: any[] = [];
-
-  constructor(public data: MockDataService) {
-    this.solicitudesMock = this.data.solicitudes;
-  }
+  solicitudes: SolicitudUnificada[] = [];
 
   ngOnInit(): void {
     if (this.esPaciente) {
       this.cargarDoctoresPublicos();
     }
+    this.cargarSolicitudes();
   }
 
   get esPaciente(): boolean {
     return this.auth.esPaciente;
+  }
+
+  cargarSolicitudes(): void {
+    this.solicitudesService.listarPublicas({}).subscribe({
+      next: (response) => {
+        const publicas: SolicitudUnificada[] = (response.data ?? []).map((s: any) => ({ ...s, tipo: 'PUBLICA' as const }));
+        this.solicitudes = publicas;
+        this.solicitudesService.listarUsuarios({}).subscribe({
+          next: (res) => {
+            const usuarios: SolicitudUnificada[] = (res.data ?? []).map((s: any) => ({ ...s, tipo: 'USUARIO' as const }));
+            this.solicitudes = [...publicas, ...usuarios];
+          },
+          error: () => { /* mantener solo las públicas */ }
+        });
+      },
+      error: (error: any) => {
+        this.solicitudes = [];
+        this.errorHandler.showError(error?.status || 500, 'No se pudieron cargar las solicitudes');
+      }
+    });
   }
 
   cargarDoctoresPublicos(): void {
@@ -56,7 +77,7 @@ export class SolicitudesComponent implements OnInit {
       next: (response) => {
         this.doctoresPublicos = response.data ?? [];
       },
-      error: (error) => {
+      error: (error: any) => {
         this.doctoresPublicos = [];
         this.errorHandler.showError(error?.status || 500, 'No se pudieron cargar los doctores');
       }
@@ -92,32 +113,40 @@ export class SolicitudesComponent implements OnInit {
         }
         this.errorHandler.showError(400, response.message || 'No se pudo enviar la solicitud');
       },
-      error: (error) => {
+      error: (error: any) => {
         this.errorHandler.showError(error?.status || 500, 'No se pudo enviar la solicitud');
       }
     });
   }
 
   countByEstado(estadoId: number): number {
-    return this.solicitudesMock.filter(s => s.estadoId === estadoId).length;
+    return this.solicitudes.filter((s: SolicitudUnificada) => s.estadoId === estadoId).length;
   }
 
   getInitials(name: string): string {
     return name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('');
   }
 
+  getEstadoSeverity(codigoEstado: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' | undefined {
+    switch (codigoEstado) {
+      case 'PEND': return 'warn';
+      case 'REVIS': return 'info';
+      case 'CONF': return 'success';
+      case 'RECH': return 'danger';
+      case 'CANC': return 'danger';
+      default: return 'secondary';
+    }
+  }
+
   get solicitudesView() {
     const term = this.searchSolicitud.toLowerCase();
-    return this.solicitudesMock.map(s => {
-      const estado = this.data.estadosSolicitud.find(e => e.estadoSolicitudId === s.estadoId);
-      return {
-        ...s,
-        pacienteNombre: this.data.getPacienteNombre(s.pacienteId),
-        doctorNombre: this.data.getDoctorNombre(s.medicoId),
-        estadoNombre: estado?.nombreEstado ?? '',
-        estadoCodigo: estado?.codigoEstado ?? ''
-      };
-    }).filter(s => !term ||
+    return this.solicitudes.map((s: SolicitudUnificada) => ({
+      ...s,
+      pacienteNombre: s.nombrePaciente,
+      doctorNombre: s.medico,
+      estadoNombre: s.estado,
+      estadoCodigo: s.codigoEstado
+    })).filter(s => !term ||
       s.pacienteNombre.toLowerCase().includes(term) ||
       s.doctorNombre.toLowerCase().includes(term) ||
       (s.motivo ?? '').toLowerCase().includes(term) ||
@@ -126,11 +155,26 @@ export class SolicitudesComponent implements OnInit {
   }
 
   cambiarEstadoSolicitud(s: any, nuevoEstado: number): void {
-    const sol = this.solicitudesMock.find((x: any) => x.solicitudId === s.solicitudId);
-    if (sol) {
-      sol.estadoId = nuevoEstado;
-      const nombre = this.data.estadosSolicitud.find(e => e.estadoSolicitudId === nuevoEstado)?.nombreEstado ?? '';
-      this.messageService.add({ severity: 'success', summary: 'Estado', detail: `Solicitud ${nombre.toLowerCase()}` });
-    }
+    const codigoMap: Record<number, string> = { 1: 'PEND', 2: 'REVIS', 3: 'CONF', 4: 'RECH', 5: 'CANC' };
+    const codigoEstado = codigoMap[nuevoEstado] ?? 'PEND';
+    const dto: CambiarEstadoSolicitudDTO = { solicitudId: s.solicitudId, codigoEstado };
+
+    const cambiar$ = s.tipo === 'PUBLICA'
+      ? this.solicitudesService.cambiarEstadoPublica(dto)
+      : this.solicitudesService.cambiarEstadoUsuario(dto);
+
+    cambiar$.subscribe({
+      next: (response: any) => {
+        if (response.success) {
+          this.messageService.add({ severity: 'success', summary: 'Estado', detail: 'Solicitud actualizada' });
+          this.cargarSolicitudes();
+        } else {
+          this.errorHandler.showError(400, response.message || 'No se pudo cambiar el estado');
+        }
+      },
+      error: (error: any) => {
+        this.errorHandler.showError(error?.status || 500, 'No se pudo cambiar el estado');
+      }
+    });
   }
 }

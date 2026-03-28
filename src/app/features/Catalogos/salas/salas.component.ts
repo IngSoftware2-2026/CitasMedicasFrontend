@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MockDataService } from '../../../core/services/Clinica/mock-data.service';
+import { Sala } from '../../../core/models/Catalogos/sala.model';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -53,7 +54,7 @@ export class SalasComponent {
       return;
     }
     if (this.salaForm['salaId']) {
-      const idx = this.salas.findIndex(s => s.salaId === this.salaForm['salaId']);
+      const idx = this.salas.findIndex((s: Sala) => s.salaId === this.salaForm['salaId']);
       if (idx >= 0) {
         this.salas[idx] = { ...this.salas[idx], ...this.salaForm };
         this.messageService.add({ severity: 'success', summary: 'Actualizada', detail: 'Sala actualizada' });

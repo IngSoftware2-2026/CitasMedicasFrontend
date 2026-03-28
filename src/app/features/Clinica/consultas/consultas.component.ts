@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, OnDestroy, signal, NgZone } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { MockDataService } from '../../../core/services/Clinica/mock-data.service';
@@ -11,33 +11,251 @@ import { CardModule } from 'primeng/card';
 import { ToolbarModule } from 'primeng/toolbar';
 import { DividerModule } from 'primeng/divider';
 import { TextareaModule } from 'primeng/textarea';
+import { TooltipModule } from 'primeng/tooltip';
 import { ConsultaService } from '../../../core/services/Clinica/consulta.service';
 import { Consulta } from '../../../core/models/Clinica/Citas/consulta.model';
+import { CitasService } from '../../../core/services/Clinica/citas.service';
+import { CitaListadoResponse } from '../../../core/models/Clinica/Citas/citas-read.model';
 
 @Component({
   selector: 'app-consultas',
   standalone: true,
-  imports: [FormsModule, DatePipe, ButtonModule, DialogModule, InputTextModule, TagModule, CardModule, ToolbarModule, DividerModule, TextareaModule],
+  imports: [FormsModule, DatePipe, ButtonModule, DialogModule, InputTextModule, TagModule, CardModule, ToolbarModule, DividerModule, TextareaModule, TooltipModule],
   templateUrl: './consultas.component.html',
   styleUrl: './consultas.component.css'
 })
-export class ConsultasComponent implements OnInit {
+export class ConsultasComponent implements OnInit, OnDestroy {
   consultaDialog = false;
   consultaForm: Record<string, any> = {};
   consultas = signal<Consulta[]>([]);
 
+  // ── Dictado por voz ──
+  private recognition: any = null;
+  dictadoCampo: string | null = null;
+  dictadoActivo = false;
+  textoInterino = '';
+  dictadoSoportado = ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window);
 
-  get citas() { return this.data.citas; }
+  citasDisponibles: CitaListadoResponse[] = [];
 
   constructor(
     public data: MockDataService,
     private consultaService: ConsultaService,
+    private citasService: CitasService,
+    private zone: NgZone,
     private cdr: ChangeDetectorRef,
     private messageService: MessageService) {}
 
   ngOnInit(): void {
     this.cargarConsultas();
     this.cargarCitas();
+  }
+
+  ngOnDestroy(): void {
+    this.detenerDictado();
+  }
+
+  // ── Métodos de dictado (directos, sin servicio intermedio) ──
+
+  toggleDictado(campo: string): void {
+    console.log('[Dictado] toggle campo:', campo, '| activo:', this.dictadoActivo, '| campoActual:', this.dictadoCampo);
+    if (this.dictadoActivo && this.dictadoCampo === campo) {
+      this.detenerDictado();
+    } else {
+      this.iniciarDictado(campo);
+    }
+  }
+
+  esDictandoCampo(campo: string): boolean {
+    return this.dictadoActivo && this.dictadoCampo === campo;
+  }
+
+  iniciarDictado(campo: string): void {
+    // Limpiar sesión anterior si existe
+    this.detenerDictado();
+
+    const SR = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    if (!SR) {
+      this.messageService.add({ severity: 'warn', summary: 'No soportado', detail: 'Tu navegador no soporta dictado por voz. Usa Google Chrome.' });
+      return;
+    }
+
+    this.dictadoCampo = campo;
+    this.dictadoActivo = true;
+    this.messageService.add({ severity: 'info', summary: 'Micrófono', detail: 'Solicitando permiso...', life: 2000 });
+    this.cdr.detectChanges();
+
+    // Solicitar permiso de micrófono ANTES de iniciar reconocimiento
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        console.log('[Dictado] Permiso de micrófono concedido');
+        // Detener el stream — solo lo usamos para pedir permiso
+        stream.getTracks().forEach(t => t.stop());
+        this.crearReconocimiento(campo);
+      })
+      .catch(err => {
+        console.error('[Dictado] Permiso de micrófono denegado:', err);
+        this.zone.run(() => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Micrófono bloqueado',
+            detail: 'Permite el acceso al micrófono. Haz clic en el candado de la barra de direcciones → Micrófono → Permitir → Recarga la página.',
+            life: 8000
+          });
+          this.dictadoActivo = false;
+          this.dictadoCampo = null;
+          this.cdr.detectChanges();
+        });
+      });
+  }
+
+  private crearReconocimiento(campo: string): void {
+    const SR = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    const rec = new SR();
+    rec.lang = 'es';
+    rec.continuous = false;      // Sesiones cortas — más estable en Chrome
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+    this.recognition = rec;
+
+    rec.onstart = () => {
+      console.log('[Dictado] ✅ Escuchando — hable ahora');
+    };
+
+    rec.onresult = (event: any) => {
+      this.zone.run(() => {
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+
+          if (event.results[i].isFinal) {
+            console.log('[Dictado] 📝 Texto:', transcript);
+            const actual = (this.consultaForm[campo] || '').trim();
+            this.consultaForm[campo] = actual + (actual ? ' ' : '') + transcript.trim();
+            this.textoInterino = '';
+          } else {
+            this.textoInterino = transcript;
+          }
+        }
+        this.cdr.detectChanges();
+      });
+    };
+
+    rec.onerror = (event: any) => {
+      console.warn('[Dictado] Error:', event.error);
+      this.zone.run(() => {
+        // Estos errores no son fatales — reiniciar silenciosamente
+        if (event.error === 'no-speech' || event.error === 'aborted') {
+          return;
+        }
+        const mensajes: Record<string, string> = {
+          'audio-capture': 'No se detectó micrófono. Conecta uno y recarga la página.',
+          'not-allowed': 'Permiso de micrófono denegado. Haz clic en el candado de la barra de direcciones y permite el micrófono.',
+          'network': 'Error de red. El dictado necesita conexión a internet.',
+          'service-not-available': 'Servicio no disponible. Usa Google Chrome actualizado.'
+        };
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error de micrófono',
+          detail: mensajes[event.error] || `Error: ${event.error}`,
+          life: 6000
+        });
+        this.dictadoActivo = false;
+        this.dictadoCampo = null;
+        this.cdr.detectChanges();
+      });
+    };
+
+    rec.onend = () => {
+      this.zone.run(() => {
+        if (this.dictadoActivo && this.dictadoCampo === campo) {
+          // Reiniciar con nueva instancia después de un pequeño delay
+          console.log('[Dictado] Reiniciando sesión...');
+          setTimeout(() => {
+            if (this.dictadoActivo && this.dictadoCampo === campo) {
+              this.crearReconocimiento(campo);
+            }
+          }, 300);
+        } else {
+          this.dictadoCampo = null;
+          this.textoInterino = '';
+          this.cdr.detectChanges();
+        }
+      });
+    };
+
+    try {
+      rec.start();
+      console.log('[Dictado] start() llamado');
+    } catch (e) {
+      console.error('[Dictado] Error al iniciar:', e);
+      // Reintentar con delay
+      setTimeout(() => {
+        if (this.dictadoActivo) {
+          this.crearReconocimiento(campo);
+        }
+      }, 500);
+    }
+  }
+
+  detenerDictado(): void {
+    this.dictadoActivo = false;
+    this.textoInterino = '';
+    if (this.recognition) {
+      try { this.recognition.stop(); } catch {}
+      this.recognition = null;
+    }
+    this.dictadoCampo = null;
+  }
+
+  probarMicrofono(): void {
+    const SR = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    if (!SR) {
+      alert('Tu navegador no soporta reconocimiento de voz. Usa Google Chrome.');
+      return;
+    }
+
+    this.messageService.add({ severity: 'info', summary: 'Micrófono', detail: 'Solicitando permiso...', life: 2000 });
+
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        stream.getTracks().forEach(t => t.stop());
+
+        const test = new SR();
+        test.lang = 'es';
+        test.interimResults = false;
+        test.maxAlternatives = 1;
+
+        this.messageService.add({ severity: 'info', summary: 'Prueba de micrófono', detail: 'Diga algo en los próximos 5 segundos...', life: 5000 });
+
+        test.onresult = (e: any) => {
+          const texto = e.results[0][0].transcript;
+          console.log('[Dictado] ✅ Prueba exitosa:', texto);
+          this.zone.run(() => {
+            this.messageService.add({ severity: 'success', summary: 'Micrófono funciona', detail: `Reconocido: "${texto}"`, life: 5000 });
+            this.cdr.detectChanges();
+          });
+        };
+        test.onerror = (e: any) => {
+          console.error('[Dictado] ❌ Prueba falló:', e.error);
+          this.zone.run(() => {
+            this.messageService.add({ severity: 'error', summary: 'Prueba fallida', detail: `Error: ${e.error}. Verifica que uses Chrome, tengas micrófono conectado e internet.`, life: 8000 });
+            this.cdr.detectChanges();
+          });
+        };
+        test.onend = () => console.log('[Dictado] Prueba terminada');
+        test.start();
+      })
+      .catch(err => {
+        console.error('[Dictado] Permiso de micrófono denegado:', err);
+        this.zone.run(() => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Micrófono bloqueado',
+            detail: 'Permite el acceso al micrófono en la barra de direcciones del navegador.',
+            life: 8000
+          });
+        });
+      });
   }
 
   cargarConsultas(): void {
@@ -56,17 +274,21 @@ export class ConsultasComponent implements OnInit {
     });
   }
 
-    cargarCitas(): void {
-    this.consultaService.obtenerConsultas().subscribe({
-      next: (data) => {
-        this.consultas.set(data);
+  cargarCitas(): void {
+    this.citasService.obtenerPorFiltro({}).subscribe({
+      next: (res) => {
+        const todas = res.data || [];
+        // Solo mostrar citas Confirmadas o Atendidas (válidas para consulta)
+        this.citasDisponibles = todas.filter(c =>
+          c.codigoEstado === 'CONF' || c.codigoEstado === 'ATEN' ||
+          c.estado === 'Confirmada' || c.estado === 'Atendida'
+        );
+        console.log('Citas válidas para consulta:', this.citasDisponibles.length, '/', todas.length);
         this.cdr.markForCheck();
       },
       error: (err) => {
-        console.error('Error al listar pacientes - Status:', err.status);
-        console.error('Error al listar pacientes - Body:', err.error);
-        console.error('Error al listar pacientes - Headers:', err.headers);
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los pacientes' });
+        console.error('Error al listar citas:', err.status, err.error);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar las citas' });
         this.cdr.markForCheck();
       }
     });
@@ -79,8 +301,9 @@ export class ConsultasComponent implements OnInit {
 
   
   saveConsulta(): void {
+    console.log('saveConsulta llamado, form:', JSON.stringify(this.consultaForm));
     if (!this.consultaForm['citaId']) {
-      this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Cita es obligatoria' });
+      this.messageService.add({ severity: 'warn', summary: 'Requerido', detail: 'Debe seleccionar una cita', life: 5000 });
       return;
     }
     
@@ -96,6 +319,7 @@ export class ConsultasComponent implements OnInit {
         next: () => {
           this.messageService.add({ severity: 'success', summary: 'Actualizado', detail: 'Consulta actualizada' });
           this.consultaDialog = false;
+          this.cdr.detectChanges();
           this.cargarConsultas();
         },
         error: (err) => {
@@ -105,10 +329,9 @@ export class ConsultasComponent implements OnInit {
       });
     } else {
       const payload: any = {
-        consultaId: Number(this.consultaForm['consultaId']),
         citaId: Number(this.consultaForm['citaId']),
         motivo: this.consultaForm['motivo'] || null,
-        notas: this.consultaForm['notas'],
+        notas: this.consultaForm['notas'] || null,
         tratamiento: this.consultaForm['tratamiento'] || null
       };
       console.log('Insertando consulta:', payload);
@@ -116,11 +339,14 @@ export class ConsultasComponent implements OnInit {
         next: () => {
           this.messageService.add({ severity: 'success', summary: 'Creado', detail: 'Consulta creada' });
           this.consultaDialog = false;
+          this.cdr.detectChanges();
           this.cargarConsultas();
+          this.cargarCitas();
         },
         error: (err) => {
           console.error('Error al crear:', err);
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.mensaje || 'No se pudo crear la consulta' });
+          const msg = err?.error?.message || err?.error?.mensaje || 'No se pudo crear la consulta';
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: msg });
         }
       });
     }

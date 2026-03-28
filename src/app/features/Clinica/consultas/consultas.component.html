@@ -31,19 +31,75 @@
 </div>
 
 <!-- CONSULTA DIALOG -->
-<p-dialog header="{{ consultaForm['consultaId'] ? 'Editar' : 'Nueva' }} Consulta" [(visible)]="consultaDialog" [modal]="true" [style]="{width: '550px'}">
+<p-dialog header="{{ consultaForm['consultaId'] ? 'Editar' : 'Nueva' }} Consulta" [(visible)]="consultaDialog" [modal]="true" [style]="{width: '600px'}">
   <div class="dialog-form">
     <div class="field"><label>Cita *</label>
       <select class="p-inputtext" [(ngModel)]="consultaForm['citaId']">
-        @for (c of citas; track c.citaId) { <option [ngValue]="c.citaId">Cita #{{ c.citaId }} - {{ data.getPacienteNombre(c.pacienteId) }}</option> }
+        @for (c of citasDisponibles; track c.citaId) {
+          <option [ngValue]="c.citaId">Cita #{{ c.citaId }} - {{ c.paciente || 'Paciente ' + c.pacienteId }} ({{ c.inicio | date:'dd/MM/yyyy HH:mm' }})</option>
+        }
       </select>
     </div>
-    <div class="field"><label>Motivo</label><input pInputText [(ngModel)]="consultaForm['motivo']" /></div>
-    <div class="field"><label>Notas</label><textarea pTextarea [(ngModel)]="consultaForm['notas']" rows="3"></textarea></div>
-    <div class="field"><label>Tratamiento</label><textarea pTextarea [(ngModel)]="consultaForm['tratamiento']" rows="2"></textarea></div>
+    <div class="field">
+      <label>Motivo</label>
+      <div class="dictado-field">
+        <input pInputText [(ngModel)]="consultaForm['motivo']" placeholder="Describa el motivo de la consulta..." />
+        @if (dictadoSoportado) {
+          <button class="dictado-btn" [class.dictado-activo]="esDictandoCampo('motivo')" (click)="toggleDictado('motivo')" pTooltip="Dictar motivo" tooltipPosition="top" type="button">
+            <i [class]="esDictandoCampo('motivo') ? 'pi pi-stop-circle' : 'pi pi-microphone'"></i>
+          </button>
+        }
+      </div>
+      @if (esDictandoCampo('motivo') && textoInterino) {
+        <div class="dictado-preview"><i class="pi pi-volume-up"></i> {{ textoInterino }}</div>
+      }
+    </div>
+    <div class="field">
+      <label>Notas / Diagnóstico</label>
+      <div class="dictado-field">
+        <textarea pTextarea [(ngModel)]="consultaForm['notas']" rows="4" placeholder="Dicte o escriba las notas del diagnóstico..."></textarea>
+        @if (dictadoSoportado) {
+          <button class="dictado-btn" [class.dictado-activo]="esDictandoCampo('notas')" (click)="toggleDictado('notas')" pTooltip="Dictar notas" tooltipPosition="top" type="button">
+            <i [class]="esDictandoCampo('notas') ? 'pi pi-stop-circle' : 'pi pi-microphone'"></i>
+          </button>
+        }
+      </div>
+      @if (esDictandoCampo('notas') && textoInterino) {
+        <div class="dictado-preview"><i class="pi pi-volume-up"></i> {{ textoInterino }}</div>
+      }
+    </div>
+    <div class="field">
+      <label>Tratamiento</label>
+      <div class="dictado-field">
+        <textarea pTextarea [(ngModel)]="consultaForm['tratamiento']" rows="3" placeholder="Dicte o escriba el tratamiento..."></textarea>
+        @if (dictadoSoportado) {
+          <button class="dictado-btn" [class.dictado-activo]="esDictandoCampo('tratamiento')" (click)="toggleDictado('tratamiento')" pTooltip="Dictar tratamiento" tooltipPosition="top" type="button">
+            <i [class]="esDictandoCampo('tratamiento') ? 'pi pi-stop-circle' : 'pi pi-microphone'"></i>
+          </button>
+        }
+      </div>
+      @if (esDictandoCampo('tratamiento') && textoInterino) {
+        <div class="dictado-preview"><i class="pi pi-volume-up"></i> {{ textoInterino }}</div>
+      }
+    </div>
+
+    @if (dictadoSoportado) {
+      <div class="dictado-banner">
+        <i class="pi pi-microphone"></i>
+        <span>Dictado por voz disponible. Presiona el micrófono en cada campo.</span>
+        <button class="dictado-test-btn" (click)="probarMicrofono()" type="button">Probar micrófono</button>
+      </div>
+    }
   </div>
   <ng-template #footer>
-    <p-button label="Cancelar" icon="pi pi-times" [text]="true" (onClick)="consultaDialog = false" />
+    @if (dictadoActivo) {
+      <div class="dictado-status">
+        <span class="dictado-pulse"></span>
+        <span>Escuchando — campo: <strong>{{ dictadoCampo }}</strong></span>
+        <p-button label="Detener" icon="pi pi-stop" severity="danger" size="small" [text]="true" (onClick)="detenerDictado()" />
+      </div>
+    }
+    <p-button label="Cancelar" icon="pi pi-times" [text]="true" (onClick)="consultaDialog = false; detenerDictado()" />
     <p-button label="Guardar" icon="pi pi-check" (onClick)="saveConsulta()" />
   </ng-template>
 </p-dialog>

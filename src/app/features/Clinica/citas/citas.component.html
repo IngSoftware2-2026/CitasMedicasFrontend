@@ -64,6 +64,17 @@
                 <i class="pi pi-eye"></i>
                 Ver detalle
               </button>
+              <app-qr-cita [cita]="{
+                citaId: c.citaId,
+                paciente: c.paciente,
+                medico: c.medico,
+                sala: c.sala,
+                inicio: c.inicio,
+                fin: c.fin,
+                duracionMinutos: c.duracionMinutos,
+                estado: c.estado,
+                codigoEstado: c.codigoEstado
+              }"></app-qr-cita>
             </footer>
           </article>
         }
@@ -277,6 +288,19 @@
     <div class="detail-item"><label>Fin</label><p>{{ detailCita.fin | date:'dd/MM/yyyy HH:mm' }}</p></div>
     <div class="detail-item"><label>Duracion</label><p>{{ detailCita.duracionMinutos }} minutos</p></div>
     <div class="detail-item"><label>Creada</label><p>{{ detailCita.fechaCreacion | date:'dd/MM/yyyy' }}</p></div>
+  </div>
+  <div class="detail-qr-section">
+    <app-qr-cita [cita]="{
+      citaId: detailCita.citaId,
+      paciente: detailCita.paciente,
+      medico: detailCita.medico,
+      sala: detailCita.sala,
+      inicio: detailCita.inicio,
+      fin: detailCita.fin,
+      duracionMinutos: detailCita.duracionMinutos,
+      estado: detailCita.estado,
+      codigoEstado: detailCita.codigoEstado
+    }"></app-qr-cita>
   </div>
   }
 </p-dialog>

@@ -98,7 +98,7 @@
         </td>
         <td><span class="sol-duration"><i class="pi pi-stopwatch"></i> {{ s.duracionMinutos }} min</span></td>
         <td><span class="sol-motivo">{{ s.motivo ?? '—' }}</span></td>
-        <td><p-tag [value]="s.estadoNombre" [severity]="data.getEstadoSolicitudSeverity(s.estadoCodigo)" [rounded]="true" /></td>
+        <td><p-tag [value]="s.estadoNombre" [severity]="getEstadoSeverity(s.estadoCodigo)" [rounded]="true" /></td>
         <td>
           <div class="sol-actions">
             @if (s.estadoId === 1) {
@@ -144,11 +144,6 @@
         <option [ngValue]="null">Seleccione un doctor</option>
         @for (d of doctoresPublicos; track d.medicoId) {
           <option [ngValue]="d.medicoId">{{ d.nombrePublico }} - {{ d.nombreEspecialidad }}</option>
-        }
-        @if (doctoresPublicos.length === 0) {
-          @for (d of data.doctores; track d.medicoId) {
-            <option [ngValue]="d.medicoId">{{ d.nombrePublico }}</option>
-          }
         }
       </select>
     </div>

@@ -17,6 +17,7 @@ import { HorariosComponent } from './features/Clinica/horarios/horarios.componen
 import { AdminRolesComponent } from './features/Accesos/admin/admin-roles.component';
 import { UsuariosComponent } from './features/Accesos/usuarios/usuarios.component';
 import { ConfiguracionesComponent } from './features/Accesos/configuraciones/configuraciones.component';
+import { QrRecepcionComponent } from './features/Clinica/recepcion/qr-recepcion.component';
 import { authGuard } from './core/guards/auth.guard';
 import { permissionGuard } from './core/guards/permission.guard';
 
@@ -35,6 +36,7 @@ const ROUTES = {
   USUARIOS: 'usuarios',
   ADMIN: 'admin',
   CONFIGURACIONES: 'configuraciones',
+  RECEPCION: 'recepcion',
   SOLICITAR_CITA: 'solicitar-cita',
   SOLICITUD_DETALLE: 'solicitudes/:id',
   EMPTY: ''
@@ -131,6 +133,12 @@ export const routes: Routes = [
         component: ConfiguracionesComponent,
         canActivate: [permissionGuard],
         data: { routeName: 'CONFIGURACIONES' }
+      },
+      {
+        path: ROUTES.RECEPCION,
+        component: QrRecepcionComponent,
+        canActivate: [permissionGuard],
+        data: { routeName: 'RECEPCION' }
       },
       { path: ROUTES.EMPTY, redirectTo: ROUTES.DASHBOARD, pathMatch: 'full' }
     ]

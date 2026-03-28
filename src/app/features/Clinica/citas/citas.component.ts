@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { QrCitaComponent } from './qr-cita.component';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -29,7 +30,7 @@ import { InputIconModule } from 'primeng/inputicon';
 @Component({
   selector: 'app-citas',
   standalone: true,
-  imports: [FormsModule, DatePipe, RouterLink, TableModule, ButtonModule, DialogModule, InputTextModule, TagModule, ToolbarModule, TooltipModule, DividerModule, IconFieldModule, InputIconModule],
+  imports: [FormsModule, DatePipe, RouterLink, TableModule, ButtonModule, DialogModule, InputTextModule, TagModule, ToolbarModule, TooltipModule, DividerModule, IconFieldModule, InputIconModule, QrCitaComponent],
   templateUrl: './citas.component.html',
   styleUrl: './citas.component.css'
 })
