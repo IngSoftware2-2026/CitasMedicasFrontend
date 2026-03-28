@@ -1,22 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { MessageService } from 'primeng/api';
-import { MockDataService } from '../../../../core/services/Clinica/mock-data.service';
 import { Permiso } from '../../../../core/models/Accesos/permiso.model';
 
 interface RolPermisoAsignacion { rolId: number; permisoId: number }
 
 @Injectable()
 export class PermisosRolAdminService {
-  private mockDataService = inject(MockDataService);
   private messageService = inject(MessageService);
 
-  get listaRolPermisos(): RolPermisoAsignacion[] { 
-    return this.mockDataService.rolPermisos; 
-  }
-  
-  get listaPermisos(): Permiso[] { 
-    return this.mockDataService.permisos; 
-  }
+  listaRolPermisos: RolPermisoAsignacion[] = [];
+  listaPermisos: Permiso[] = [];
 
   obtenerNombrePermiso(idPermiso: number): string {
     return this.listaPermisos.find(p => p.permisoId === idPermiso)?.nombrePermiso ?? '';

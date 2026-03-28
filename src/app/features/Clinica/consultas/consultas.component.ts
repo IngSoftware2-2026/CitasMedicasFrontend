@@ -1,7 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit, OnDestroy, signal, NgZone } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-import { MockDataService } from '../../../core/services/Clinica/mock-data.service';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -39,7 +38,6 @@ export class ConsultasComponent implements OnInit, OnDestroy {
   citasDisponibles: CitaListadoResponse[] = [];
 
   constructor(
-    public data: MockDataService,
     private consultaService: ConsultaService,
     private citasService: CitasService,
     private zone: NgZone,
@@ -277,13 +275,8 @@ export class ConsultasComponent implements OnInit, OnDestroy {
   cargarCitas(): void {
     this.citasService.obtenerPorFiltro({}).subscribe({
       next: (res) => {
-        const todas = res.data || [];
-        // Solo mostrar citas Confirmadas o Atendidas (válidas para consulta)
-        this.citasDisponibles = todas.filter(c =>
-          c.codigoEstado === 'CONF' || c.codigoEstado === 'ATEN' ||
-          c.estado === 'Confirmada' || c.estado === 'Atendida'
-        );
-        console.log('Citas válidas para consulta:', this.citasDisponibles.length, '/', todas.length);
+        this.citasDisponibles = res.data || [];
+        console.log('Citas cargadas:', this.citasDisponibles.length);
         this.cdr.markForCheck();
       },
       error: (err) => {

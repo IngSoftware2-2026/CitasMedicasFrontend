@@ -64,7 +64,7 @@ export class QrCitaComponent implements OnChanges {
 
   async ngOnChanges(_changes: SimpleChanges) {
     if (this.cita) {
-      const qrPayload = JSON.stringify({ citaId: this.cita.citaId });
+      const qrPayload = String(this.cita.citaId);
       this.qrDataUrl = await QRCode.toDataURL(qrPayload, { width: 300, margin: 2 });
     }
   }

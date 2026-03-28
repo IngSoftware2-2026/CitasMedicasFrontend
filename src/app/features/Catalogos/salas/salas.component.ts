@@ -1,8 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MockDataService } from '../../../core/services/Clinica/mock-data.service';
 import { Sala } from '../../../core/models/Catalogos/sala.model';
 import { MessageService, ConfirmationService } from 'primeng/api';
+import { CitasService } from '../../../core/services/Clinica/citas.service';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
@@ -20,12 +20,12 @@ import { InputIconModule } from 'primeng/inputicon';
   templateUrl: './salas.component.html',
   styleUrl: './salas.component.css'
 })
-export class SalasComponent {
+export class SalasComponent implements OnInit {
   salaDialog = false;
   salaForm: Record<string, any> = {};
   searchSala = '';
-
-  get salas() { return this.data.salas; }
+  salas: Sala[] = [];
+  private nextSalaId = 1000;
 
   get filteredSalas() {
     const term = this.searchSala.toLowerCase();
@@ -38,10 +38,22 @@ export class SalasComponent {
   }
 
   constructor(
-    private data: MockDataService,
+    private citasService: CitasService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) {}
+
+  ngOnInit(): void {
+    this.citasService.listarSalas().subscribe({
+      next: (resp) => {
+        this.salas = resp.data ?? [];
+        if (this.salas.length) {
+          this.nextSalaId = Math.max(...this.salas.map(s => s.salaId)) + 1;
+        }
+      },
+      error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar las salas' })
+    });
+  }
 
   openSalaDialog(s?: any): void {
     this.salaForm = s ? { ...s } : {};
@@ -62,7 +74,7 @@ export class SalasComponent {
     } else {
       this.salas.push({
         ...this.salaForm,
-        salaId: this.data.nextId('sala'),
+        salaId: ++this.nextSalaId,
         activo: true
       } as any);
       this.messageService.add({ severity: 'success', summary: 'Creada', detail: 'Sala creada' });

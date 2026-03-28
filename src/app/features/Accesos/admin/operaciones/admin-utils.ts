@@ -1,15 +1,12 @@
-import { Injectable, inject } from '@angular/core';
-import { MockDataService } from '../../../../core/services/Clinica/mock-data.service';
+import { Injectable } from '@angular/core';
 import { Permiso } from '../../../../core/models/Accesos/permiso.model';
 import { Rol } from '../../../../core/models/Accesos/rol.model';
 
 @Injectable()
 export class AdminUtils {
-  private data = inject(MockDataService);
-
-  get permisos() { return this.data.permisos; }
-  get rolPermisos() { return this.data.rolPermisos; }
-  get roles(): Rol[] { return this.data.roles; }
+  permisos: Permiso[] = [];
+  rolPermisos: { rolId: number; permisoId: number }[] = [];
+  roles: Rol[] = [];
 
   getRoles(): Rol[] { return this.roles; }
 

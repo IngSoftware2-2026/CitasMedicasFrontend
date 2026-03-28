@@ -1,20 +1,14 @@
 import { Injectable, inject } from '@angular/core';
 import { MessageService } from 'primeng/api';
-import { MockDataService } from '../../../../core/services/Clinica/mock-data.service';
 import { Permiso } from '../../../../core/models/Accesos/permiso.model';
 
 @Injectable()
 export class PermisosAdminService {
-  private mockDataService = inject(MockDataService);
   private messageService = inject(MessageService);
 
-  get listaPermisos(): Permiso[] { 
-    return this.mockDataService.permisos; 
-  }
-  
-  get listaRolPermisos(): any[] { 
-    return this.mockDataService.rolPermisos; 
-  }
+  listaPermisos: Permiso[] = [];
+  listaRolPermisos: { rolId: number; permisoId: number }[] = [];
+  private nextPermisoId = 1000;
 
   guardarPermiso(permiso: Partial<Permiso>, esEdicion: boolean): void {
     if (!permiso.codigoPermiso || !permiso.nombrePermiso) {
@@ -31,7 +25,7 @@ export class PermisosAdminService {
 
   private crearPermiso(permiso: Partial<Permiso>): void {
     this.listaPermisos.push({
-      permisoId: this.mockDataService.nextId('permiso'),
+      permisoId: ++this.nextPermisoId,
       codigoPermiso: permiso.codigoPermiso!,
       nombrePermiso: permiso.nombrePermiso!,
       descripcion: permiso.descripcion
