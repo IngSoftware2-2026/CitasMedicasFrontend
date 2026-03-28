@@ -193,6 +193,41 @@
   font-weight: 700;
   color: var(--text-color);
 }
+.doc-operacion-line {
+  margin: 0.35rem 0 0.5rem;
+}
+.doc-operacion-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.doc-operacion-badge--ok {
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
+}
+.doc-operacion-badge--warn {
+  background: rgba(245, 158, 11, 0.14);
+  color: #b45309;
+}
+.doc-operacion-alertas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: center;
+  margin: 0 0 0.6rem;
+}
+.doc-alerta-chip {
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.08);
+  color: #b91c1c;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
 .doc-card-specialty {
   display: inline-block;
   font-size: 0.82rem;

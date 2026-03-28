@@ -370,6 +370,17 @@ td {
   color: #16a34a;
 }
 
+.action-btn.action-reschedule {
+  color: #2563eb;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.action-btn.action-reschedule:hover {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: #3b82f6;
+  color: #2563eb;
+}
+
 .action-btn.action-reject {
   color: #dc2626;
   border-color: rgba(239, 68, 68, 0.3);

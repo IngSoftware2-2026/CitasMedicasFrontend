@@ -37,7 +37,7 @@
           </div>
         </div>
       </div>
-      @if (esPendiente) {
+      @if (!esPaciente) {
         <div class="detail-actions">
           <button class="btn btn-success" (click)="abrirAprobar()" [disabled]="actionLoading()">
             <i class="pi pi-check"></i> Aprobar y crear cita

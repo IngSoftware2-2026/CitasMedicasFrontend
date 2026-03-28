@@ -67,10 +67,10 @@
           </a>
         }
 
-        @if (esAdmin || esRecepcion) {
+        @if (esAdmin || esRecepcion || esDoctor) {
           <a routerLink="/solicitudes" routerLinkActive="active" (click)="closeSidebarOnMobile()">
             <i class="pi pi-clipboard"></i>
-            <span>Solicitudes</span>
+            <span>{{ esDoctor ? 'Solicitudes de Pacientes' : 'Solicitudes' }}</span>
           </a>
         }
 

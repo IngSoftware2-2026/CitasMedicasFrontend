@@ -37,6 +37,19 @@ export class DoctoresService {
     );
   }
 
+  listarOperativos(): Observable<Doctor[]> {
+    return this.http.get<any>(`${environment.apiUrl}/Doctores/ListarOperativos`).pipe(
+      map(res => {
+        const list = Array.isArray(res) ? res : (res?.datos || res?.data || []);
+        return this.normalizeDoctorList(list);
+      }),
+      catchError(err => {
+        console.error('[DoctoresService] listarOperativos error:', err);
+        return of([]);
+      })
+    );
+  }
+
   obtenerPorId(id: number): Observable<DoctorDetalle | null> {
     return this.http.get<any>(`${this.baseUrl}/${id}`).pipe(
       map(res => {
@@ -79,6 +92,10 @@ export class DoctoresService {
 
   editar(id: number, doctor: Partial<Doctor>): Observable<void> {
     return this.http.put<void>(`${this.baseUrl}/${id}`, doctor);
+  }
+
+  eliminar(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 
   cambiarActivo(id: number, activo: boolean): Observable<void> {

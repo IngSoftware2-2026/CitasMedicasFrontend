@@ -121,13 +121,88 @@
   <div class="admin-dashboard">
     <div class="dashboard-header">
       <div>
-        <h1>Dashboard</h1>
-        <p>Sin datos consolidados en tiempo real para esta vista.</p>
+        <h1>{{ tituloDashboardGeneral }}</h1>
+        <p>{{ subtituloDashboardGeneral }}</p>
       </div>
       <span class="dashboard-date">{{ currentDate }}</span>
     </div>
-    <article class="panel">
-      <p class="empty-text">Esta pantalla no mostrara datos hasta que exista una fuente backend real para este resumen.</p>
-    </article>
+
+    <section class="admin-stats">
+      <article class="admin-stat">
+        <strong>{{ totalCitas }}</strong>
+        <span>{{ esRecepcion ? 'Citas confirmadas' : 'Citas cargadas' }}</span>
+      </article>
+      <article class="admin-stat">
+        <strong>{{ totalPacientes }}</strong>
+        <span>Pacientes activos</span>
+      </article>
+      <article class="admin-stat">
+        <strong>{{ totalDoctores }}</strong>
+        <span>Doctores activos</span>
+      </article>
+      <article class="admin-stat">
+        <strong>{{ distributionStats[1]?.count ?? 0 }}</strong>
+        <span>Atendidas / en curso</span>
+      </article>
+    </section>
+
+    <section class="admin-panels">
+      <article class="panel panel--appointments">
+        <div class="panel-head">
+          <h2>{{ esRecepcion ? 'Citas confirmadas recientes' : 'Citas recientes' }}</h2>
+          <a routerLink="/citas">Ir a Citas</a>
+        </div>
+        @if (loadingGeneral) {
+          <p class="empty-text">Cargando resumen...</p>
+        } @else if (recentCitas.length > 0) {
+          <div class="appointment-list">
+            @for (cita of recentCitas; track cita.citaId) {
+              <div class="appointment-item">
+                <div class="appointment-date">
+                  <strong>{{ cita.inicio | date:'dd/MM' }}</strong>
+                  <span>{{ cita.inicio | date:'HH:mm' }}</span>
+                </div>
+                <div class="appointment-main">
+                  <p>{{ cita.paciente || ('Paciente #' + cita.pacienteId) }}</p>
+                  <small>{{ cita.medico || ('Medico #' + cita.medicoId) }} - {{ cita.sala || ('Sala ' + cita.salaId) }}</small>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="empty-text">No hay citas para mostrar en este momento.</p>
+        }
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Accesos rapidos</h2>
+        </div>
+        <div class="quick-grid">
+          <a routerLink="/citas" class="quick-link"><i class="pi pi-calendar"></i> Citas</a>
+          <a routerLink="/solicitudes" class="quick-link"><i class="pi pi-clipboard"></i> Solicitudes</a>
+          <a routerLink="/pacientes" class="quick-link"><i class="pi pi-users"></i> Pacientes</a>
+          <a routerLink="/doctores" class="quick-link"><i class="pi pi-user-md"></i> Doctores</a>
+          <a routerLink="/horarios" class="quick-link"><i class="pi pi-clock"></i> Horarios</a>
+          <a routerLink="/configuraciones" class="quick-link"><i class="pi pi-cog"></i> Configuracion</a>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Estado operativo</h2>
+        </div>
+        @if (loadingGeneral) {
+          <p class="empty-text">Cargando estado operativo...</p>
+        } @else {
+          <ul class="simple-list">
+            <li><i class="pi pi-check-circle"></i> Confirmadas: {{ distributionStats[0]?.count ?? 0 }}</li>
+            <li><i class="pi pi-play-circle"></i> Atendidas / en curso: {{ distributionStats[1]?.count ?? 0 }}</li>
+            <li><i class="pi pi-times-circle"></i> Canceladas / no asistio: {{ distributionStats[2]?.count ?? 0 }}</li>
+            <li><i class="pi pi-user"></i> Doctores activos: {{ totalDoctores }}</li>
+          </ul>
+        }
+      </article>
+    </section>
   </div>
 }

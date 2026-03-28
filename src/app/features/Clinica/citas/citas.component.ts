@@ -75,6 +75,9 @@ export class CitasComponent implements OnInit {
     const rolId = this.auth.rolIdActual();
     return rolId === 1 || rolId === 3;
   }
+  get esRecepcion(): boolean {
+    return this.auth.esRecepcion;
+  }
   get esPaciente(): boolean {
     return this.auth.esPaciente;
   }
@@ -128,6 +131,10 @@ export class CitasComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    if (this.esRecepcion && !this.filtros.estadoId) {
+      this.filtros.estadoId = 2;
+    }
+
     if (this.esPaciente) {
       this.pacienteService.obtenerPerfilActual().subscribe({
         next: (perfil) => {
@@ -251,7 +258,7 @@ export class CitasComponent implements OnInit {
     this.filtros = {
       pacienteId: this.esPaciente ? this.pacienteIdActual : null,
       medicoId: null,
-      estadoId: null,
+      estadoId: this.esRecepcion ? 2 : null,
       salaId: null,
       desde: null,
       hasta: null
@@ -448,6 +455,15 @@ export class CitasComponent implements OnInit {
         fechaHoraInicio
       }
     });
+  }
+
+  editarCitaRecepcion(c: any): void {
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Modificar cita',
+      detail: 'La edicion directa aun no esta disponible. Puedes revisar el detalle, cancelar la cita actual y crear una nueva con los datos corregidos.'
+    });
+    this.openCitaDetail(c);
   }
 
   private ejecutarCambioEstado(c: any, nuevoEstado: number): void {

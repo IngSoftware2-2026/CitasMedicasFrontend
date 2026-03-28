@@ -22,6 +22,7 @@ import { AuthService } from '../../../core/services/Accesos/auth//auth.service';
 import { CloudinaryService } from '../../../core/services/Clinica/cloudinary.service';
 import { Especialidad } from '../../../core/models/Catalogos/especialidad.model';
 import { Usuario } from '../../../core/models/Accesos/usuario.model';
+import { ROLES } from '../../../core/constants/roles';
 import { CloudinaryThumbPipe } from '../../../core/shared/pipes/cloudinary-thumb.pipe';
 import { DoctorImagenUploadComponent } from '../../../core/shared/components/doctor-imagen-upload/doctor-imagen-upload.component';
 
@@ -41,6 +42,7 @@ export class DoctoresComponent implements OnInit {
   // --- Search & Filters ---
   searchDoctor = '';
   filterEspecialidadId: number | null = null;
+  filterActivo: boolean | null = true;
   searchDoctorId: number | null = null;
   searchingById = false;
 
@@ -166,7 +168,8 @@ export class DoctoresComponent implements OnInit {
   cargarDoctores() {
     this.loadingList = true;
     const espId = this.filterEspecialidadId || undefined;
-    this.doctoresService.listar(undefined, espId).subscribe({
+    const activo = this.filterActivo === null ? undefined : this.filterActivo;
+    this.doctoresService.listar(activo, espId).subscribe({
       next: (docs) => {
         this.doctoresList = docs;
         this.loadingList = false;
@@ -189,6 +192,10 @@ export class DoctoresComponent implements OnInit {
   }
 
   onFilterEspecialidad() {
+    this.cargarDoctores();
+  }
+
+  onFilterActivo() {
     this.cargarDoctores();
   }
 
@@ -230,20 +237,31 @@ export class DoctoresComponent implements OnInit {
   /** Returns users NOT already linked to a doctor */
   getAvailableUsuarios(): Usuario[] {
     const usedUserIds = this.doctoresList.map((d: any) => d.usuarioId || d.UsuarioId);
-    return this.usuarios.filter(u => u.activo && !usedUserIds.includes(u.usuarioId));
+    return this.usuarios.filter(u => u.activo && this.esUsuarioDoctor(u) && !usedUserIds.includes(u.usuarioId));
   }
 
   /** Retorna opciones formateadas para el p-dropdown */
   getUsuariosDropdownOptions(): any[] {
-    const usedUserIds = this.doctoresList.map((d: any) => d.usuarioId || d.UsuarioId);
-    
-    return this.getAllUsuarios().map(u => {
-      const isLinked = usedUserIds.includes(u.usuarioId);
-      const extraText = isLinked ? ' (Ya vinculado)' : '';
-      return {
-        label: `${u.nombreUsuario} — ${u.correo} (ID: ${u.usuarioId})${extraText}`,
-        value: u.usuarioId
-      };
+    return this.getAvailableUsuarios().map(u => ({
+      label: `${u.nombreUsuario} - ${u.correo} (ID: ${u.usuarioId})`,
+      value: u.usuarioId
+    }));
+  }
+
+  private esUsuarioDoctor(usuario: Usuario | null | undefined): boolean {
+    return (usuario?.rolId ?? 0) === 2 || usuario?.rolId === (ROLES as any).DOCTOR_ID;
+  }
+
+  private obtenerUsuarioPorId(usuarioId: number): Usuario | undefined {
+    return this.usuarios.find(u => u.usuarioId === usuarioId);
+  }
+
+  private usuarioYaVinculado(usuarioId: number): boolean {
+    const medicoActual = Number(this.doctorForm['medicoId'] ?? 0);
+    return this.doctoresList.some((doctor: any) => {
+      const doctorUsuarioId = Number(doctor.usuarioId ?? doctor.UsuarioId ?? 0);
+      const doctorMedicoId = Number(doctor.medicoId ?? doctor.MedicoId ?? 0);
+      return doctorUsuarioId === usuarioId && doctorMedicoId !== medicoActual;
     });
   }
 
@@ -316,6 +334,41 @@ export class DoctoresComponent implements OnInit {
 
   getRating(medicoId: number): string {
     return 'N/D';
+  }
+
+  esDoctorOperativo(d: Doctor): boolean {
+    return this.getAlertasOperacion(d).length === 0;
+  }
+
+  getAlertasOperacion(d: Doctor): string[] {
+    const alertas: string[] = [];
+    const usuario = this.usuarios.find(u => u.usuarioId === d.usuarioId);
+    const duplicados = this.doctoresList.filter(doc => doc.usuarioId === d.usuarioId);
+
+    if (!usuario) {
+      alertas.push('Sin usuario vinculado');
+    } else {
+      if (!usuario.activo) {
+        alertas.push('Usuario inactivo');
+      }
+      if (String(usuario.rolId ?? '') !== '2') {
+        alertas.push('Usuario sin rol DOCTOR');
+      }
+    }
+
+    if (duplicados.length > 1) {
+      alertas.push('Usuario duplicado en doctores');
+    }
+
+    if (!this.getDoctorEspecialidadDisplay(d) || this.getDoctorEspecialidadDisplay(d) === 'Especialidad no disponible') {
+      alertas.push('Sin especialidad');
+    }
+
+    if (!d.horarios || d.horarios.length === 0) {
+      alertas.push('Sin horario');
+    }
+
+    return alertas;
   }
 
   getHorarioResumen(medicoId: number): string {
@@ -497,6 +550,24 @@ export class DoctoresComponent implements OnInit {
     if (this.doctorForm['usuarioId'] == null || this.doctorForm['usuarioId'] === '') {
       this.formErrors['usuarioId'] = 'El Usuario ID es obligatorio';
       valid = false;
+    } else {
+      const usuarioId = Number(this.doctorForm['usuarioId']);
+      if (!Number.isInteger(usuarioId) || usuarioId <= 0) {
+        this.formErrors['usuarioId'] = 'El Usuario ID debe ser valido';
+        valid = false;
+      } else if (this.usuarioYaVinculado(usuarioId)) {
+        this.formErrors['usuarioId'] = 'Este usuario ya esta vinculado a otro doctor';
+        valid = false;
+      } else {
+        const usuario = this.obtenerUsuarioPorId(usuarioId);
+        if (usuario && !usuario.activo) {
+          this.formErrors['usuarioId'] = 'El usuario seleccionado esta inactivo';
+          valid = false;
+        } else if (usuario && !this.esUsuarioDoctor(usuario)) {
+          this.formErrors['usuarioId'] = 'El usuario seleccionado no tiene rol DOCTOR';
+          valid = false;
+        }
+      }
     }
 
     const durDefault = Number(this.doctorForm['duracionDefaultMinutos']);
@@ -592,6 +663,17 @@ export class DoctoresComponent implements OnInit {
   }
 
   private crearDoctor(): void {
+    const usuarioId = Number(this.doctorForm['usuarioId']);
+    if (this.usuarioYaVinculado(usuarioId)) {
+      this.saving = false;
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Usuario ya vinculado',
+        detail: 'Selecciona un usuario diferente. Ese usuario ya pertenece a otro doctor.'
+      });
+      return;
+    }
+
     // Start Cloudinary upload immediately in parallel with the POST create
     const upload$: Observable<string | null> = this.creationImagenFile
       ? this.cloudinaryService.uploadImagen(this.creationImagenFile).pipe(catchError(() => of(null as string | null)))
@@ -855,27 +937,53 @@ export class DoctoresComponent implements OnInit {
 
   toggleActivoFromCard(d: Doctor, event: Event): void {
     event.stopPropagation();
-    const newActivo = !d.activo;
-    const accion = newActivo ? 'activar' : 'desactivar';
+    if (d.activo) {
+      this.confirmationService.confirm({
+        header: 'Confirmar eliminacion',
+        message: `¿Está seguro de eliminar al doctor "${d.nombrePublico}"? Se desactivará y dejará de aparecer en listados activos.`,
+        icon: 'pi pi-trash',
+        acceptLabel: 'Sí, eliminar',
+        rejectLabel: 'Cancelar',
+        acceptButtonStyleClass: 'p-button-danger',
+        accept: () => {
+          this.confirmationService.close();
+          this.doctoresService.cambiarActivo(d.medicoId, false).subscribe({
+            next: () => {
+              this.confirmationService.close();
+              this.messageService.add({
+                severity: 'success',
+                summary: 'Eliminado',
+                detail: 'Doctor desactivado correctamente'
+              });
+              this.cargarDoctores();
+            },
+            error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar al doctor' })
+          });
+        }
+      });
+      return;
+    }
 
     this.confirmationService.confirm({
-      header: `Confirmar ${accion}`,
-      message: `¿Está seguro de ${accion} al doctor "${d.nombrePublico}"?`,
-      icon: newActivo ? 'pi pi-check-circle' : 'pi pi-ban',
-      acceptLabel: `Sí, ${accion}`,
+      header: 'Confirmar reactivacion',
+      message: `¿Está seguro de reactivar al doctor "${d.nombrePublico}"?`,
+      icon: 'pi pi-refresh',
+      acceptLabel: 'Sí, reactivar',
       rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: newActivo ? 'p-button-success' : 'p-button-danger',
+      acceptButtonStyleClass: 'p-button-success',
       accept: () => {
-        this.doctoresService.cambiarActivo(d.medicoId, newActivo).subscribe({
+        this.confirmationService.close();
+        this.doctoresService.cambiarActivo(d.medicoId, true).subscribe({
           next: () => {
+            this.confirmationService.close();
             this.messageService.add({
               severity: 'success',
-              summary: newActivo ? 'Activado' : 'Desactivado',
-              detail: `Doctor ${accion} correctamente`
+              summary: 'Reactivado',
+              detail: 'Doctor reactivado correctamente'
             });
             this.cargarDoctores();
           },
-          error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: `No se pudo ${accion} al doctor` })
+          error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo reactivar al doctor' })
         });
       }
     });

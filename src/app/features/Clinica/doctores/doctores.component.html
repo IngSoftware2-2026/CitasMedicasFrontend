@@ -47,6 +47,13 @@
       <option [ngValue]="e.especialidadId">{{ e.nombre }}</option>
     }
   </select>
+  @if (!esSoloLectura) {
+    <select class="doc-filter-select" [(ngModel)]="filterActivo" (ngModelChange)="onFilterActivo()">
+      <option [ngValue]="true">Solo activos</option>
+      <option [ngValue]="false">Solo inactivos</option>
+      <option [ngValue]="null">Todos</option>
+    </select>
+  }
   <span class="mod-caption-count">{{ filteredDoctores.length }} doctores</span>
 </div>
 
@@ -81,6 +88,20 @@
 
     <div class="doc-card-body">
       <h4 class="doc-card-name">{{ d.nombrePublico }}</h4>
+      @if (!esSoloLectura) {
+        <div class="doc-operacion-line">
+          <span class="doc-operacion-badge" [class.doc-operacion-badge--ok]="esDoctorOperativo(d)" [class.doc-operacion-badge--warn]="!esDoctorOperativo(d)">
+            {{ esDoctorOperativo(d) ? 'Operativo para citas' : 'Perfil incompleto' }}
+          </span>
+        </div>
+        @if (!esDoctorOperativo(d)) {
+          <div class="doc-operacion-alertas">
+            @for (alerta of getAlertasOperacion(d); track alerta) {
+              <span class="doc-alerta-chip">{{ alerta }}</span>
+            }
+          </div>
+        }
+      }
       <span class="doc-card-specialty">{{ getDoctorEspecialidadDisplay(d) }}</span>
       @if (!esSoloLectura) {
       <span class="doc-card-id"
@@ -109,6 +130,14 @@
       @if (!esSoloLectura) {
         <button class="doc-btn doc-btn--filled" (click)="openDoctorDialog(d)" pTooltip="Editar información">
           <i class="pi pi-pencil"></i> Editar
+        </button>
+        <button class="doc-btn"
+                [class.doc-btn--danger-outline]="d.activo"
+                [class.doc-btn--success-outline]="!d.activo"
+                (click)="toggleActivoFromCard(d, $event)"
+                [pTooltip]="d.activo ? 'Desactivar doctor y ocultarlo de los listados activos' : 'Reactivar doctor'">
+          <i class="pi" [class.pi-trash]="d.activo" [class.pi-refresh]="!d.activo"></i>
+          {{ d.activo ? 'Eliminar' : 'Reactivar' }}
         </button>
       }
     </div>

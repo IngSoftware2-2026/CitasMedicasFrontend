@@ -219,6 +219,16 @@
   color: #fca5a5;
 }
 
+.mod-helper-text {
+  margin-top: 0.75rem;
+  padding: 0.8rem 0.95rem;
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, #2563eb 9%, var(--surface-card) 91%);
+  border: 1px solid color-mix(in srgb, #2563eb 16%, var(--surface-border) 84%);
+  color: var(--text-color-secondary);
+  font-size: 0.92rem;
+}
+
 @media (max-width: 900px) {
   .patient-card-list {
     grid-template-columns: 1fr;

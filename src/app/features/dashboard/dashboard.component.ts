@@ -9,6 +9,7 @@ import { DoctoresService } from '../../core/services/Clinica/doctores.service';
 import { PacienteService } from '../../core/services/Clinica/paciente.service';
 import { CitaListadoResponse } from '../../core/models/Clinica/Citas/citas-read.model';
 import { Doctor } from '../../core/models/Clinica/Doctores/doctor.model';
+import { Paciente } from '../../core/models/Clinica/Pacientes/paciente.model';
 
 @Component({
   selector: 'app-dashboard',
@@ -25,13 +26,19 @@ export class DashboardComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
 
   loadingPaciente = false;
+  loadingGeneral = false;
   citasPaciente: CitaListadoResponse[] = [];
+  citasGenerales: CitaListadoResponse[] = [];
   doctoresActivos: Doctor[] = [];
+  pacientesActivos: Paciente[] = [];
 
   ngOnInit(): void {
     if (this.auth.esPaciente) {
       this.cargarDashboardPaciente();
+      return;
     }
+
+    this.cargarDashboardGeneral();
   }
 
   get userName(): string {
@@ -83,12 +90,38 @@ export class DashboardComponent implements OnInit {
   }
 
   // Mantenidos para compatibilidad de plantilla en otros roles.
-  get totalPacientes(): number { return 0; }
-  get totalDoctores(): number { return 0; }
-  get totalCitas(): number { return 0; }
-  get solicitudesPendientes(): number { return 0; }
-  get distributionStats(): Array<{ label: string; count: number }> { return []; }
-  get recentCitas(): CitaListadoResponse[] { return []; }
+  get totalPacientes(): number { return this.pacientesActivos.length; }
+  get totalDoctores(): number { return this.doctoresActivos.filter(d => d.activo).length; }
+  get totalCitas(): number { return this.citasGenerales.length; }
+  get solicitudesPendientes(): number {
+    return this.citasGenerales.filter(c => {
+      const estado = String(c.codigoEstado ?? '').toUpperCase();
+      return estado === 'CONFIRMADA' || estado === 'CONF';
+    }).length;
+  }
+  get distributionStats(): Array<{ label: string; count: number }> {
+    return [
+      { label: 'Confirmadas', count: this.citasGenerales.filter(c => ['CONFIRMADA', 'CONF'].includes(String(c.codigoEstado ?? '').toUpperCase())).length },
+      { label: 'Atendidas', count: this.citasGenerales.filter(c => ['FINALIZADA', 'ATENDIDA', 'ATEN', 'EN_CURSO'].includes(String(c.codigoEstado ?? '').toUpperCase())).length },
+      { label: 'Canceladas', count: this.citasGenerales.filter(c => ['CANCELADA', 'CANC', 'NO_ASISTIO', 'NOAS'].includes(String(c.codigoEstado ?? '').toUpperCase())).length }
+    ];
+  }
+  get recentCitas(): CitaListadoResponse[] {
+    return [...this.citasGenerales]
+      .sort((a, b) => new Date(a.inicio).getTime() - new Date(b.inicio).getTime())
+      .slice(0, 5);
+  }
+  get esRecepcion(): boolean {
+    return this.auth.esRecepcion;
+  }
+  get tituloDashboardGeneral(): string {
+    return this.esRecepcion ? 'Dashboard de Recepcion' : 'Dashboard Operativo';
+  }
+  get subtituloDashboardGeneral(): string {
+    return this.esRecepcion
+      ? 'Resumen en tiempo real de citas confirmadas, pacientes y disponibilidad medica.'
+      : 'Resumen operativo con datos reales del sistema.';
+  }
 
   private cargarDashboardPaciente(): void {
     this.loadingPaciente = true;
@@ -147,6 +180,53 @@ export class DashboardComponent implements OnInit {
         console.error('[Dashboard] Error al cargar inicio del paciente:', error);
         this.citasPaciente = [];
         this.doctoresActivos = [];
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private cargarDashboardGeneral(): void {
+    this.loadingGeneral = true;
+
+    forkJoin({
+      citas: this.citasService.obtenerPorFiltro(this.auth.esRecepcion ? { estadoId: 2 } : {}).pipe(
+        timeout(10000),
+        catchError((error) => {
+          console.error('[Dashboard] Error al cargar citas generales:', error);
+          return of({ data: [] as CitaListadoResponse[] });
+        })
+      ),
+      doctores: this.doctoresService.listar(true).pipe(
+        timeout(10000),
+        catchError((error) => {
+          console.error('[Dashboard] Error al cargar doctores generales:', error);
+          return of([] as Doctor[]);
+        })
+      ),
+      pacientes: this.pacienteService.listar().pipe(
+        timeout(10000),
+        catchError((error) => {
+          console.error('[Dashboard] Error al cargar pacientes generales:', error);
+          return of([] as Paciente[]);
+        })
+      )
+    }).pipe(
+      finalize(() => {
+        this.loadingGeneral = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: (resultado) => {
+        this.citasGenerales = resultado.citas?.data ?? [];
+        this.doctoresActivos = resultado.doctores ?? [];
+        this.pacientesActivos = (resultado.pacientes ?? []).filter(p => p.activo);
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('[Dashboard] Error al cargar dashboard general:', error);
+        this.citasGenerales = [];
+        this.doctoresActivos = [];
+        this.pacientesActivos = [];
         this.cdr.detectChanges();
       }
     });

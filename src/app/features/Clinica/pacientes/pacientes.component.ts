@@ -6,6 +6,7 @@ import { PacienteService } from '../../../core/services/Clinica/paciente.service
 import { UsuarioService } from '../../../core/services/Accesos/usuarios/usuario.service';
 import { ErrorHandlerService } from '../../../core/services/Http/error-handler.service';
 import { Paciente } from '../../../core/models/Clinica/Pacientes/paciente.model';
+import { ROLES } from '../../../core/constants/roles';
 import { ConfirmationService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -128,7 +129,8 @@ export class PacientesComponent implements OnInit {
         correo: this.pacienteForm['correo'] || `${nombreUsuario}@medicitas.com`,
         telefono: this.pacienteForm['telefono'],
         clave: this.pacienteForm['numeroIdentidad'],
-        rolId: 3
+        rolId: 4,
+        codigoRol: ROLES.PACIENTE
       };
 
       this.usuarioService.insertar(nuevoUsuario).pipe(

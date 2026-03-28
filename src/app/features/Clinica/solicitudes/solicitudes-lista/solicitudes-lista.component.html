@@ -100,6 +100,9 @@
         </div>
         <span class="result-count">{{ misSolicitudesOrdenadas.length }} solicitudes</span>
       </div>
+      <div class="mod-helper-text">
+        Aqui ves tus solicitudes enviadas. Solo las citas que ya fueron confirmadas y registradas apareceran en <strong>Mis Citas</strong>.
+      </div>
 
       @if (loading()) {
         <div class="empty-state">
@@ -110,7 +113,7 @@
         <div class="empty-state">
           <i class="pi pi-inbox"></i>
           <p>No tienes solicitudes registradas</p>
-          <span>Tu primera solicitud aparecera aqui despues de enviarla.</span>
+          <span>Tu primera solicitud aparecera aqui despues de enviarla para revision.</span>
         </div>
       } @else {
         <div class="patient-request-grid">
@@ -140,8 +143,8 @@
       <div class="page-header-left">
         <div class="page-header-icon"><i class="pi pi-clipboard"></i></div>
         <div class="page-header-text">
-          <h2>Solicitudes de Citas</h2>
-          <p>Gestion y seguimiento de solicitudes</p>
+          <h2>{{ esDoctor ? 'Solicitudes de Pacientes' : 'Solicitudes de Citas' }}</h2>
+          <p>{{ esDoctor ? 'Revisa y gestiona las solicitudes asignadas a tu agenda.' : 'Gestion y seguimiento de solicitudes' }}</p>
         </div>
       </div>
       @if (pendientesCount > 0) {
@@ -189,14 +192,16 @@
 
     <div class="filters-card">
       <div class="filters-row">
-        <div class="filter-group">
-          <label>Tipo</label>
-          <select [(ngModel)]="filtroTipo">
-            <option value="">Todas</option>
-            <option value="PUBLICA">Publicas</option>
-            <option value="USUARIO">De usuarios</option>
-          </select>
-        </div>
+        @if (!esDoctor) {
+          <div class="filter-group">
+            <label>Tipo</label>
+            <select [(ngModel)]="filtroTipo">
+              <option value="">Todas</option>
+              <option value="PUBLICA">Publicas</option>
+              <option value="USUARIO">De usuarios</option>
+            </select>
+          </div>
+        }
         <div class="filter-group">
           <label>Estado</label>
           <select [(ngModel)]="filtroEstado">
@@ -319,9 +324,12 @@
                     <button class="action-btn" (click)="verDetalle(sol); $event.stopPropagation()" title="Ver detalle">
                       <i class="pi pi-eye"></i>
                     </button>
-                    @if (puedeGestionar && sol.codigoEstado === 'PENDIENTE') {
-                      <button class="action-btn action-approve" (click)="aprobarSolicitud(sol); $event.stopPropagation()" title="Aprobar">
+                    @if (!esPaciente) {
+                      <button class="action-btn action-approve" (click)="irAConfirmar(sol); $event.stopPropagation()" title="Confirmar solicitud">
                         <i class="pi pi-check"></i>
+                      </button>
+                      <button class="action-btn action-reschedule" (click)="irAReprogramar(sol); $event.stopPropagation()" title="Proponer reprogramacion">
+                        <i class="pi pi-replay"></i>
                       </button>
                       <button class="action-btn action-reject" (click)="rechazarSolicitud(sol); $event.stopPropagation()" title="Rechazar">
                         <i class="pi pi-times"></i>

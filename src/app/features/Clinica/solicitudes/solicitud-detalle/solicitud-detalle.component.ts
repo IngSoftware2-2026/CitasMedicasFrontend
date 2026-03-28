@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Observable, catchError, switchMap, throwError } from 'rxjs';
 import { SolicitudesService } from '../../../../core/services/Clinica/solicitudes.service';
 import { CitasService } from '../../../../core/services/Clinica/citas.service';
 import { PacienteService } from '../../../../core/services/Clinica/paciente.service';
@@ -85,6 +86,14 @@ export class SolicitudDetalleComponent implements OnInit {
             ? this.toDateTimeLocal(data.fechaHoraInicio)
             : '';
           this.duracionMinutos = data.duracionMinutos ?? data.duracionDefaultMinutos ?? 30;
+          const accion = this.route.snapshot.queryParamMap.get('accion');
+          const estadoNormalizado = this.obtenerCodigoEstadoNormalizado();
+          if (accion === 'reprogramar' && estadoNormalizado === 'PENDIENTE') {
+            this.showReprogramarForm.set(true);
+          }
+          if (accion === 'aprobar' && estadoNormalizado === 'PENDIENTE') {
+            this.abrirAprobar();
+          }
         } else {
           this.errorHandler.showError(404, 'Solicitud no encontrada');
         }
@@ -104,7 +113,11 @@ export class SolicitudDetalleComponent implements OnInit {
   }
 
   get esPendiente(): boolean {
-    return this.solicitud()?.codigoEstado === 'PENDIENTE';
+    return this.obtenerCodigoEstadoNormalizado() === 'PENDIENTE';
+  }
+
+  get esPaciente(): boolean {
+    return this.auth.esPaciente;
   }
 
   get calcularFin(): string {
@@ -126,11 +139,38 @@ export class SolicitudDetalleComponent implements OnInit {
   getEstadoClass(codigo: string): string {
     switch (codigo) {
       case 'PENDIENTE': return 'status-pending';
+      case 'CONFIRMADA': return 'status-approved';
       case 'APROBADA': return 'status-approved';
       case 'RECHAZADA': return 'status-rejected';
+      case 'PROPUESTA': return 'status-rescheduled';
       case 'REPROGRAMADA': return 'status-rescheduled';
       default: return 'status-default';
     }
+  }
+
+  private obtenerCodigoEstadoNormalizado(): string {
+    const sol = this.solicitud();
+    if (!sol) return '';
+
+    const estadoId = Number(sol.estadoId ?? 0);
+    if (estadoId === 1) return 'PENDIENTE';
+    if (estadoId === 2) return 'PROPUESTA';
+    if (estadoId === 3) return 'CONFIRMADA';
+    if (estadoId === 4) return 'RECHAZADA';
+    if (estadoId === 5) return 'CANCELADA';
+
+    const codigo = String(sol.codigoEstado ?? '').trim().toUpperCase();
+    if (codigo) return codigo;
+
+    const estado = String(sol.estado ?? '').trim().toUpperCase();
+    if (estado.includes('PEND')) return 'PENDIENTE';
+    if (estado.includes('CONF')) return 'CONFIRMADA';
+    if (estado.includes('PROP')) return 'PROPUESTA';
+    if (estado.includes('RECHAZ')) return 'RECHAZADA';
+    if (estado.includes('REPROG')) return 'REPROGRAMADA';
+    if (estado.includes('CANCEL')) return 'CANCELADA';
+
+    return estado;
   }
 
   // ===== APROBAR =====
@@ -239,28 +279,151 @@ export class SolicitudDetalleComponent implements OnInit {
       creadaPorUsuarioId: this.auth.usuarioIdActual() ?? 0
     };
 
-    this.solicitudesService.crearCita(citaData).subscribe({
-      next: (res) => {
+    this.solicitudesService.crearCita(citaData).pipe(
+      switchMap((res) => {
         const exitoso = res?.success ?? (res as any)?.exitoso;
-        if (exitoso) {
-          this.errorHandler.showSuccess('Cita creada exitosamente');
-          // Cambiar estado a APROBADA
-          const dto = { solicitudId: sol.solicitudId, codigoEstado: 'APROBADA' };
-          const cambiar$ = sol.tipo === 'PUBLICA'
-            ? this.solicitudesService.cambiarEstadoPublica(dto)
-            : this.solicitudesService.cambiarEstadoUsuario(dto);
-          cambiar$.subscribe();
-          this.showAprobarDialog.set(false);
-          this.router.navigate(['/solicitudes']);
-        } else {
+        if (!exitoso) {
           const msg = res?.message ?? (res as any)?.mensaje ?? 'Error al crear la cita';
-          this.errorHandler.showError(400, msg);
+          throw new Error(msg);
         }
-        this.actionLoading.set(false);
+
+        return this.confirmarSolicitud$(sol.solicitudId, sol.tipo);
+      })
+    ).subscribe({
+      next: (estadoRes: any) => {
+        const exitoso = estadoRes?.success ?? (estadoRes as any)?.exitoso;
+        if (!exitoso) {
+          const msg = estadoRes?.message ?? (estadoRes as any)?.mensaje ?? 'La cita se creo, pero no se pudo actualizar el estado de la solicitud';
+          this.errorHandler.showError(400, msg);
+          this.actionLoading.set(false);
+          return;
+        }
+
+        this.finalizarAprobacionExitosa('Cita creada y solicitud confirmada exitosamente');
       },
-      error: (err) => {
-        const msg = err?.error?.message ?? err?.error?.mensaje ?? 'Error al crear la cita';
+      error: (err: any) => {
+        if (err?.status === 409) {
+          this.recuperarTrasConflictoDeCita(sol, pacienteId, inicio, fin);
+          return;
+        }
+
+        const msg = err?.message ?? err?.error?.message ?? err?.error?.mensaje ?? 'Error al crear la cita';
         this.errorHandler.showError(500, msg);
+        this.actionLoading.set(false);
+      }
+    });
+  }
+
+  private cambiarEstadoSolicitud$(solicitudId: number, tipo: TipoSolicitud, codigos: string[]): Observable<any> {
+    const [codigoActual, ...resto] = codigos;
+    const dto = { solicitudId, codigoEstado: codigoActual };
+    const request$ = tipo === 'PUBLICA'
+      ? this.solicitudesService.cambiarEstadoPublica(dto)
+      : this.solicitudesService.cambiarEstadoUsuario(dto);
+
+    return request$.pipe(
+      catchError((err: any) => {
+        if (resto.length > 0 && this.esCodigoEstadoInvalido(err)) {
+          return this.cambiarEstadoSolicitud$(solicitudId, tipo, resto);
+        }
+
+        return throwError(() => err);
+      })
+    );
+  }
+
+  private confirmarSolicitud$(solicitudId: number, tipo: TipoSolicitud) {
+    return this.cambiarEstadoSolicitud$(solicitudId, tipo, ['CONFIRMADA', 'APROBADA']);
+  }
+
+  private rechazarSolicitud$(solicitudId: number, tipo: TipoSolicitud) {
+    return this.cambiarEstadoSolicitud$(solicitudId, tipo, ['RECHAZADA', 'CANCELADA']);
+  }
+
+  private esConflictoConMensajeExitoso(err: any): boolean {
+    const msg = String(
+      err?.error?.message ??
+      err?.error?.mensaje ??
+      err?.message ??
+      ''
+    ).toLowerCase();
+
+    return err?.status === 409 && msg.includes('operaci') && msg.includes('exitosa');
+  }
+
+  private esCodigoEstadoInvalido(err: any): boolean {
+    const msg = String(
+      err?.error?.message ??
+      err?.error?.mensaje ??
+      err?.message ??
+      ''
+    ).toLowerCase();
+
+    return err?.status === 409 && msg.includes('codigo de estado') && msg.includes('no existe');
+  }
+
+  private finalizarAprobacionExitosa(mensaje: string): void {
+    this.errorHandler.showSuccess(mensaje);
+    this.showAprobarDialog.set(false);
+    this.router.navigate(['/solicitudes']);
+    this.actionLoading.set(false);
+  }
+
+  private recuperarTrasConflictoDeCita(
+    sol: SolicitudUnificada,
+    pacienteId: number,
+    inicio: Date,
+    fin: Date
+  ): void {
+    this.citasService.obtenerPorFiltro({
+      medicoId: sol.medicoId,
+      pacienteId,
+      desde: inicio.toISOString(),
+      hasta: fin.toISOString()
+    }).subscribe({
+      next: (res: any) => {
+        const citas = res?.data ?? [];
+        const citaExistente = Array.isArray(citas) && citas.some(c => {
+          const inicioCita = c?.inicio ? new Date(c.inicio).getTime() : NaN;
+          const finCita = c?.fin ? new Date(c.fin).getTime() : NaN;
+          return c?.medicoId === sol.medicoId
+            && c?.pacienteId === pacienteId
+            && inicioCita === inicio.getTime()
+            && finCita === fin.getTime();
+        });
+
+        if (!citaExistente) {
+          this.errorHandler.showError(409, res?.message ?? 'Ese horario ya no esta disponible para confirmar la cita.');
+          this.actionLoading.set(false);
+          return;
+        }
+
+        this.confirmarSolicitud$(sol.solicitudId, sol.tipo).subscribe({
+          next: (estadoRes: any) => {
+            const exitoso = estadoRes?.success ?? (estadoRes as any)?.exitoso;
+            if (!exitoso) {
+              const msg = estadoRes?.message ?? (estadoRes as any)?.mensaje ?? 'La cita existe, pero no se pudo confirmar la solicitud.';
+              this.errorHandler.showError(409, msg);
+              this.actionLoading.set(false);
+              return;
+            }
+
+            this.finalizarAprobacionExitosa('La cita ya existia y la solicitud quedo confirmada correctamente.');
+          },
+          error: (estadoErr: any) => {
+            if (this.esConflictoConMensajeExitoso(estadoErr)) {
+              this.finalizarAprobacionExitosa('La cita ya existia y la solicitud quedo confirmada correctamente.');
+              return;
+            }
+
+            const msg = estadoErr?.error?.message ?? estadoErr?.error?.mensaje ?? estadoErr?.message ?? 'La cita existe, pero no se pudo confirmar la solicitud.';
+            this.errorHandler.showError(409, msg);
+            this.actionLoading.set(false);
+          }
+        });
+      },
+      error: () => {
+        this.errorHandler.showError(409, 'No se pudo verificar si la cita ya habia sido creada. Intenta recargar el listado.');
         this.actionLoading.set(false);
       }
     });
@@ -276,10 +439,7 @@ export class SolicitudDetalleComponent implements OnInit {
     if (!sol) return;
 
     this.actionLoading.set(true);
-    const dto = { solicitudId: sol.solicitudId, codigoEstado: 'RECHAZADA' };
-    const cambiar$ = sol.tipo === 'PUBLICA'
-      ? this.solicitudesService.cambiarEstadoPublica(dto)
-      : this.solicitudesService.cambiarEstadoUsuario(dto);
+    const cambiar$ = this.rechazarSolicitud$(sol.solicitudId, sol.tipo);
 
     cambiar$.subscribe({
       next: (res) => {
@@ -292,8 +452,17 @@ export class SolicitudDetalleComponent implements OnInit {
         }
         this.actionLoading.set(false);
       },
-      error: () => {
-        this.errorHandler.showError(500, 'Error al rechazar la solicitud');
+      error: (err: any) => {
+        if (this.esConflictoConMensajeExitoso(err)) {
+          this.errorHandler.showSuccess('Solicitud rechazada correctamente');
+          this.showRechazarDialog.set(false);
+          this.router.navigate(['/solicitudes']);
+          this.actionLoading.set(false);
+          return;
+        }
+
+        const msg = err?.error?.message ?? err?.error?.mensaje ?? err?.message ?? 'Error al rechazar la solicitud';
+        this.errorHandler.showError(err?.status ?? 500, msg);
         this.actionLoading.set(false);
       }
     });
@@ -333,8 +502,18 @@ export class SolicitudDetalleComponent implements OnInit {
         }
         this.actionLoading.set(false);
       },
-      error: () => {
-        this.errorHandler.showError(500, 'Error al enviar propuesta');
+      error: (err) => {
+        if (this.esConflictoConMensajeExitoso(err)) {
+          this.errorHandler.showSuccess('Propuesta enviada exitosamente');
+          this.showReprogramarForm.set(false);
+          this.nuevaFechaHora = '';
+          this.cargarDetalle();
+          this.actionLoading.set(false);
+          return;
+        }
+
+        const msg = err?.error?.message ?? err?.error?.mensaje ?? err?.message ?? 'Error al enviar propuesta';
+        this.errorHandler.showError(err?.status ?? 500, msg);
         this.actionLoading.set(false);
       }
     });

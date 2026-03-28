@@ -67,11 +67,19 @@ export class SolicitudesListaComponent implements OnInit {
       return;
     }
 
+    if (this.esDoctor) {
+      this.filtroTipo = 'USUARIO';
+    }
+
     this.cargarSolicitudes();
   }
 
   get esPaciente(): boolean {
     return this.auth.esPaciente;
+  }
+
+  get esDoctor(): boolean {
+    return this.auth.esDoctor;
   }
 
   get pacienteIdActual(): number | null {
@@ -160,13 +168,13 @@ export class SolicitudesListaComponent implements OnInit {
         const pacienteId = this.pacienteIdActual;
         if (!pacienteId) {
           return forkJoin({
-            doctores: this.doctoresService.listar(true).pipe(catchError(() => of([]))),
+            doctores: this.cargarDoctoresDisponiblesPaciente(),
             solicitudesResponse: of({ data: [] as SolicitudCitaListadoDTO[] })
           });
         }
 
         return forkJoin({
-          doctores: this.doctoresService.listar(true).pipe(catchError(() => of([]))),
+          doctores: this.cargarDoctoresDisponiblesPaciente(),
           solicitudesResponse: this.solicitudesService.listarUsuarios({ pacienteId }).pipe(
             catchError(() => of({ data: [] as SolicitudCitaListadoDTO[] }))
           )
@@ -176,6 +184,9 @@ export class SolicitudesListaComponent implements OnInit {
       next: ({ doctores, solicitudesResponse }) => {
         this.doctoresPaciente = (doctores ?? []).filter(d => d.activo);
         this.misSolicitudesPaciente = solicitudesResponse?.data ?? [];
+        if (this.doctoresPaciente.length === 0) {
+          this.errorHandler.showInfo('No hay doctores operativos disponibles para agendar en este momento.');
+        }
         this.aplicarPrefillReagendamiento();
         this.loading.set(false);
       },
@@ -184,6 +195,32 @@ export class SolicitudesListaComponent implements OnInit {
         this.errorHandler.showError(error?.status || 500, 'No se pudo cargar el contexto del paciente');
       }
     });
+  }
+
+  private cargarDoctoresDisponiblesPaciente() {
+    return this.doctoresService.listarOperativos().pipe(
+      switchMap((operativos) => {
+        if ((operativos ?? []).length > 0) {
+          return of(operativos);
+        }
+
+        return this.doctoresService.listar(true).pipe(
+          switchMap((activos) => {
+            const candidatos = (activos ?? []).filter(d => d.activo);
+            if (candidatos.length > 0) {
+              this.messageService.add({
+                severity: 'warn',
+                summary: 'Catalogo limitado',
+                detail: 'No se encontraron doctores operativos completos. Se mostraran doctores activos disponibles.'
+              });
+            }
+            return of(candidatos);
+          }),
+          catchError(() => of([]))
+        );
+      }),
+      catchError(() => of([]))
+    );
   }
 
   crearSolicitudPaciente(): void {
@@ -337,7 +374,9 @@ export class SolicitudesListaComponent implements OnInit {
     if (this.filtroDesde) filtro.desde = this.filtroDesde;
     if (this.filtroHasta) filtro.hasta = this.filtroHasta;
 
-    const tipoFiltro = this.filtroTipo as TipoSolicitud | '';
+    const tipoFiltro = this.esDoctor
+      ? 'USUARIO'
+      : (this.filtroTipo as TipoSolicitud | '');
 
     if (tipoFiltro === 'PUBLICA') {
       this.solicitudesService.listarPublicas(filtro).subscribe({
@@ -359,6 +398,12 @@ export class SolicitudesListaComponent implements OnInit {
       this.solicitudesService.listarUsuarios(filtro).subscribe({
         next: (res) => {
           const data = res?.data ?? [];
+          console.log('[SolicitudesDoctor] estados cargados', (Array.isArray(data) ? data : []).map((s: any) => ({
+            solicitudId: s.solicitudId,
+            estadoId: s.estadoId,
+            codigoEstado: s.codigoEstado,
+            estado: s.estado
+          })));
           this.solicitudes.set(
             (Array.isArray(data) ? data : []).map(s => ({ ...s, tipo: 'USUARIO' as TipoSolicitud }))
           );
@@ -368,7 +413,10 @@ export class SolicitudesListaComponent implements OnInit {
         error: (error) => {
           this.loading.set(false);
           this.solicitudes.set([]);
-          this.errorHandler.showError(error?.status || 500, 'No se pudieron cargar solicitudes de usuario');
+          this.errorHandler.showError(
+            error?.status || 500,
+            this.getErrorMessage(error, 'No se pudieron cargar solicitudes de usuario')
+          );
         }
       });
     } else {
@@ -392,7 +440,10 @@ export class SolicitudesListaComponent implements OnInit {
         error: (error) => {
           this.loading.set(false);
           this.solicitudes.set([]);
-          this.errorHandler.showError(error?.status || 500, 'No se pudieron cargar solicitudes');
+          this.errorHandler.showError(
+            error?.status || 500,
+            this.getErrorMessage(error, 'No se pudieron cargar solicitudes')
+          );
         }
       });
     }
@@ -403,7 +454,7 @@ export class SolicitudesListaComponent implements OnInit {
   }
 
   limpiarFiltros(): void {
-    this.filtroTipo = '';
+    this.filtroTipo = this.esDoctor ? 'USUARIO' : '';
     this.filtroEstado = '';
     this.filtroDesde = '';
     this.filtroHasta = '';
@@ -433,19 +484,28 @@ export class SolicitudesListaComponent implements OnInit {
   }
 
   get pendientesCount(): number {
-    return this.solicitudes().filter(s => s.codigoEstado === 'PENDIENTE').length;
+    return this.solicitudes().filter(s => this.esSolicitudPendiente(s)).length;
   }
 
   get aprobadasCount(): number {
-    return this.solicitudes().filter(s => s.codigoEstado === 'APROBADA' || s.codigoEstado === 'CONFIRMADA').length;
+    return this.solicitudes().filter(s => {
+      const codigo = this.obtenerCodigoEstadoNormalizado(s);
+      return codigo === 'APROBADA' || codigo === 'CONFIRMADA';
+    }).length;
   }
 
   get rechazadasCount(): number {
-    return this.solicitudes().filter(s => s.codigoEstado === 'RECHAZADA').length;
+    return this.solicitudes().filter(s => {
+      const codigo = this.obtenerCodigoEstadoNormalizado(s);
+      return codigo === 'RECHAZADA' || codigo === 'CANCELADA';
+    }).length;
   }
 
   get reprogramadasCount(): number {
-    return this.solicitudes().filter(s => s.codigoEstado === 'REPROGRAMADA' || s.codigoEstado === 'PROPUESTA').length;
+    return this.solicitudes().filter(s => {
+      const codigo = this.obtenerCodigoEstadoNormalizado(s);
+      return codigo === 'REPROGRAMADA' || codigo === 'PROPUESTA';
+    }).length;
   }
 
   cambiarPagina(page: number): void {
@@ -460,16 +520,34 @@ export class SolicitudesListaComponent implements OnInit {
     });
   }
 
+  irAReprogramar(sol: SolicitudUnificada): void {
+    this.router.navigate(['/solicitudes', sol.solicitudId], {
+      queryParams: {
+        tipo: sol.tipo,
+        accion: 'reprogramar'
+      }
+    });
+  }
+
+  irAConfirmar(sol: SolicitudUnificada): void {
+    this.router.navigate(['/solicitudes', sol.solicitudId], {
+      queryParams: {
+        tipo: sol.tipo,
+        accion: 'aprobar'
+      }
+    });
+  }
+
   getEstadoClass(codigo: string): string {
     switch ((codigo || '').toUpperCase()) {
       case 'PENDIENTE': return 'badge-warning';
-      case 'APROBADA':
       case 'CONFIRMADA':
+      case 'APROBADA':
       case 'CONF': return 'badge-success';
       case 'RECHAZADA':
       case 'CANCELADA': return 'badge-danger';
-      case 'REPROGRAMADA':
       case 'PROPUESTA':
+      case 'REPROGRAMADA':
       case 'EN_CURSO': return 'badge-info';
       default: return 'badge-secondary';
     }
@@ -484,8 +562,39 @@ export class SolicitudesListaComponent implements OnInit {
   }
 
   get puedeGestionar(): boolean {
-    const rolId = this.auth.rolIdActual();
-    return rolId === 1 || rolId === 2 || rolId === 3;
+    return this.auth.esAdmin || this.auth.esRecepcion || this.auth.esDoctor;
+  }
+
+  obtenerCodigoEstadoNormalizado(sol: SolicitudUnificada): string {
+    const estadoId = Number(sol.estadoId ?? 0);
+    if (estadoId === 1) return 'PENDIENTE';
+    if (estadoId === 2) return 'PROPUESTA';
+    if (estadoId === 3) return 'CONFIRMADA';
+    if (estadoId === 4) return 'RECHAZADA';
+    if (estadoId === 5) return 'CANCELADA';
+
+    const codigo = String(sol.codigoEstado ?? '').trim().toUpperCase();
+    if (codigo) return codigo;
+
+    const estado = String(sol.estado ?? '').trim().toUpperCase();
+    if (estado.includes('PEND')) return 'PENDIENTE';
+    if (estado.includes('CONF')) return 'CONFIRMADA';
+    if (estado.includes('APROB')) return 'APROBADA';
+    if (estado.includes('PROPUE')) return 'PROPUESTA';
+    if (estado.includes('REPROG')) return 'REPROGRAMADA';
+    if (estado.includes('RECHAZ')) return 'RECHAZADA';
+    if (estado.includes('CANCEL')) return 'CANCELADA';
+
+    return estado;
+  }
+
+  esSolicitudPendiente(sol: SolicitudUnificada): boolean {
+    return this.obtenerCodigoEstadoNormalizado(sol) === 'PENDIENTE';
+  }
+
+  puedeGestionarSolicitudPendiente(sol: SolicitudUnificada): boolean {
+    if (this.esPaciente) return false;
+    return this.esSolicitudPendiente(sol);
   }
 
   aprobarSolicitud(sol: SolicitudUnificada): void {

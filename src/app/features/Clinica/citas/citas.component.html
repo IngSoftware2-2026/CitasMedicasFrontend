@@ -36,12 +36,15 @@
         <input pInputText [(ngModel)]="searchCita" placeholder="Buscar por doctor, sala o estado..." />
       </p-iconfield>
     </div>
+    <div class="mod-helper-text">
+      Aqui se muestran tus citas reales ya registradas en el sistema. Si una solicitud aun esta pendiente de revision del doctor, la veras en <strong>Solicitar Cita</strong>.
+    </div>
 
     @if (citasView.length === 0) {
       <div class="mod-empty">
         <i class="pi pi-calendar-times"></i>
         <p>Aun no tienes citas registradas</p>
-        <span>Cuando tengas una cita, podras verla aqui con todo su detalle.</span>
+        <span>Cuando una solicitud sea confirmada y la cita quede creada, aparecera aqui con todo su detalle.</span>
       </div>
     } @else {
       <div class="patient-card-list">
@@ -86,7 +89,7 @@
   </section>
 } @else {
   <p-toolbar>
-    <ng-template #start><h2 class="m-0"><i class="pi pi-calendar"></i> Citas</h2></ng-template>
+    <ng-template #start><h2 class="m-0"><i class="pi pi-calendar"></i> {{ esRecepcion ? 'Citas Confirmadas' : 'Citas' }}</h2></ng-template>
     <ng-template #end>
       @if (canManageCitas) {
         <p-button label="Nueva Cita" icon="pi pi-plus" (onClick)="openCitaDialog()" />
@@ -128,6 +131,9 @@
             (onClick)="toggleAdvancedFilters()" />
           <span class="mod-caption-count">{{ citasView.length }} citas</span>
         </div>
+        @if (esRecepcion) {
+          <div class="mod-helper-text">Recepcion inicia mostrando citas confirmadas para gestion diaria. Puedes cambiar el estado o limpiar filtros para ver todo.</div>
+        }
         @if (showAdvancedFilters) {
           <div class="advanced-filters">
             <div class="form-row">
@@ -225,7 +231,10 @@
             <div class="mod-actions">
               <button class="mod-action-btn --view" pTooltip="Ver detalle" tooltipPosition="top" (click)="openCitaDetail(c)"><i class="pi pi-eye"></i></button>
               @if (canManageCitas) {
-                @if (c.estadoCodigo === 'CONF') {
+                @if (esRecepcion && (c.estadoCodigo === 'CONF' || c.estadoCodigo === 'CONFIRMADA')) {
+                  <button class="mod-action-btn --edit" pTooltip="Modificar cita" tooltipPosition="top" (click)="editarCitaRecepcion(c)"><i class="pi pi-pencil"></i></button>
+                }
+                @if (c.estadoCodigo === 'CONF' || c.estadoCodigo === 'CONFIRMADA') {
                   <button class="mod-action-btn --start" pTooltip="Marcar como atendida" tooltipPosition="top" (click)="cambiarEstadoCita(c, 2)"><i class="pi pi-check"></i></button>
                   <button class="mod-action-btn --danger" pTooltip="Cancelar" tooltipPosition="top" (click)="cambiarEstadoCita(c, 4)"><i class="pi pi-times"></i></button>
                 }
