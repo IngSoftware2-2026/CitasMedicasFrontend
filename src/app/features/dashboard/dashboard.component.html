@@ -119,15 +119,264 @@
   </div>
 } @else {
   <div class="admin-dashboard">
-    <div class="dashboard-header">
-      <div>
-        <h1>Dashboard</h1>
-        <p>Sin datos consolidados en tiempo real para esta vista.</p>
+    <!-- ═══ Animated Logo ═══ -->
+    <section class="logo-hero">
+      <div class="logo-container">
+        <div class="logo-pulse-ring"></div>
+        <div class="logo-pulse-ring logo-pulse-ring--delay"></div>
+        <div class="logo-icon">
+          <span class="logo-cross">+</span>
+        </div>
       </div>
-      <span class="dashboard-date">{{ currentDate }}</span>
-    </div>
-    <article class="panel">
-      <p class="empty-text">Esta pantalla no mostrara datos hasta que exista una fuente backend real para este resumen.</p>
-    </article>
+      <div class="logo-text">
+        <h1 class="logo-title">
+          <span class="logo-medi">Medi</span><span class="logo-citas">Citas</span>
+        </h1>
+        <p class="logo-subtitle">Sistema de Gestión de Citas Médicas</p>
+      </div>
+      <div class="logo-info">
+        <span class="logo-date">{{ currentDate }}</span>
+        <span class="logo-welcome">Bienvenido, {{ userName }}</span>
+      </div>
+    </section>
+
+    @if (loadingAdmin) {
+      <div class="admin-loading">
+        <p-progressSpinner strokeWidth="3" />
+        <p>Cargando datos del sistema...</p>
+      </div>
+    } @else {
+      <!-- ═══ KPIs principales ═══ -->
+      <section class="admin-stats">
+        <article class="admin-stat admin-stat--primary" routerLink="/citas">
+          <div class="stat-icon"><i class="pi pi-calendar"></i></div>
+          <div class="stat-body">
+            <strong>{{ totalCitas }}</strong>
+            <span>Citas totales</span>
+          </div>
+        </article>
+        <article class="admin-stat admin-stat--success" routerLink="/pacientes">
+          <div class="stat-icon"><i class="pi pi-users"></i></div>
+          <div class="stat-body">
+            <strong>{{ totalPacientes }}</strong>
+            <span>Pacientes</span>
+          </div>
+        </article>
+        <article class="admin-stat admin-stat--info" routerLink="/doctores">
+          <div class="stat-icon"><i class="pi pi-user"></i></div>
+          <div class="stat-body">
+            <strong>{{ totalDoctores }}</strong>
+            <span>Doctores</span>
+          </div>
+        </article>
+        <article class="admin-stat admin-stat--warning" routerLink="/solicitudes">
+          <div class="stat-icon"><i class="pi pi-clipboard"></i></div>
+          <div class="stat-body">
+            <strong>{{ totalSolicitudes }}</strong>
+            <span>Solicitudes</span>
+          </div>
+        </article>
+        <article class="admin-stat admin-stat--secondary" routerLink="/salas">
+          <div class="stat-icon"><i class="pi pi-building"></i></div>
+          <div class="stat-body">
+            <strong>{{ totalSalas }}</strong>
+            <span>Salas</span>
+          </div>
+        </article>
+      </section>
+
+      <!-- ═══ Citas de hoy + Accesos rápidos ═══ -->
+      <section class="today-row">
+        <!-- Citas de hoy -->
+        <article class="panel panel--today">
+          <div class="panel-head panel-head--today">
+            <div class="panel-head-left">
+              <span class="today-icon-badge">
+                <i class="pi pi-clock"></i>
+              </span>
+              <div>
+                <h2>Citas de hoy</h2>
+                <small class="today-count">{{ citasHoy.length }} cita{{ citasHoy.length !== 1 ? 's' : '' }} programada{{ citasHoy.length !== 1 ? 's' : '' }}</small>
+              </div>
+            </div>
+            <a routerLink="/citas" class="today-link">Ver todas <i class="pi pi-arrow-right"></i></a>
+          </div>
+          @if (citasHoy.length > 0) {
+            <div class="today-list">
+              @for (cita of citasHoy; track cita.citaId; let i = $index) {
+                <div class="today-item">
+                  <div class="today-time">
+                    <span class="today-time-start">{{ cita.inicio | date:'HH:mm' }}</span>
+                    <span class="today-time-separator">—</span>
+                    <span class="today-time-end">{{ cita.fin | date:'HH:mm' }}</span>
+                  </div>
+                  <div class="today-divider"></div>
+                  <div class="today-details">
+                    <p class="today-patient">{{ cita.paciente || 'Paciente #' + cita.pacienteId }}</p>
+                    <div class="today-meta">
+                      <span><i class="pi pi-user"></i> {{ cita.medico || 'Doctor #' + cita.medicoId }}</span>
+                      <span><i class="pi pi-building"></i> {{ cita.sala || 'Sala ' + cita.salaId }}</span>
+                    </div>
+                  </div>
+                  <p-tag [value]="cita.estado || cita.codigoEstado || ''" [severity]="estadoSeverity(cita.codigoEstado)" [rounded]="true" />
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="today-empty">
+              <i class="pi pi-calendar-times"></i>
+              <p>No hay citas programadas para hoy</p>
+            </div>
+          }
+        </article>
+
+        <!-- Accesos rápidos sidebar -->
+        <aside class="quick-sidebar">
+          <div class="quick-sidebar-head">
+            <span class="quick-sidebar-icon"><i class="pi pi-th-large"></i></span>
+            <h3>Accesos rápidos</h3>
+          </div>
+          <nav class="quick-sidebar-nav">
+            <a routerLink="/citas" class="quick-sidebar-link">
+              <span class="qs-icon qs-icon--primary"><i class="pi pi-calendar"></i></span>
+              <span>Citas</span>
+              <i class="pi pi-chevron-right qs-arrow"></i>
+            </a>
+            <a routerLink="/pacientes" class="quick-sidebar-link">
+              <span class="qs-icon qs-icon--success"><i class="pi pi-users"></i></span>
+              <span>Pacientes</span>
+              <i class="pi pi-chevron-right qs-arrow"></i>
+            </a>
+            <a routerLink="/doctores" class="quick-sidebar-link">
+              <span class="qs-icon qs-icon--info"><i class="pi pi-user"></i></span>
+              <span>Doctores</span>
+              <i class="pi pi-chevron-right qs-arrow"></i>
+            </a>
+            <a routerLink="/solicitudes" class="quick-sidebar-link">
+              <span class="qs-icon qs-icon--warning"><i class="pi pi-clipboard"></i></span>
+              <span>Solicitudes</span>
+              <i class="pi pi-chevron-right qs-arrow"></i>
+            </a>
+            <a routerLink="/salas" class="quick-sidebar-link">
+              <span class="qs-icon qs-icon--secondary"><i class="pi pi-building"></i></span>
+              <span>Salas</span>
+              <i class="pi pi-chevron-right qs-arrow"></i>
+            </a>
+            <a routerLink="/reportes" class="quick-sidebar-link">
+              <span class="qs-icon qs-icon--accent"><i class="pi pi-chart-line"></i></span>
+              <span>Reportes</span>
+              <i class="pi pi-chevron-right qs-arrow"></i>
+            </a>
+          </nav>
+        </aside>
+      </section>
+
+      <!-- ═══ Grid de paneles ═══ -->
+      <section class="admin-panels">
+
+        <!-- Distribución de estados -->
+        <article class="panel">
+          <div class="panel-head">
+            <h2><i class="pi pi-chart-bar"></i> Estados de citas</h2>
+          </div>
+          @if (distribucionEstados.length > 0) {
+            <div class="estado-bars">
+              @for (item of distribucionEstados; track item.label) {
+                <div class="estado-bar-row">
+                  <div class="estado-bar-label">
+                    <span>{{ item.label }}</span>
+                    <strong>{{ item.count }}</strong>
+                  </div>
+                  <div class="estado-bar-track">
+                    <div class="estado-bar-fill estado-bar-fill--{{ item.severity }}"
+                      [style.width.%]="totalCitas > 0 ? (item.count / totalCitas * 100) : 0">
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="empty-text">Sin datos de citas disponibles.</p>
+          }
+        </article>
+
+        <!-- Top doctores -->
+        <article class="panel">
+          <div class="panel-head">
+            <h2><i class="pi pi-star"></i> Doctores mas activos</h2>
+          </div>
+          @if (topDoctores.length > 0) {
+            <div class="doctor-list">
+              @for (doc of topDoctores; track doc.nombre; let i = $index) {
+                <div class="doctor-item">
+                  <span class="doctor-avatar doctor-rank">{{ i + 1 }}</span>
+                  <div class="doctor-info-col">
+                    <p>{{ doc.nombre }}</p>
+                    <small>{{ doc.especialidad || 'Sin especialidad' }} · {{ doc.citas }} citas</small>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="empty-text">Sin datos de doctores.</p>
+          }
+        </article>
+
+        <!-- Citas recientes -->
+        <article class="panel panel--wide">
+          <div class="panel-head">
+            <h2><i class="pi pi-history"></i> Ultimas citas registradas</h2>
+            <a routerLink="/citas">Ver todas</a>
+          </div>
+          @if (citasRecientes.length > 0) {
+            <div class="recent-table">
+              <div class="recent-row recent-header">
+                <span>Paciente</span>
+                <span>Médico</span>
+                <span>Sala</span>
+                <span>Fecha</span>
+                <span>Estado</span>
+              </div>
+              @for (cita of citasRecientes; track cita.citaId) {
+                <div class="recent-row">
+                  <span>{{ cita.paciente || 'Paciente #' + cita.pacienteId }}</span>
+                  <span>{{ cita.medico || 'Doctor #' + cita.medicoId }}</span>
+                  <span>{{ cita.sala || 'Sala #' + cita.salaId }}</span>
+                  <span>{{ cita.inicio | date:'dd/MM/yyyy HH:mm' }}</span>
+                  <span><p-tag [value]="cita.estado || cita.codigoEstado || ''" [severity]="estadoSeverity(cita.codigoEstado)" /></span>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="empty-text">No hay citas registradas.</p>
+          }
+        </article>
+
+        <!-- Resumen rápido -->
+        <article class="panel">
+          <div class="panel-head">
+            <h2><i class="pi pi-info-circle"></i> Resumen del sistema</h2>
+          </div>
+          <div class="summary-list">
+            <div class="summary-item">
+              <span>Doctores activos</span>
+              <strong>{{ doctoresActivosCount }}</strong>
+            </div>
+            <div class="summary-item">
+              <span>Salas disponibles</span>
+              <strong>{{ totalSalas }}</strong>
+            </div>
+            <div class="summary-item">
+              <span>Citas hoy</span>
+              <strong>{{ citasHoy.length }}</strong>
+            </div>
+            <div class="summary-item">
+              <span>Solicitudes pendientes</span>
+              <strong>{{ solicitudesPendientesCount }}</strong>
+            </div>
+          </div>
+        </article>
+      </section>
+    }
   </div>
 }

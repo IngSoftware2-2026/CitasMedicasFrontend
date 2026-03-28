@@ -2,18 +2,23 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
 import { CardModule } from 'primeng/card';
+import { TagModule } from 'primeng/tag';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { catchError, finalize, forkJoin, of, switchMap, timeout } from 'rxjs';
 import { AuthService } from '../../core/services/Accesos/auth/auth.service';
 import { CitasService } from '../../core/services/Clinica/citas.service';
 import { DoctoresService } from '../../core/services/Clinica/doctores.service';
 import { PacienteService } from '../../core/services/Clinica/paciente.service';
+import { SolicitudesService } from '../../core/services/Clinica/solicitudes.service';
 import { CitaListadoResponse } from '../../core/models/Clinica/Citas/citas-read.model';
 import { Doctor } from '../../core/models/Clinica/Doctores/doctor.model';
+import { Paciente } from '../../core/models/Clinica/Pacientes/paciente.model';
+import { Sala } from '../../core/models/Catalogos/sala.model';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, DatePipe, RouterLink, CardModule],
+  imports: [CommonModule, DatePipe, RouterLink, CardModule, TagModule, ProgressSpinnerModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
@@ -22,15 +27,27 @@ export class DashboardComponent implements OnInit {
   private citasService = inject(CitasService);
   private doctoresService = inject(DoctoresService);
   private pacienteService = inject(PacienteService);
+  private solicitudesService = inject(SolicitudesService);
   private cdr = inject(ChangeDetectorRef);
 
   loadingPaciente = false;
+  loadingAdmin = false;
   citasPaciente: CitaListadoResponse[] = [];
   doctoresActivos: Doctor[] = [];
+
+  // Admin data
+  allCitas: CitaListadoResponse[] = [];
+  allDoctores: Doctor[] = [];
+  allPacientes: Paciente[] = [];
+  allSalas: Sala[] = [];
+  totalSolicitudes = 0;
+  solicitudesPendientesCount = 0;
 
   ngOnInit(): void {
     if (this.auth.esPaciente) {
       this.cargarDashboardPaciente();
+    } else {
+      this.cargarDashboardAdmin();
     }
   }
 
@@ -82,13 +99,127 @@ export class DashboardComponent implements OnInit {
     return this.doctoresActivos.slice(0, 3);
   }
 
-  // Mantenidos para compatibilidad de plantilla en otros roles.
-  get totalPacientes(): number { return 0; }
-  get totalDoctores(): number { return 0; }
-  get totalCitas(): number { return 0; }
-  get solicitudesPendientes(): number { return 0; }
-  get distributionStats(): Array<{ label: string; count: number }> { return []; }
-  get recentCitas(): CitaListadoResponse[] { return []; }
+  // ─── Admin computed properties ───
+  get totalPacientes(): number { return this.allPacientes.length; }
+  get totalDoctores(): number { return this.allDoctores.length; }
+  get totalCitas(): number { return this.allCitas.length; }
+  get totalSalas(): number { return this.allSalas.length; }
+
+  get citasAtendidas(): number {
+    return this.allCitas.filter(c => this.esEstado(c.codigoEstado, ['ATEN', 'ATENDIDA', 'FINALIZADA'])).length;
+  }
+  get citasPendientes(): number {
+    return this.allCitas.filter(c => this.esEstado(c.codigoEstado, ['PEND', 'PENDIENTE'])).length;
+  }
+  get citasConfirmadas(): number {
+    return this.allCitas.filter(c => this.esEstado(c.codigoEstado, ['CONF', 'CONFIRMADA'])).length;
+  }
+  get citasCanceladas(): number {
+    return this.allCitas.filter(c => this.esEstado(c.codigoEstado, ['CANC', 'CANCELADA'])).length;
+  }
+  get citasNoAsistidas(): number {
+    return this.allCitas.filter(c => this.esEstado(c.codigoEstado, ['NOAS', 'NO_ASISTIO'])).length;
+  }
+
+  get doctoresActivosCount(): number {
+    return this.allDoctores.filter(d => d.activo).length;
+  }
+
+  get citasRecientes(): CitaListadoResponse[] {
+    return [...this.allCitas]
+      .sort((a, b) => new Date(b.inicio).getTime() - new Date(a.inicio).getTime())
+      .slice(0, 5);
+  }
+
+  get citasHoy(): CitaListadoResponse[] {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const manana = new Date(hoy);
+    manana.setDate(manana.getDate() + 1);
+    return this.allCitas.filter(c => {
+      const f = new Date(c.inicio);
+      return f >= hoy && f < manana;
+    });
+  }
+
+  get distribucionEstados(): { label: string; count: number; severity: string }[] {
+    return [
+      { label: 'Atendidas', count: this.citasAtendidas, severity: 'success' },
+      { label: 'Confirmadas', count: this.citasConfirmadas, severity: 'info' },
+      { label: 'Pendientes', count: this.citasPendientes, severity: 'warn' },
+      { label: 'Canceladas', count: this.citasCanceladas, severity: 'danger' },
+      { label: 'No asistió', count: this.citasNoAsistidas, severity: 'danger' }
+    ].filter(e => e.count > 0);
+  }
+
+  get topDoctores(): { nombre: string; citas: number; especialidad: string }[] {
+    const mapa = new Map<number, { nombre: string; citas: number; especialidad: string }>();
+    for (const c of this.allCitas) {
+      if (!mapa.has(c.medicoId)) {
+        const doc = this.allDoctores.find(d => d.medicoId === c.medicoId);
+        mapa.set(c.medicoId, {
+          nombre: c.medico || `Doctor #${c.medicoId}`,
+          citas: 0,
+          especialidad: doc?.nombreEspecialidad || ''
+        });
+      }
+      mapa.get(c.medicoId)!.citas++;
+    }
+    return Array.from(mapa.values()).sort((a, b) => b.citas - a.citas).slice(0, 5);
+  }
+
+  estadoSeverity(codigo: string | null | undefined): "success" | "info" | "warn" | "danger" | "secondary" | "contrast" {
+    const c = (codigo ?? '').toUpperCase();
+    if (['ATEN', 'ATENDIDA', 'FINALIZADA'].includes(c)) return 'success';
+    if (['CONF', 'CONFIRMADA'].includes(c)) return 'info';
+    if (['PEND', 'PENDIENTE'].includes(c)) return 'warn';
+    if (['CANC', 'CANCELADA', 'NOAS', 'NO_ASISTIO'].includes(c)) return 'danger';
+    return 'secondary';
+  }
+
+  private esEstado(codigo: string | null | undefined, valores: string[]): boolean {
+    return valores.includes((codigo ?? '').toUpperCase());
+  }
+
+  private extraerDatos(res: any): any[] {
+    if (Array.isArray(res)) return res;
+    return res?.data ?? res?.datos ?? [];
+  }
+
+  private cargarDashboardAdmin(): void {
+    this.loadingAdmin = true;
+    forkJoin({
+      citas: this.citasService.obtenerPorFiltro({}).pipe(timeout(15000), catchError(() => of({ data: [] }))),
+      doctores: this.doctoresService.listar().pipe(timeout(15000), catchError(() => of([]))),
+      pacientes: this.pacienteService.listar().pipe(timeout(15000), catchError(() => of([]))),
+      salas: this.citasService.listarSalas().pipe(timeout(15000), catchError(() => of({ data: [] }))),
+      solPublicas: this.solicitudesService.listarPublicas({}).pipe(timeout(15000), catchError(() => of({ data: [] }))),
+      solUsuarios: this.solicitudesService.listarUsuarios({}).pipe(timeout(15000), catchError(() => of({ data: [] })))
+    }).pipe(
+      finalize(() => {
+        this.loadingAdmin = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: (res) => {
+        this.allCitas = this.extraerDatos(res.citas);
+        this.allDoctores = Array.isArray(res.doctores) ? res.doctores : [];
+        this.allPacientes = Array.isArray(res.pacientes) ? res.pacientes : [];
+        this.allSalas = this.extraerDatos(res.salas);
+
+        const pubArr = this.extraerDatos(res.solPublicas);
+        const usrArr = this.extraerDatos(res.solUsuarios);
+        this.totalSolicitudes = pubArr.length + usrArr.length;
+        this.solicitudesPendientesCount = [...pubArr, ...usrArr]
+          .filter((s: any) => ['PEND', 'PENDIENTE'].includes((s.codigoEstado ?? '').toUpperCase())).length;
+
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cdr.detectChanges();
+      }
+    });
+  }
 
   private cargarDashboardPaciente(): void {
     this.loadingPaciente = true;
