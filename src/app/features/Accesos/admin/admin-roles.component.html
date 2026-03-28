@@ -53,12 +53,30 @@
 
         @if (rolesExpandidos.has(rol.rolId)) {
         <div class="role-permisos-list">
-          @for (permiso of listaPermisos; track permiso.permisoId) {
-          <label class="permiso-item" [class.active]="verificarPermisoAsignado(rol.rolId, permiso.permisoId)">
-            <input type="checkbox" [checked]="verificarPermisoAsignado(rol.rolId, permiso.permisoId)" [disabled]="!puedeEditar" (change)="alternarPermisoRol(rol.rolId, permiso.permisoId)" />
-            <i class="pi pi-shield"></i>
-            <span>{{ permiso.nombrePermiso }}</span>
-          </label>
+          @for (modulo of obtenerModulosPermisos(); track modulo.nombre) {
+          <div class="modulo-accordion">
+            <div class="modulo-header" (click)="alternarModulo(rol.rolId, modulo.nombre)">
+              <div class="modulo-header-left">
+                <i class="modulo-chevron pi" [class.pi-chevron-right]="!esModuloExpandido(rol.rolId, modulo.nombre)" [class.pi-chevron-down]="esModuloExpandido(rol.rolId, modulo.nombre)"></i>
+                <i [class]="modulo.icono" class="modulo-icon"></i>
+                <span class="modulo-nombre">{{ modulo.nombre }}</span>
+              </div>
+              <span class="modulo-count" [class.empty]="obtenerCantidadPermisosModulo(rol.rolId, modulo.permisos) === 0">
+                {{ obtenerCantidadPermisosModulo(rol.rolId, modulo.permisos) }}/{{ modulo.permisos.length }}
+              </span>
+            </div>
+            @if (esModuloExpandido(rol.rolId, modulo.nombre)) {
+            <div class="modulo-permisos">
+              @for (permiso of modulo.permisos; track permiso.permisoId) {
+              <label class="permiso-item" [class.active]="verificarPermisoAsignado(rol.rolId, permiso.permisoId)">
+                <input type="checkbox" [checked]="verificarPermisoAsignado(rol.rolId, permiso.permisoId)" [disabled]="!puedeEditar" (change)="alternarPermisoRol(rol.rolId, permiso.permisoId)" />
+                <i class="pi pi-shield"></i>
+                <span>{{ permiso.nombrePermiso }}</span>
+              </label>
+              }
+            </div>
+            }
+          </div>
           }
         </div>
         }
