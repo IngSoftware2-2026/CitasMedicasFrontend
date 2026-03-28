@@ -60,10 +60,24 @@
               <span><i class="pi pi-stopwatch"></i> {{ c.duracionMinutos }} min</span>
             </div>
             <footer>
-              <button class="mod-action-btn --view" (click)="openCitaDetail(c)">
-                <i class="pi pi-eye"></i>
-                Ver detalle
-              </button>
+              <div class="patient-actions">
+                <button class="patient-action-btn patient-action-btn--view" (click)="openCitaDetail(c)">
+                  <i class="pi pi-eye"></i>
+                  <span>Ver detalle</span>
+                </button>
+                @if (puedeModificarCitaPaciente(c)) {
+                  <button class="patient-action-btn patient-action-btn--edit" (click)="modificarCitaPaciente(c)">
+                    <i class="pi pi-pencil"></i>
+                    <span>Modificar</span>
+                  </button>
+                }
+                @if (puedeCancelarCitaPaciente(c)) {
+                  <button class="patient-action-btn patient-action-btn--cancel" [disabled]="cancelandoCitaId === c.citaId" (click)="cambiarEstadoCita(c, 4)">
+                    <i class="pi" [class.pi-spin]="cancelandoCitaId === c.citaId" [class.pi-spinner]="cancelandoCitaId === c.citaId" [class.pi-times]="cancelandoCitaId !== c.citaId"></i>
+                    <span>{{ cancelandoCitaId === c.citaId ? 'Cancelando...' : 'Cancelar' }}</span>
+                  </button>
+                }
+              </div>
             </footer>
           </article>
         }

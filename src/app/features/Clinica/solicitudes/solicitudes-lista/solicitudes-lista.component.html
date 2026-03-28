@@ -128,6 +128,14 @@
                 <span><i class="pi pi-clock"></i> {{ cita.inicio | date:'HH:mm' }} hrs</span>
                 <span><i class="pi pi-building"></i> {{ cita.sala || ('Sala ' + cita.salaId) }}</span>
               </div>
+              @if (puedeCancelarCita(cita)) {
+                <div class="filter-actions">
+                  <button class="btn btn-outline" [disabled]="cancelandoCitaId === cita.citaId" (click)="cancelarCitaPaciente(cita)">
+                    <i class="pi" [class.pi-spin]="cancelandoCitaId === cita.citaId" [class.pi-spinner]="cancelandoCitaId === cita.citaId" [class.pi-times]="cancelandoCitaId !== cita.citaId"></i>
+                    {{ cancelandoCitaId === cita.citaId ? 'Cancelando...' : 'Cancelar cita' }}
+                  </button>
+                </div>
+              }
             </article>
           }
         </div>

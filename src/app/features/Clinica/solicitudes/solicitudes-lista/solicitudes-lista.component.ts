@@ -1,9 +1,8 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { catchError, forkJoin, of, switchMap, timeout } from 'rxjs';
 import { SolicitudesService } from '../../../../core/services/Clinica/solicitudes.service';
 import { CitasService } from '../../../../core/services/Clinica/citas.service';
 import { DoctoresService } from '../../../../core/services/Clinica/doctores.service';
@@ -17,6 +16,7 @@ import {
   TipoSolicitud,
   CambiarEstadoSolicitudDTO
 } from '../../../../core/models/Clinica/Solicitudes/solicitud-publica.model';
+import { CitasCambiarEstadoRequest } from '../../../../core/models/Clinica/Citas/citas-cambiar-estado.model';
 import { CitasInsertarRequest } from '../../../../core/models/Clinica/Citas/citas-insertar.model';
 import { CitaListadoResponse } from '../../../../core/models/Clinica/Citas/citas-read.model';
 import { Doctor } from '../../../../core/models/Clinica/Doctores/doctor.model';
@@ -37,6 +37,7 @@ export class SolicitudesListaComponent implements OnInit {
   private pacienteService = inject(PacienteService);
   private errorHandler = inject(ErrorHandlerService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private auth = inject(AuthService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
@@ -59,6 +60,7 @@ export class SolicitudesListaComponent implements OnInit {
   salasPaciente: Sala[] = [];
   misCitasPaciente: CitaListadoResponse[] = [];
   creandoCita = false;
+  cancelandoCitaId: number | null = null;
   nuevaCita = {
     medicoId: null as number | null,
     fechaHoraInicio: '',
@@ -132,6 +134,22 @@ export class SolicitudesListaComponent implements OnInit {
     this.requiereCompletarPerfil = false;
 
     this.pacienteService.obtenerPerfilActual().pipe(
+      timeout(10000),
+      catchError((error) => {
+        const pacienteId = this.auth.pacienteIdActual();
+        if (pacienteId) {
+          console.warn('[SolicitudesPaciente] PerfilActual fallo, usando fallback por pacienteId.', error);
+          return this.pacienteService.obtenerPorId(pacienteId).pipe(
+            catchError((fallbackError) => {
+              console.error('[SolicitudesPaciente] Fallback ObtenerPorId tambien fallo.', fallbackError);
+              return of(null);
+            })
+          );
+        }
+
+        console.error('[SolicitudesPaciente] No se pudo cargar PerfilActual y no hay pacienteId en sesion.', error);
+        return of(null);
+      }),
       switchMap((perfil) => {
         this.perfilPaciente = perfil;
 
@@ -139,22 +157,24 @@ export class SolicitudesListaComponent implements OnInit {
           this.auth.establecerPacienteId(perfil.pacienteId);
           this.requiereCompletarPerfil = false;
         } else {
-          this.requiereCompletarPerfil = true;
+          this.requiereCompletarPerfil = !this.auth.pacienteIdActual();
         }
 
         const pacienteId = this.pacienteIdActual;
         if (!pacienteId) {
           return forkJoin({
-            doctores: this.doctoresService.listar(true),
-            salasResponse: this.citasService.listarSalas(),
+            doctores: this.doctoresService.listar(true).pipe(catchError(() => of([]))),
+            salasResponse: this.citasService.listarSalas().pipe(catchError(() => of({ data: [] as Sala[] }))),
             citasResponse: of({ data: [] as CitaListadoResponse[] })
           });
         }
 
         return forkJoin({
-          doctores: this.doctoresService.listar(true),
-          salasResponse: this.citasService.listarSalas(),
-          citasResponse: this.citasService.obtenerPorFiltro({ pacienteId })
+          doctores: this.doctoresService.listar(true).pipe(catchError(() => of([]))),
+          salasResponse: this.citasService.listarSalas().pipe(catchError(() => of({ data: [] as Sala[] }))),
+          citasResponse: this.citasService.obtenerPorFiltro({ pacienteId }).pipe(
+            catchError(() => of({ data: [] as CitaListadoResponse[] }))
+          )
         });
       })
     ).subscribe({
@@ -162,31 +182,10 @@ export class SolicitudesListaComponent implements OnInit {
         this.doctoresPaciente = (doctores ?? []).filter(d => d.activo);
         this.salasPaciente = (salasResponse?.data ?? []).filter(s => s.activo);
         this.misCitasPaciente = citasResponse?.data ?? [];
+        this.aplicarPrefillReagendamiento();
         this.loading.set(false);
       },
       error: (error) => {
-        if (error?.status === 404) {
-          this.requiereCompletarPerfil = true;
-          this.perfilPaciente = null;
-
-          forkJoin({
-            doctores: this.doctoresService.listar(true),
-            salasResponse: this.citasService.listarSalas()
-          }).subscribe({
-            next: ({ doctores, salasResponse }) => {
-              this.doctoresPaciente = (doctores ?? []).filter(d => d.activo);
-              this.salasPaciente = (salasResponse?.data ?? []).filter(s => s.activo);
-              this.misCitasPaciente = [];
-              this.loading.set(false);
-            },
-            error: () => {
-              this.loading.set(false);
-              this.errorHandler.showError(500, 'No se pudo cargar informacion base para agendar');
-            }
-          });
-          return;
-        }
-
         this.loading.set(false);
         this.errorHandler.showError(error?.status || 500, 'No se pudo cargar el contexto del paciente');
       }
@@ -295,6 +294,60 @@ export class SolicitudesListaComponent implements OnInit {
     this.router.navigate(['/configuraciones']);
   }
 
+  puedeCancelarCita(cita: CitaListadoResponse): boolean {
+    const codigo = (cita.codigoEstado ?? '').toUpperCase();
+    const estado = (cita.estado ?? '').toUpperCase();
+    const normalizado = codigo || estado;
+    return !['ATEN', 'ATENDIDA', 'FINALIZADA', 'EN_CURSO', 'CANC', 'CANCELADA', 'NOAS', 'NO_ASISTIO'].includes(normalizado);
+  }
+
+  cancelarCitaPaciente(cita: CitaListadoResponse): void {
+    if (!cita?.citaId || !this.puedeCancelarCita(cita)) {
+      return;
+    }
+
+    this.confirmationService.confirm({
+      message: `¿Deseas cancelar la cita con ${cita.medico || 'tu doctor'} del ${new Date(cita.inicio).toLocaleDateString('es-HN')}?`,
+      header: 'Cancelar cita',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, cancelar',
+      rejectLabel: 'No',
+      accept: () => this.ejecutarCancelacionCita(cita.citaId)
+    });
+  }
+
+  private ejecutarCancelacionCita(citaId: number): void {
+    const request: CitasCambiarEstadoRequest = {
+      citaId,
+      codigoEstado: 'CANC'
+    };
+
+    this.cancelandoCitaId = citaId;
+
+    this.citasService.cambiarEstado(request).subscribe({
+      next: (response) => {
+        this.cancelandoCitaId = null;
+
+        if (!response.success) {
+          this.errorHandler.showError(400, response.message || 'No se pudo cancelar la cita');
+          return;
+        }
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Cita cancelada',
+          detail: response.message || 'La cita fue cancelada correctamente.'
+        });
+
+        this.cargarMisCitasPaciente();
+      },
+      error: (error) => {
+        this.cancelandoCitaId = null;
+        this.errorHandler.showError(error?.status || 500, this.getErrorMessage(error, 'No se pudo cancelar la cita'));
+      }
+    });
+  }
+
   private cargarMisCitasPaciente(): void {
     const pacienteId = this.pacienteIdActual;
     if (!pacienteId) return;
@@ -326,6 +379,19 @@ export class SolicitudesListaComponent implements OnInit {
       ?? fallback;
 
     return String(message);
+  }
+
+  private aplicarPrefillReagendamiento(): void {
+    const medicoId = Number(this.route.snapshot.queryParamMap.get('medicoId'));
+    const fechaHoraInicio = this.route.snapshot.queryParamMap.get('fechaHoraInicio');
+
+    if (Number.isInteger(medicoId) && medicoId > 0) {
+      this.nuevaCita.medicoId = medicoId;
+    }
+
+    if (fechaHoraInicio) {
+      this.nuevaCita.fechaHoraInicio = fechaHoraInicio;
+    }
   }
 
   cargarSolicitudes(): void {

@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/Accesos/auth/auth.service';
 import { CitasService } from '../../../core/services/Clinica/citas.service';
 import { PacienteService } from '../../../core/services/Clinica/paciente.service';
@@ -38,6 +38,7 @@ export class CitasComponent implements OnInit {
   showAdvancedFilters = false;
   citaDialog = false;
   citaDetailDialog = false;
+  cancelandoCitaId: number | null = null;
   citaForm: Record<string, any> = {};
   filtros: {
     pacienteId: number | null;
@@ -122,7 +123,8 @@ export class CitasComponent implements OnInit {
     private errorHandler: ErrorHandlerService,
     private cdr: ChangeDetectorRef,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -420,6 +422,34 @@ export class CitasComponent implements OnInit {
     this.ejecutarCambioEstado(c, nuevoEstado);
   }
 
+  puedeCancelarCitaPaciente(c: any): boolean {
+    const codigo = this.obtenerCodigoEstadoPaciente(c);
+    return this.esCitaGestionablePaciente(codigo);
+  }
+
+  puedeModificarCitaPaciente(c: any): boolean {
+    const codigo = this.obtenerCodigoEstadoPaciente(c);
+    return this.esCitaGestionablePaciente(codigo);
+  }
+
+  modificarCitaPaciente(c: any): void {
+    const medicoId = c?.medicoId ?? null;
+    const fechaHoraInicio = c?.inicio ? this.toLocalDateTimeInputValue(new Date(c.inicio)) : null;
+
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Modificar cita',
+      detail: 'Te llevamos a Solicitar Cita con los datos actuales para reagendar. La edicion directa de una cita existente aun no esta soportada por el backend actual.'
+    });
+
+    this.router.navigate(['/solicitudes'], {
+      queryParams: {
+        medicoId,
+        fechaHoraInicio
+      }
+    });
+  }
+
   private ejecutarCambioEstado(c: any, nuevoEstado: number): void {
     const citaId = c.citaId ?? c;
     const codigoEstado = this.getCodigoEstadoCambio(nuevoEstado);
@@ -438,8 +468,13 @@ export class CitasComponent implements OnInit {
       codigoEstado
     };
 
+    if (this.esPaciente && nuevoEstado === 4) {
+      this.cancelandoCitaId = citaId;
+    }
+
     this.citasService.cambiarEstado(request).subscribe({
       next: (response) => {
+        this.cancelandoCitaId = null;
         if (response.success) {
           this.messageService.add({
             severity: 'success',
@@ -457,6 +492,7 @@ export class CitasComponent implements OnInit {
         });
       },
       error: (error) => {
+        this.cancelandoCitaId = null;
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -504,5 +540,29 @@ export class CitasComponent implements OnInit {
       default:
         return undefined;
     }
+  }
+
+  private obtenerCodigoEstadoPaciente(c: any): string {
+    const codigo = String(c?.estadoCodigo ?? c?.codigoEstado ?? '').toUpperCase();
+    if (codigo) return codigo;
+
+    const estado = String(c?.estadoNombre ?? c?.estado ?? '').toUpperCase();
+    if (estado.includes('PENDIENTE')) return 'PENDIENTE';
+    if (estado.includes('CONFIRMADA')) return 'CONFIRMADA';
+    if (estado.includes('ATENDIDA') || estado.includes('FINALIZADA')) return 'ATEN';
+    if (estado.includes('CANCELADA')) return 'CANC';
+    if (estado.includes('NO ASIST')) return 'NOAS';
+
+    return '';
+  }
+
+  private esCitaGestionablePaciente(codigo: string): boolean {
+    const normalizado = String(codigo || '').toUpperCase();
+    return !['ATEN', 'ATENDIDA', 'FINALIZADA', 'EN_CURSO', 'CANC', 'CANCELADA', 'NOAS', 'NO_ASISTIO'].includes(normalizado);
+  }
+
+  private toLocalDateTimeInputValue(date: Date): string {
+    const pad = (value: number) => value.toString().padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }
 }
