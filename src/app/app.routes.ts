@@ -18,6 +18,7 @@ import { AdminRolesComponent } from './features/Accesos/admin/admin-roles.compon
 import { UsuariosComponent } from './features/Accesos/usuarios/usuarios.component';
 import { ConfiguracionesComponent } from './features/Accesos/configuraciones/configuraciones.component';
 import { QrRecepcionComponent } from './features/Clinica/recepcion/qr-recepcion.component';
+import { ReportesComponent } from './features/reportes/reportes.component';
 import { authGuard } from './core/guards/auth.guard';
 import { permissionGuard } from './core/guards/permission.guard';
 
@@ -37,6 +38,7 @@ const ROUTES = {
   ADMIN: 'admin',
   CONFIGURACIONES: 'configuraciones',
   RECEPCION: 'recepcion',
+  REPORTES: 'reportes',
   SOLICITAR_CITA: 'solicitar-cita',
   SOLICITUD_DETALLE: 'solicitudes/:id',
   EMPTY: ''
@@ -139,6 +141,12 @@ export const routes: Routes = [
         component: QrRecepcionComponent,
         canActivate: [permissionGuard],
         data: { routeName: 'RECEPCION' }
+      },
+      {
+        path: ROUTES.REPORTES,
+        component: ReportesComponent,
+        canActivate: [permissionGuard],
+        data: { routeName: 'REPORTES' }
       },
       { path: ROUTES.EMPTY, redirectTo: ROUTES.DASHBOARD, pathMatch: 'full' }
     ]

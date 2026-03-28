@@ -116,6 +116,13 @@
           </a>
         }
 
+        @if (esAdmin) {
+          <a routerLink="/reportes" routerLinkActive="active" (click)="closeSidebarOnMobile()">
+            <i class="pi pi-chart-line"></i>
+            <span>Reportes</span>
+          </a>
+        }
+
         @if (esAdmin || esDoctor) {
           <div class="sidebar-section-inline">
             <span class="sidebar-section-title">CATALOGOS</span>

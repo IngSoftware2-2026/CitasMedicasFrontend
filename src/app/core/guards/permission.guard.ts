@@ -19,7 +19,8 @@ const ROLES_PERMITIDOS: Record<string, string[]> = {
   'HORARIOS': ['ADMIN', 'RECEP', 'DOCTOR', 'PACIENTE'],
   'USUARIOS': ['ADMIN'],
   'ADMIN': ['ADMIN'],
-  'CONFIGURACIONES': ['ADMIN', 'RECEP', 'DOCTOR', 'PACIENTE']
+  'CONFIGURACIONES': ['ADMIN', 'RECEP', 'DOCTOR', 'PACIENTE'],
+  'REPORTES': ['ADMIN']
 };
 
 const permissionGuard: CanActivateFn = (route): boolean => {

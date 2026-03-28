@@ -1,0 +1,469 @@
+<div class="reportes-container">
+  <div class="reportes-header">
+    <h1><i class="pi pi-chart-bar"></i> Reportería</h1>
+    <div class="filtros-globales">
+      <div class="filtro-grupo">
+        <label>Desde</label>
+        <p-datepicker [(ngModel)]="filtroDesde" dateFormat="dd/mm/yy" placeholder="Fecha inicio" [showIcon]="true" />
+      </div>
+      <div class="filtro-grupo">
+        <label>Hasta</label>
+        <p-datepicker [(ngModel)]="filtroHasta" dateFormat="dd/mm/yy" placeholder="Fecha fin" [showIcon]="true" />
+      </div>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="loading-overlay">
+      <p-progressSpinner strokeWidth="3" />
+      <p>Cargando reportes...</p>
+    </div>
+  } @else {
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0"><i class="pi pi-calendar"></i> Citas</p-tab>
+        <p-tab value="1"><i class="pi pi-qrcode"></i> Recepción</p-tab>
+        <p-tab value="2"><i class="pi pi-users"></i> Pacientes</p-tab>
+        <p-tab value="3"><i class="pi pi-user"></i> Doctores</p-tab>
+        <p-tab value="4"><i class="pi pi-clipboard"></i> Solicitudes</p-tab>
+        <p-tab value="5"><i class="pi pi-id-card"></i> Usuarios</p-tab>
+        <p-tab value="6"><i class="pi pi-building"></i> Salas</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <!-- ═══ CITAS ═══ -->
+        <p-tabpanel value="0">
+          <div class="kpi-row">
+            <div class="kpi-card kpi-total">
+              <span class="kpi-value">{{ citasFiltradas.length }}</span>
+              <span class="kpi-label">Total citas</span>
+            </div>
+            <div class="kpi-card kpi-success">
+              <span class="kpi-value">{{ citasAtendidas }}</span>
+              <span class="kpi-label">Atendidas</span>
+            </div>
+            <div class="kpi-card kpi-info">
+              <span class="kpi-value">{{ citasConfirmadas }}</span>
+              <span class="kpi-label">Confirmadas</span>
+            </div>
+            <div class="kpi-card kpi-warning">
+              <span class="kpi-value">{{ citasPendientes }}</span>
+              <span class="kpi-label">Pendientes</span>
+            </div>
+            <div class="kpi-card kpi-danger">
+              <span class="kpi-value">{{ citasCanceladas }}</span>
+              <span class="kpi-label">Canceladas</span>
+            </div>
+            <div class="kpi-card kpi-danger">
+              <span class="kpi-value">{{ citasNoAsistidas }}</span>
+              <span class="kpi-label">No asistió</span>
+            </div>
+          </div>
+
+          <p-table [value]="citasFiltradas" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5,10,25]"
+            styleClass="p-datatable-sm p-datatable-striped" [scrollable]="true">
+            <ng-template #header>
+              <tr>
+                <th pSortableColumn="citaId">ID</th>
+                <th pSortableColumn="paciente">Paciente</th>
+                <th pSortableColumn="medico">Médico</th>
+                <th pSortableColumn="sala">Sala</th>
+                <th pSortableColumn="inicio">Inicio</th>
+                <th pSortableColumn="fin">Fin</th>
+                <th pSortableColumn="codigoEstado">Estado</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-cita>
+              <tr>
+                <td>{{ cita.citaId }}</td>
+                <td>{{ cita.paciente || 'Paciente #' + cita.pacienteId }}</td>
+                <td>{{ cita.medico || 'Doctor #' + cita.medicoId }}</td>
+                <td>{{ cita.sala || 'Sala #' + cita.salaId }}</td>
+                <td>{{ cita.inicio | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td>{{ cita.fin | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td><p-tag [value]="cita.estado || cita.codigoEstado" [severity]="estadoSeverity(cita.codigoEstado)" /></td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+
+        <!-- ═══ RECEPCIÓN ═══ -->
+        <p-tabpanel value="1">
+          <h3>Pacientes atendidos</h3>
+          <div class="kpi-row">
+            <div class="kpi-card kpi-success">
+              <span class="kpi-value">{{ pacientesAtendidos.length }}</span>
+              <span class="kpi-label">Pacientes atendidos</span>
+            </div>
+          </div>
+
+          <p-table [value]="pacientesAtendidos" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5,10,25]"
+            styleClass="p-datatable-sm p-datatable-striped" [scrollable]="true">
+            <ng-template #header>
+              <tr>
+                <th pSortableColumn="citaId">Cita ID</th>
+                <th pSortableColumn="paciente">Paciente</th>
+                <th pSortableColumn="medico">Médico</th>
+                <th pSortableColumn="sala">Sala</th>
+                <th pSortableColumn="inicio">Fecha</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-cita>
+              <tr>
+                <td>{{ cita.citaId }}</td>
+                <td>{{ cita.paciente || 'Paciente #' + cita.pacienteId }}</td>
+                <td>{{ cita.medico || 'Doctor #' + cita.medicoId }}</td>
+                <td>{{ cita.sala || 'Sala #' + cita.salaId }}</td>
+                <td>{{ cita.inicio | date:'dd/MM/yyyy HH:mm' }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+
+          <h3 class="section-title">Saturación por doctor</h3>
+          <p-table [value]="saturacionDoctores" [paginator]="true" [rows]="10"
+            styleClass="p-datatable-sm p-datatable-striped" [scrollable]="true">
+            <ng-template #header>
+              <tr>
+                <th pSortableColumn="medico">Médico</th>
+                <th pSortableColumn="total">Total citas</th>
+                <th pSortableColumn="atendidas">Atendidas</th>
+                <th pSortableColumn="pendientes">Pendientes</th>
+                <th pSortableColumn="porcentaje">% Saturación</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-row>
+              <tr>
+                <td>{{ row.medico }}</td>
+                <td>{{ row.total }}</td>
+                <td>{{ row.atendidas }}</td>
+                <td>{{ row.pendientes }}</td>
+                <td>
+                  <div class="bar-container">
+                    <div class="bar-fill" [style.width.%]="row.porcentaje"
+                      [class.bar-high]="row.porcentaje >= 75"
+                      [class.bar-medium]="row.porcentaje >= 40 && row.porcentaje < 75"
+                      [class.bar-low]="row.porcentaje < 40">
+                    </div>
+                    <span class="bar-label">{{ row.porcentaje }}%</span>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+
+        <!-- ═══ PACIENTES ═══ -->
+        <p-tabpanel value="2">
+          <div class="kpi-row">
+            <div class="kpi-card kpi-total">
+              <span class="kpi-value">{{ pacientes.length }}</span>
+              <span class="kpi-label">Total pacientes</span>
+            </div>
+            <div class="kpi-card kpi-success">
+              <span class="kpi-value">{{ pacientesActivos }}</span>
+              <span class="kpi-label">Activos</span>
+            </div>
+            <div class="kpi-card kpi-danger">
+              <span class="kpi-value">{{ pacientesInactivos }}</span>
+              <span class="kpi-label">Inactivos</span>
+            </div>
+          </div>
+
+          <h3 class="section-title">Pacientes atendidos por mes</h3>
+          <p-table [value]="pacientesPorMes" styleClass="p-datatable-sm p-datatable-striped" [scrollable]="true">
+            <ng-template #header>
+              <tr>
+                <th pSortableColumn="mes">Mes</th>
+                <th pSortableColumn="cantidad">Atendidos</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-row>
+              <tr>
+                <td>{{ row.mes }}</td>
+                <td>
+                  <div class="bar-container">
+                    <div class="bar-fill bar-info" [style.width.%]="(row.cantidad / (pacientesPorMes[0]?.cantidad || 1)) * 100"></div>
+                    <span class="bar-label">{{ row.cantidad }}</span>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+
+          <h3 class="section-title">Listado de pacientes</h3>
+          <p-table [value]="pacientes" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5,10,25]"
+            styleClass="p-datatable-sm p-datatable-striped" [scrollable]="true">
+            <ng-template #header>
+              <tr>
+                <th pSortableColumn="pacienteId">ID</th>
+                <th pSortableColumn="nombres">Nombres</th>
+                <th pSortableColumn="apellidos">Apellidos</th>
+                <th pSortableColumn="telefono">Teléfono</th>
+                <th pSortableColumn="activo">Estado</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-pac>
+              <tr>
+                <td>{{ pac.pacienteId }}</td>
+                <td>{{ pac.nombres }}</td>
+                <td>{{ pac.apellidos }}</td>
+                <td>{{ pac.telefono }}</td>
+                <td><p-tag [value]="pac.activo ? 'Activo' : 'Inactivo'" [severity]="pac.activo ? 'success' : 'danger'" /></td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+
+        <!-- ═══ DOCTORES ═══ -->
+        <p-tabpanel value="3">
+          <div class="kpi-row">
+            <div class="kpi-card kpi-total">
+              <span class="kpi-value">{{ doctores.length }}</span>
+              <span class="kpi-label">Total doctores</span>
+            </div>
+            <div class="kpi-card kpi-success">
+              <span class="kpi-value">{{ totalDoctoresActivos }}</span>
+              <span class="kpi-label">Activos</span>
+            </div>
+            <div class="kpi-card kpi-info">
+              <span class="kpi-value">{{ especialidades.length }}</span>
+              <span class="kpi-label">Especialidades</span>
+            </div>
+          </div>
+
+          <h3 class="section-title">Especialidades y cantidad de doctores</h3>
+          <p-table [value]="especialidadesResumen" styleClass="p-datatable-sm p-datatable-striped" [scrollable]="true">
+            <ng-template #header>
+              <tr>
+                <th pSortableColumn="nombre">Especialidad</th>
+                <th pSortableColumn="cantidadDoctores">Doctores</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-row>
+              <tr>
+                <td>{{ row.nombre }}</td>
+                <td>{{ row.cantidadDoctores }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+
+          <h3 class="section-title">Historial clínico por doctor</h3>
+          <p-table [value]="historialPorDoctor" [paginator]="true" [rows]="10"
+            styleClass="p-datatable-sm p-datatable-striped" [scrollable]="true">
+            <ng-template #header>
+              <tr>
+                <th pSortableColumn="medico">Médico</th>
+                <th pSortableColumn="totalCitas">Total citas</th>
+                <th pSortableColumn="atendidas">Atendidas</th>
+                <th pSortableColumn="canceladas">Canceladas/No asistió</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-row>
+              <tr>
+                <td>{{ row.medico }}</td>
+                <td>{{ row.totalCitas }}</td>
+                <td><span class="text-success">{{ row.atendidas }}</span></td>
+                <td><span class="text-danger">{{ row.canceladas }}</span></td>
+              </tr>
+            </ng-template>
+          </p-table>
+
+          <h3 class="section-title">Listado de doctores</h3>
+          <p-table [value]="doctoresConEspecialidad" [paginator]="true" [rows]="10"
+            styleClass="p-datatable-sm p-datatable-striped" [scrollable]="true">
+            <ng-template #header>
+              <tr>
+                <th pSortableColumn="doctor">Doctor</th>
+                <th pSortableColumn="especialidad">Especialidad</th>
+                <th pSortableColumn="activo">Estado</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-row>
+              <tr>
+                <td>{{ row.doctor }}</td>
+                <td>{{ row.especialidad }}</td>
+                <td><p-tag [value]="row.activo ? 'Activo' : 'Inactivo'" [severity]="row.activo ? 'success' : 'danger'" /></td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+
+        <!-- ═══ SOLICITUDES ═══ -->
+        <p-tabpanel value="4">
+          <div class="kpi-row">
+            <div class="kpi-card kpi-total">
+              <span class="kpi-value">{{ solicitudesFiltradas.length }}</span>
+              <span class="kpi-label">Total solicitudes</span>
+            </div>
+            <div class="kpi-card kpi-info">
+              <span class="kpi-value">{{ solicitudesPublicas }}</span>
+              <span class="kpi-label">Públicas</span>
+            </div>
+            <div class="kpi-card kpi-success">
+              <span class="kpi-value">{{ solicitudesDeUsuario }}</span>
+              <span class="kpi-label">De usuario</span>
+            </div>
+          </div>
+
+          <h3 class="section-title">Solicitudes por estado</h3>
+          <p-table [value]="solicitudesPorEstado" styleClass="p-datatable-sm p-datatable-striped" [scrollable]="true">
+            <ng-template #header>
+              <tr>
+                <th pSortableColumn="estado">Estado</th>
+                <th pSortableColumn="cantidad">Cantidad</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-row>
+              <tr>
+                <td>{{ row.estado }}</td>
+                <td>{{ row.cantidad }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+
+          <h3 class="section-title">Detalle de solicitudes</h3>
+          <p-table [value]="solicitudesFiltradas" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5,10,25]"
+            styleClass="p-datatable-sm p-datatable-striped" [scrollable]="true">
+            <ng-template #header>
+              <tr>
+                <th pSortableColumn="solicitudId">ID</th>
+                <th pSortableColumn="tipo">Tipo</th>
+                <th pSortableColumn="nombrePaciente">Paciente</th>
+                <th pSortableColumn="medico">Médico</th>
+                <th pSortableColumn="fechaHoraInicio">Fecha</th>
+                <th pSortableColumn="estado">Estado</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-sol>
+              <tr>
+                <td>{{ sol.solicitudId }}</td>
+                <td><p-tag [value]="sol.tipo" [severity]="sol.tipo === 'PUBLICA' ? 'info' : 'success'" /></td>
+                <td>{{ sol.nombrePaciente }}</td>
+                <td>{{ sol.medico }}</td>
+                <td>{{ sol.fechaHoraInicio | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td><p-tag [value]="sol.estado || sol.codigoEstado" [severity]="estadoSeverity(sol.codigoEstado)" /></td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+
+        <!-- ═══ USUARIOS ═══ -->
+        <p-tabpanel value="5">
+          <div class="kpi-row">
+            <div class="kpi-card kpi-total">
+              <span class="kpi-value">{{ usuarios.length }}</span>
+              <span class="kpi-label">Total usuarios</span>
+            </div>
+            <div class="kpi-card kpi-success">
+              <span class="kpi-value">{{ usuariosActivos }}</span>
+              <span class="kpi-label">Activos</span>
+            </div>
+            <div class="kpi-card kpi-danger">
+              <span class="kpi-value">{{ usuariosInactivos }}</span>
+              <span class="kpi-label">Inactivos</span>
+            </div>
+          </div>
+
+          <h3 class="section-title">Usuarios por rol</h3>
+          <p-table [value]="usuariosPorRol" styleClass="p-datatable-sm p-datatable-striped" [scrollable]="true">
+            <ng-template #header>
+              <tr>
+                <th>Rol</th>
+                <th pSortableColumn="cantidad">Cantidad</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-row>
+              <tr>
+                <td>{{ nombreRol(row.rolId) }}</td>
+                <td>{{ row.cantidad }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+
+          <h3 class="section-title">Listado de usuarios</h3>
+          <p-table [value]="usuarios" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5,10,25]"
+            styleClass="p-datatable-sm p-datatable-striped" [scrollable]="true">
+            <ng-template #header>
+              <tr>
+                <th pSortableColumn="usuarioId">ID</th>
+                <th pSortableColumn="nombreUsuario">Usuario</th>
+                <th pSortableColumn="correo">Correo</th>
+                <th pSortableColumn="rolId">Rol</th>
+                <th pSortableColumn="activo">Estado</th>
+                <th pSortableColumn="fechaCreacion">Creado</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-usr>
+              <tr>
+                <td>{{ usr.usuarioId }}</td>
+                <td>{{ usr.nombreUsuario }}</td>
+                <td>{{ usr.correo }}</td>
+                <td>{{ nombreRol(usr.rolId) }}</td>
+                <td><p-tag [value]="usr.activo ? 'Activo' : 'Inactivo'" [severity]="usr.activo ? 'success' : 'danger'" /></td>
+                <td>{{ usr.fechaCreacion | date:'dd/MM/yyyy' }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+
+        <!-- ═══ SALAS ═══ -->
+        <p-tabpanel value="6">
+          <div class="kpi-row">
+            <div class="kpi-card kpi-total">
+              <span class="kpi-value">{{ salas.length }}</span>
+              <span class="kpi-label">Total salas</span>
+            </div>
+            <div class="kpi-card kpi-success">
+              <span class="kpi-value">{{ salasActivas }}</span>
+              <span class="kpi-label">Activas</span>
+            </div>
+            <div class="kpi-card kpi-danger">
+              <span class="kpi-value">{{ salasInactivas }}</span>
+              <span class="kpi-label">Inactivas</span>
+            </div>
+          </div>
+
+          <h3 class="section-title">Ocupación por sala</h3>
+          <p-table [value]="ocupacionSalas" styleClass="p-datatable-sm p-datatable-striped" [scrollable]="true">
+            <ng-template #header>
+              <tr>
+                <th pSortableColumn="sala">Sala</th>
+                <th pSortableColumn="totalCitas">Total citas</th>
+                <th pSortableColumn="atendidas">Atendidas</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-row>
+              <tr>
+                <td>{{ row.sala }}</td>
+                <td>{{ row.totalCitas }}</td>
+                <td>{{ row.atendidas }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+
+          <h3 class="section-title">Listado de salas</h3>
+          <p-table [value]="salas" styleClass="p-datatable-sm p-datatable-striped" [scrollable]="true">
+            <ng-template #header>
+              <tr>
+                <th pSortableColumn="salaId">ID</th>
+                <th pSortableColumn="codigoSala">Código</th>
+                <th pSortableColumn="nombreSala">Nombre</th>
+                <th pSortableColumn="ubicacion">Ubicación</th>
+                <th pSortableColumn="activo">Estado</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-sala>
+              <tr>
+                <td>{{ sala.salaId }}</td>
+                <td>{{ sala.codigoSala }}</td>
+                <td>{{ sala.nombreSala }}</td>
+                <td>{{ sala.ubicacion || '—' }}</td>
+                <td><p-tag [value]="sala.activo ? 'Activa' : 'Inactiva'" [severity]="sala.activo ? 'success' : 'danger'" /></td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  }
+</div>

@@ -1,0 +1,157 @@
+.reportes-container {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.reportes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.reportes-header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filtros-globales {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.filtro-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.filtro-grupo label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 4rem 0;
+  opacity: 0.7;
+}
+
+/* ─── KPI Cards ─── */
+.kpi-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.kpi-card {
+  flex: 1;
+  min-width: 140px;
+  padding: 1.2rem;
+  border-radius: 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border: 1px solid var(--p-surface-200, #e5e7eb);
+  background: var(--p-surface-0, #fff);
+}
+
+.kpi-value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.kpi-label {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  font-weight: 500;
+}
+
+.kpi-total .kpi-value { color: var(--p-primary-color, #6366f1); }
+.kpi-success .kpi-value { color: #22c55e; }
+.kpi-info .kpi-value { color: #3b82f6; }
+.kpi-warning .kpi-value { color: #f59e0b; }
+.kpi-danger .kpi-value { color: #ef4444; }
+
+/* ─── Section titles ─── */
+.section-title {
+  margin: 2rem 0 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* ─── Progress bar cells ─── */
+.bar-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.bar-fill {
+  height: 8px;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  min-width: 2px;
+}
+
+.bar-high { background: #ef4444; }
+.bar-medium { background: #f59e0b; }
+.bar-low { background: #22c55e; }
+.bar-info { background: #3b82f6; }
+
+.bar-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ─── Text colors ─── */
+.text-success { color: #22c55e; font-weight: 600; }
+.text-danger { color: #ef4444; font-weight: 600; }
+
+/* ─── Tabs ─── */
+:host ::ng-deep .p-tablist-tab-list {
+  gap: 0.25rem;
+}
+
+:host ::ng-deep .p-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .reportes-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filtros-globales {
+    width: 100%;
+  }
+
+  .kpi-row {
+    flex-direction: column;
+  }
+
+  .kpi-card {
+    min-width: unset;
+  }
+}
