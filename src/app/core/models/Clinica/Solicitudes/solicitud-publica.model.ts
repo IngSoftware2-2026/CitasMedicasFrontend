@@ -8,6 +8,14 @@ export interface SolicitudPublicaInsertarDTO {
   motivo?: string;
 }
 
+export interface SolicitudUsuarioInsertarDTO {
+  pacienteId: number;
+  medicoId: number;
+  fechaHoraInicio: string;
+  duracionMinutos: number;
+  motivo?: string;
+}
+
 // ── Listado de solicitudes públicas (response del backend) ──
 export interface SolicitudPublicaListadoDTO {
   solicitudId: number;

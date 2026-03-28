@@ -5,7 +5,7 @@
         <div class="page-header-icon"><i class="pi pi-calendar-plus"></i></div>
         <div class="page-header-text">
           <h2>Solicitar Cita</h2>
-          <p>Usamos tu perfil actual para agendar sin volver a pedir tus datos personales.</p>
+          <p>Usamos tu perfil actual para enviar una solicitud de cita sin volver a pedir tus datos personales.</p>
         </div>
       </div>
       <a class="patient-action-link" (click)="irAMisCitas()">
@@ -17,38 +17,38 @@
       <div class="stat-card">
         <div class="stat-icon total"><i class="pi pi-list"></i></div>
         <div class="stat-info">
-          <span class="stat-num">{{ totalMisCitas }}</span>
-          <span class="stat-label">Citas registradas</span>
+          <span class="stat-num">{{ totalMisSolicitudes }}</span>
+          <span class="stat-label">Solicitudes registradas</span>
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-icon pending"><i class="pi pi-clock"></i></div>
         <div class="stat-info">
-          <span class="stat-num">{{ misCitasPendientes }}</span>
+          <span class="stat-num">{{ misSolicitudesPendientes }}</span>
           <span class="stat-label">Pendientes</span>
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-icon approved"><i class="pi pi-check-circle"></i></div>
         <div class="stat-info">
-          <span class="stat-num">{{ misCitasAtendidas }}</span>
-          <span class="stat-label">Atendidas</span>
+          <span class="stat-num">{{ misSolicitudesAprobadas }}</span>
+          <span class="stat-label">Aprobadas</span>
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-icon rejected"><i class="pi pi-times-circle"></i></div>
         <div class="stat-info">
-          <span class="stat-num">{{ misCitasCanceladas }}</span>
-          <span class="stat-label">Canceladas</span>
+          <span class="stat-num">{{ misSolicitudesReprogramadas + misSolicitudesRechazadas }}</span>
+          <span class="stat-label">Reprogramadas / rechazadas</span>
         </div>
       </div>
     </div>
 
     <div class="filters-card patient-form-card">
-      <h3 class="patient-form-title"><i class="pi pi-file-edit"></i> Nueva cita</h3>
+      <h3 class="patient-form-title"><i class="pi pi-file-edit"></i> Nueva solicitud</h3>
       @if (requiereCompletarPerfil) {
         <div class="config-profile-warning">
-          Debes completar tu perfil antes de agendar una cita.
+          Debes completar tu perfil antes de solicitar una cita.
           <a class="inline-link" (click)="irACompletarPerfil()">Completar perfil</a>
         </div>
       }
@@ -64,7 +64,7 @@
       <div class="filters-row">
         <div class="filter-group">
           <label>Doctor</label>
-          <select [(ngModel)]="nuevaCita.medicoId">
+          <select [(ngModel)]="nuevaSolicitud.medicoId">
             <option [ngValue]="null">Selecciona un doctor</option>
             @for (doc of doctoresPaciente; track doc.medicoId) {
               <option [ngValue]="doc.medicoId">{{ doc.nombrePublico }} - {{ doc.nombreEspecialidad || 'Medicina General' }}</option>
@@ -72,22 +72,22 @@
           </select>
         </div>
         <div class="filter-group">
-          <label>Fecha y Hora</label>
-          <input type="datetime-local" [(ngModel)]="nuevaCita.fechaHoraInicio" />
+          <label>Fecha y hora solicitada</label>
+          <input type="datetime-local" [(ngModel)]="nuevaSolicitud.fechaHoraInicio" />
         </div>
       </div>
 
       <div class="filters-row">
         <div class="filter-group" style="min-width: 100%;">
           <label>Motivo de la consulta</label>
-          <input type="text" [(ngModel)]="nuevaCita.motivo" placeholder="Ej: control general, dolor de garganta, seguimiento..." />
+          <input type="text" [(ngModel)]="nuevaSolicitud.motivo" placeholder="Ej: control general, dolor de garganta, seguimiento..." />
         </div>
       </div>
 
       <div class="filter-actions">
-        <button class="btn btn-primary" [disabled]="creandoCita || requiereCompletarPerfil" (click)="crearCitaPaciente()">
-          <i class="pi" [class.pi-spin]="creandoCita" [class.pi-spinner]="creandoCita" [class.pi-check]="!creandoCita"></i>
-          {{ creandoCita ? 'Creando cita...' : 'Crear cita' }}
+        <button class="btn btn-primary" [disabled]="creandoSolicitud || requiereCompletarPerfil" (click)="crearSolicitudPaciente()">
+          <i class="pi" [class.pi-spin]="creandoSolicitud" [class.pi-spinner]="creandoSolicitud" [class.pi-check]="!creandoSolicitud"></i>
+          {{ creandoSolicitud ? 'Enviando solicitud...' : 'Enviar solicitud' }}
         </button>
       </div>
     </div>
@@ -96,9 +96,9 @@
       <div class="table-header">
         <div class="search-box">
           <i class="pi pi-search"></i>
-          <input type="text" [(ngModel)]="searchTerm" placeholder="Buscar por doctor, estado o sala..." />
+          <input type="text" [(ngModel)]="searchTerm" placeholder="Buscar por doctor, estado o motivo..." />
         </div>
-        <span class="result-count">{{ misCitasOrdenadas.length }} citas</span>
+        <span class="result-count">{{ misSolicitudesOrdenadas.length }} solicitudes</span>
       </div>
 
       @if (loading()) {
@@ -106,36 +106,28 @@
           <i class="pi pi-spin pi-spinner"></i>
           <p>Cargando datos del paciente...</p>
         </div>
-      } @else if (misCitasOrdenadas.length === 0) {
+      } @else if (misSolicitudesOrdenadas.length === 0) {
         <div class="empty-state">
           <i class="pi pi-inbox"></i>
-          <p>No tienes citas registradas</p>
-          <span>Tu primera cita aparecera aqui despues de crearla.</span>
+          <p>No tienes solicitudes registradas</p>
+          <span>Tu primera solicitud aparecera aqui despues de enviarla.</span>
         </div>
       } @else {
         <div class="patient-request-grid">
-          @for (cita of misCitasOrdenadas; track cita.citaId) {
+          @for (solicitud of misSolicitudesOrdenadas; track solicitud.solicitudId) {
             <article class="patient-request-card">
               <header>
                 <div>
-                  <p class="request-id">Cita #{{ cita.citaId }}</p>
-                  <h3>{{ cita.medico }}</h3>
+                  <p class="request-id">Solicitud #{{ solicitud.solicitudId }}</p>
+                  <h3>{{ solicitud.medico }}</h3>
                 </div>
-                <span class="badge" [class]="getEstadoClass(cita.codigoEstado || '')">{{ cita.estado || cita.codigoEstado }}</span>
+                <span class="badge" [class]="getEstadoClass(solicitud.codigoEstado || '')">{{ solicitud.estado || solicitud.codigoEstado }}</span>
               </header>
               <div class="request-meta">
-                <span><i class="pi pi-calendar"></i> {{ cita.inicio | date:'dd/MM/yyyy' }}</span>
-                <span><i class="pi pi-clock"></i> {{ cita.inicio | date:'HH:mm' }} hrs</span>
-                <span><i class="pi pi-building"></i> {{ cita.sala || ('Sala ' + cita.salaId) }}</span>
+                <span><i class="pi pi-calendar"></i> {{ solicitud.fechaHoraInicio | date:'dd/MM/yyyy' }}</span>
+                <span><i class="pi pi-clock"></i> {{ solicitud.fechaHoraInicio | date:'HH:mm' }} hrs</span>
+                <span><i class="pi pi-file-edit"></i> {{ solicitud.motivo || 'Sin motivo registrado' }}</span>
               </div>
-              @if (puedeCancelarCita(cita)) {
-                <div class="filter-actions">
-                  <button class="btn btn-outline" [disabled]="cancelandoCitaId === cita.citaId" (click)="cancelarCitaPaciente(cita)">
-                    <i class="pi" [class.pi-spin]="cancelandoCitaId === cita.citaId" [class.pi-spinner]="cancelandoCitaId === cita.citaId" [class.pi-times]="cancelandoCitaId !== cita.citaId"></i>
-                    {{ cancelandoCitaId === cita.citaId ? 'Cancelando...' : 'Cancelar cita' }}
-                  </button>
-                </div>
-              }
             </article>
           }
         </div>

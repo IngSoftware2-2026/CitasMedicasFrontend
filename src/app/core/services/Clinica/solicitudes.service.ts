@@ -5,6 +5,7 @@ import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../models/api-response.model';
 import {
   SolicitudPublicaInsertarDTO,
+  SolicitudUsuarioInsertarDTO,
   SolicitudPublicaListadoDTO,
   SolicitudCitaListadoDTO,
   SolicitudesFiltroDTO,
@@ -34,6 +35,12 @@ export class SolicitudesService {
   insertarPublica(dto: SolicitudPublicaInsertarDTO): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(
       `${this.baseUrl}/Publicas/Insertar`, dto
+    );
+  }
+
+  insertarUsuario(dto: SolicitudUsuarioInsertarDTO): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.baseUrl}/Usuarios/Insertar`, dto
     );
   }
 

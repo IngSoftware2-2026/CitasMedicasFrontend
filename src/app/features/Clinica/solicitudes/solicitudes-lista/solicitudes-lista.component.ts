@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { catchError, forkJoin, of, switchMap, timeout } from 'rxjs';
 import { SolicitudesService } from '../../../../core/services/Clinica/solicitudes.service';
-import { CitasService } from '../../../../core/services/Clinica/citas.service';
 import { DoctoresService } from '../../../../core/services/Clinica/doctores.service';
 import { PacienteService } from '../../../../core/services/Clinica/paciente.service';
 import { ErrorHandlerService } from '../../../../core/services/Http/error-handler.service';
@@ -12,16 +11,14 @@ import { AuthService } from '../../../../core/services/Accesos/auth/auth.service
 import { ConfirmationService, MessageService } from 'primeng/api';
 import {
   SolicitudUnificada,
+  SolicitudCitaListadoDTO,
+  SolicitudUsuarioInsertarDTO,
   SolicitudesFiltroDTO,
   TipoSolicitud,
   CambiarEstadoSolicitudDTO
 } from '../../../../core/models/Clinica/Solicitudes/solicitud-publica.model';
-import { CitasCambiarEstadoRequest } from '../../../../core/models/Clinica/Citas/citas-cambiar-estado.model';
-import { CitasInsertarRequest } from '../../../../core/models/Clinica/Citas/citas-insertar.model';
-import { CitaListadoResponse } from '../../../../core/models/Clinica/Citas/citas-read.model';
 import { Doctor } from '../../../../core/models/Clinica/Doctores/doctor.model';
 import { Paciente } from '../../../../core/models/Clinica/Pacientes/paciente.model';
-import { Sala } from '../../../../core/models/Catalogos/sala.model';
 
 @Component({
   selector: 'app-solicitudes-lista',
@@ -32,7 +29,6 @@ import { Sala } from '../../../../core/models/Catalogos/sala.model';
 })
 export class SolicitudesListaComponent implements OnInit {
   private solicitudesService = inject(SolicitudesService);
-  private citasService = inject(CitasService);
   private doctoresService = inject(DoctoresService);
   private pacienteService = inject(PacienteService);
   private errorHandler = inject(ErrorHandlerService);
@@ -57,11 +53,9 @@ export class SolicitudesListaComponent implements OnInit {
   perfilPaciente: Paciente | null = null;
   requiereCompletarPerfil = false;
   doctoresPaciente: Doctor[] = [];
-  salasPaciente: Sala[] = [];
-  misCitasPaciente: CitaListadoResponse[] = [];
-  creandoCita = false;
-  cancelandoCitaId: number | null = null;
-  nuevaCita = {
+  misSolicitudesPaciente: SolicitudCitaListadoDTO[] = [];
+  creandoSolicitud = false;
+  nuevaSolicitud = {
     medicoId: null as number | null,
     fechaHoraInicio: '',
     motivo: ''
@@ -90,42 +84,46 @@ export class SolicitudesListaComponent implements OnInit {
     return null;
   }
 
-  get misCitasOrdenadas(): CitaListadoResponse[] {
+  get misSolicitudesOrdenadas(): SolicitudCitaListadoDTO[] {
     const term = this.searchTerm.toLowerCase().trim();
-    const base = [...this.misCitasPaciente].sort(
-      (a, b) => new Date(b.inicio).getTime() - new Date(a.inicio).getTime()
+    const base = [...this.misSolicitudesPaciente].sort(
+      (a, b) => new Date(b.fechaHoraInicio).getTime() - new Date(a.fechaHoraInicio).getTime()
     );
 
     if (!term) return base;
-    return base.filter(c =>
-      (c.medico ?? '').toLowerCase().includes(term) ||
-      (c.estado ?? '').toLowerCase().includes(term) ||
-      (c.sala ?? '').toLowerCase().includes(term)
+    return base.filter(s =>
+      (s.medico ?? '').toLowerCase().includes(term) ||
+      (s.estado ?? '').toLowerCase().includes(term) ||
+      (s.motivo ?? '').toLowerCase().includes(term)
     );
   }
 
-  get totalMisCitas(): number {
-    return this.misCitasPaciente.length;
+  get totalMisSolicitudes(): number {
+    return this.misSolicitudesPaciente.length;
   }
 
-  get misCitasPendientes(): number {
-    return this.misCitasPaciente.filter(c => {
-      const code = (c.codigoEstado ?? '').toUpperCase();
-      return code === 'PENDIENTE' || code === 'CONFIRMADA' || code === 'CONF';
+  get misSolicitudesPendientes(): number {
+    return this.misSolicitudesPaciente.filter(s => (s.codigoEstado ?? '').toUpperCase() === 'PENDIENTE').length;
+  }
+
+  get misSolicitudesAprobadas(): number {
+    return this.misSolicitudesPaciente.filter(s => {
+      const code = (s.codigoEstado ?? '').toUpperCase();
+      return code === 'APROBADA' || code === 'CONFIRMADA' || code === 'CONF';
     }).length;
   }
 
-  get misCitasAtendidas(): number {
-    return this.misCitasPaciente.filter(c => {
-      const code = (c.codigoEstado ?? '').toUpperCase();
-      return code === 'FINALIZADA' || code === 'ATENDIDA' || code === 'ATEN' || code === 'EN_CURSO';
+  get misSolicitudesReprogramadas(): number {
+    return this.misSolicitudesPaciente.filter(s => {
+      const code = (s.codigoEstado ?? '').toUpperCase();
+      return code === 'REPROGRAMADA' || code === 'PROPUESTA';
     }).length;
   }
 
-  get misCitasCanceladas(): number {
-    return this.misCitasPaciente.filter(c => {
-      const code = (c.codigoEstado ?? '').toUpperCase();
-      return code === 'CANCELADA' || code === 'NO_ASISTIO' || code === 'CANC' || code === 'NOAS';
+  get misSolicitudesRechazadas(): number {
+    return this.misSolicitudesPaciente.filter(s => {
+      const code = (s.codigoEstado ?? '').toUpperCase();
+      return code === 'RECHAZADA' || code === 'CANCELADA';
     }).length;
   }
 
@@ -147,7 +145,6 @@ export class SolicitudesListaComponent implements OnInit {
           );
         }
 
-        console.error('[SolicitudesPaciente] No se pudo cargar PerfilActual y no hay pacienteId en sesion.', error);
         return of(null);
       }),
       switchMap((perfil) => {
@@ -164,24 +161,21 @@ export class SolicitudesListaComponent implements OnInit {
         if (!pacienteId) {
           return forkJoin({
             doctores: this.doctoresService.listar(true).pipe(catchError(() => of([]))),
-            salasResponse: this.citasService.listarSalas().pipe(catchError(() => of({ data: [] as Sala[] }))),
-            citasResponse: of({ data: [] as CitaListadoResponse[] })
+            solicitudesResponse: of({ data: [] as SolicitudCitaListadoDTO[] })
           });
         }
 
         return forkJoin({
           doctores: this.doctoresService.listar(true).pipe(catchError(() => of([]))),
-          salasResponse: this.citasService.listarSalas().pipe(catchError(() => of({ data: [] as Sala[] }))),
-          citasResponse: this.citasService.obtenerPorFiltro({ pacienteId }).pipe(
-            catchError(() => of({ data: [] as CitaListadoResponse[] }))
+          solicitudesResponse: this.solicitudesService.listarUsuarios({ pacienteId }).pipe(
+            catchError(() => of({ data: [] as SolicitudCitaListadoDTO[] }))
           )
         });
       })
     ).subscribe({
-      next: ({ doctores, salasResponse, citasResponse }) => {
+      next: ({ doctores, solicitudesResponse }) => {
         this.doctoresPaciente = (doctores ?? []).filter(d => d.activo);
-        this.salasPaciente = (salasResponse?.data ?? []).filter(s => s.activo);
-        this.misCitasPaciente = citasResponse?.data ?? [];
+        this.misSolicitudesPaciente = solicitudesResponse?.data ?? [];
         this.aplicarPrefillReagendamiento();
         this.loading.set(false);
       },
@@ -192,93 +186,82 @@ export class SolicitudesListaComponent implements OnInit {
     });
   }
 
-  crearCitaPaciente(): void {
+  crearSolicitudPaciente(): void {
     const pacienteId = this.pacienteIdActual;
     if (!pacienteId) {
       this.errorHandler.showWarning('No se pudo identificar tu perfil de paciente');
       return;
     }
 
-    if (!this.nuevaCita.medicoId || this.nuevaCita.medicoId <= 0) {
+    if (!this.nuevaSolicitud.medicoId || this.nuevaSolicitud.medicoId <= 0) {
       this.errorHandler.showWarning('Debes seleccionar un doctor');
       return;
     }
 
-    if (!this.nuevaCita.fechaHoraInicio) {
+    if (!this.nuevaSolicitud.fechaHoraInicio) {
       this.errorHandler.showWarning('Debes seleccionar fecha y hora');
       return;
     }
 
-    if (!this.nuevaCita.motivo.trim()) {
+    if (!this.nuevaSolicitud.motivo.trim()) {
       this.errorHandler.showWarning('Debes indicar el motivo de la consulta');
       return;
     }
 
-    const doctorLocal = this.doctoresPaciente.find(d => d.medicoId === this.nuevaCita.medicoId);
+    const doctorLocal = this.doctoresPaciente.find(d => d.medicoId === this.nuevaSolicitud.medicoId);
     if (!doctorLocal) {
       this.errorHandler.showWarning('El doctor seleccionado no existe en el catalogo actual');
       return;
     }
 
-    this.doctoresService.obtenerPorId(this.nuevaCita.medicoId).subscribe({
+    this.doctoresService.obtenerPorId(this.nuevaSolicitud.medicoId).subscribe({
       next: (doctorValidado) => {
         if (!doctorValidado?.medicoId) {
           this.errorHandler.showWarning('El doctor seleccionado no esta disponible');
           return;
         }
 
-        const salaId = doctorValidado.salaPredeterminadaId ?? this.salasPaciente[0]?.salaId ?? null;
-        if (!salaId) {
-          this.errorHandler.showWarning('No hay una sala disponible para agendar con este doctor');
-          return;
-        }
-
-        const inicio = new Date(this.nuevaCita.fechaHoraInicio);
+        const inicio = new Date(this.nuevaSolicitud.fechaHoraInicio);
         if (Number.isNaN(inicio.getTime())) {
           this.errorHandler.showWarning('La fecha seleccionada no es valida');
           return;
         }
 
-        const duracionMinutos = doctorValidado.duracionDefaultMinutos || 30;
-        const fin = new Date(inicio.getTime() + duracionMinutos * 60000);
-
-        const request: CitasInsertarRequest = {
+        const request: SolicitudUsuarioInsertarDTO = {
           pacienteId,
           medicoId: doctorValidado.medicoId,
-          salaId,
-          inicio: this.toLocalDateTimeValue(inicio),
-          fin: this.toLocalDateTimeValue(fin),
-          duracionMinutos,
-          creadaPorUsuarioId: this.auth.usuarioIdActual()
+          fechaHoraInicio: this.toLocalDateTimeValue(inicio),
+          duracionMinutos: doctorValidado.duracionDefaultMinutos || 30,
+          motivo: this.nuevaSolicitud.motivo.trim()
         };
 
-        this.creandoCita = true;
-        this.citasService.insertar(request).subscribe({
+        this.creandoSolicitud = true;
+        this.solicitudesService.insertarUsuario(request).subscribe({
           next: (response) => {
-            this.creandoCita = false;
+            this.creandoSolicitud = false;
 
             if (!response.success) {
-              this.errorHandler.showError(400, response.message || 'No se pudo registrar la cita');
+              this.errorHandler.showError(400, response.message || 'No se pudo registrar la solicitud');
               return;
             }
 
             this.messageService.add({
               severity: 'success',
-              summary: 'Cita registrada',
-              detail: 'Tu cita fue creada correctamente y se reflejara en Mis Citas.'
+              summary: 'Solicitud registrada',
+              detail: 'Tu solicitud fue enviada correctamente y quedo pendiente de confirmacion.'
             });
 
-            this.nuevaCita = {
+            this.nuevaSolicitud = {
               medicoId: null,
               fechaHoraInicio: '',
               motivo: ''
             };
 
-            this.cargarMisCitasPaciente();
+            this.cargarMisSolicitudesPaciente();
           },
           error: (error) => {
-            this.creandoCita = false;
-            this.errorHandler.showError(error?.status || 500, this.getErrorMessage(error, 'No se pudo crear la cita'));
+            this.creandoSolicitud = false;
+            this.errorHandler.showError(error?.status || 500, this.getErrorMessage(error, 'No se pudo crear la solicitud'));
           }
         });
       },
@@ -294,70 +277,16 @@ export class SolicitudesListaComponent implements OnInit {
     this.router.navigate(['/configuraciones']);
   }
 
-  puedeCancelarCita(cita: CitaListadoResponse): boolean {
-    const codigo = (cita.codigoEstado ?? '').toUpperCase();
-    const estado = (cita.estado ?? '').toUpperCase();
-    const normalizado = codigo || estado;
-    return !['ATEN', 'ATENDIDA', 'FINALIZADA', 'EN_CURSO', 'CANC', 'CANCELADA', 'NOAS', 'NO_ASISTIO'].includes(normalizado);
-  }
-
-  cancelarCitaPaciente(cita: CitaListadoResponse): void {
-    if (!cita?.citaId || !this.puedeCancelarCita(cita)) {
-      return;
-    }
-
-    this.confirmationService.confirm({
-      message: `¿Deseas cancelar la cita con ${cita.medico || 'tu doctor'} del ${new Date(cita.inicio).toLocaleDateString('es-HN')}?`,
-      header: 'Cancelar cita',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí, cancelar',
-      rejectLabel: 'No',
-      accept: () => this.ejecutarCancelacionCita(cita.citaId)
-    });
-  }
-
-  private ejecutarCancelacionCita(citaId: number): void {
-    const request: CitasCambiarEstadoRequest = {
-      citaId,
-      codigoEstado: 'CANC'
-    };
-
-    this.cancelandoCitaId = citaId;
-
-    this.citasService.cambiarEstado(request).subscribe({
-      next: (response) => {
-        this.cancelandoCitaId = null;
-
-        if (!response.success) {
-          this.errorHandler.showError(400, response.message || 'No se pudo cancelar la cita');
-          return;
-        }
-
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Cita cancelada',
-          detail: response.message || 'La cita fue cancelada correctamente.'
-        });
-
-        this.cargarMisCitasPaciente();
-      },
-      error: (error) => {
-        this.cancelandoCitaId = null;
-        this.errorHandler.showError(error?.status || 500, this.getErrorMessage(error, 'No se pudo cancelar la cita'));
-      }
-    });
-  }
-
-  private cargarMisCitasPaciente(): void {
+  private cargarMisSolicitudesPaciente(): void {
     const pacienteId = this.pacienteIdActual;
     if (!pacienteId) return;
 
-    this.citasService.obtenerPorFiltro({ pacienteId }).subscribe({
+    this.solicitudesService.listarUsuarios({ pacienteId }).subscribe({
       next: (response) => {
-        this.misCitasPaciente = response?.data ?? [];
+        this.misSolicitudesPaciente = response?.data ?? [];
       },
       error: (error) => {
-        this.errorHandler.showError(error?.status || 500, 'No se pudo actualizar Mis Citas');
+        this.errorHandler.showError(error?.status || 500, 'No se pudo actualizar Mis Solicitudes');
       }
     });
   }
@@ -386,11 +315,11 @@ export class SolicitudesListaComponent implements OnInit {
     const fechaHoraInicio = this.route.snapshot.queryParamMap.get('fechaHoraInicio');
 
     if (Number.isInteger(medicoId) && medicoId > 0) {
-      this.nuevaCita.medicoId = medicoId;
+      this.nuevaSolicitud.medicoId = medicoId;
     }
 
     if (fechaHoraInicio) {
-      this.nuevaCita.fechaHoraInicio = fechaHoraInicio;
+      this.nuevaSolicitud.fechaHoraInicio = fechaHoraInicio;
     }
   }
 
